@@ -8419,7 +8419,7 @@ function whdups {
 
 Set-Alias which wh   # Might as well just alias 'which' to 'wh' in case type it while in PowerShell
 
-function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip) {
+function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # zip a folder (by default recursively). Possibly add $password and [switch]$mincompress (-mx1) / $maxcompress (-mx9)
     # Always append date-time "2021-04-13__96_46_13" to every archive as means always unique and good for backups etc
 
@@ -8471,6 +8471,10 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip) {
     if (Test-Path 'D:\0\7-Zip\7z.exe') { $7z = 'D:\0\7-Zip\7z.exe' }
     if ($7z -ne "") { "The 7z.exe found at '$7z' will be used.`n" }
 
+    if ($maxcompress) { $compress = "-mx9"}
+    if ($mincompress) { $compress = "-mx1"}
+    if ($nocompress) { $compress = "-mx0"}
+
     # Strip any declared .7z or .zip to replace with correct timestamp and extension later
     if ($PathToDestination -match ".7z$") { $PathToDestination = $PathToDestination -replace ".7z$", "" }
     if ($PathToDestination -match ".zip$") { $PathToDestination = $PathToDestination -replace ".zip$", "" }
@@ -8478,13 +8482,15 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip) {
     if ($sevenzip) {
         $PathToDestination = "$($PathToDestination)__$($dtnow).7z"
         if ($7z -ne "") {
-            & $7z "a" "-y" "-r" "-t7z" "$PathToDestination" "$FilesAndOrFoldersToZip"
+            echo "$7z a -y -r -t7z $compress $PathToDestination $FilesAndOrFoldersToZip"
+            & $7z "a" "-y" "-r" "-t7z" "$compress" "$PathToDestination" "$FilesAndOrFoldersToZip"
         }
     }
     else {
         $PathToDestination = "$($PathToDestination)__$($dtnow).zip"
         if ($7z -ne "") {
-            & $7z "a" "-y" "-r" "-tzip" "$PathToDestination" "$FilesAndOrFoldersToZip" 
+            echo "$7z a -y -r -t7zip $compress $PathToDestination $FilesAndOrFoldersToZip"
+            & $7z "a" "-y" "-r" "-tzip" "$compress" "$PathToDestination" "$FilesAndOrFoldersToZip" 
         }
         else { 
             # Don't really want to use PowerShell method but will if 7z.exe is not available
