@@ -3,26 +3,29 @@ Installation does *not* require Administrator privileges and can run from a norm
   
 `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
 
-If there are any problems with installation, see the below section on Windows Defender.
-```
-sc stop WinDefend   # Stop the Windows Defeder Service  
-iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))  
-sc start WinDefend   # Start the Windows Defeder Service  
-```
+If there are any problems with installation, this is probably due to the recently more aggressive Windows Defender. This is not a bad thing, it's good for Microsoft to protect against viruses, but this toolkit is just a collection of functions and all of the function code is open on the Github project so there is nothing malicious in here.
+`Set-MpPreference -DisableRealtimeMonitoring $true    # Disable`  
+`... Now install Custon-Tools ...`  
+`Set-MpPreference -DisableRealtimeMonitoring $false   # Enable`  
+
 
 # Custom-Tools Basics  
 • `BeginSystemConfig.ps1` controls setup of `ProfileExtensions.ps1` and `Custom-Tools.psm1`.  
 • A single line is inserted into `$profile` that calls the ProfileExtensions (and the extensions script is placed in the profile folder). The ProfileExtensions holds only fundamental functions and definitions required to make changes to the `Custom-Tools` etc (to easily recover if something goes wrong with `Custom-Tools` etc).  
 • `Custom-Tools.psm1` is installed under the users profile Module folder (see `$Env:PSModulePath`). Each of the functions in here is intended to be a completely stand-alone and portable so can extract anything to use for other projects.  
-• To uninstall, simply remove the line from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools`.  
+• To uninstall is easy simply remove the line from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools`.  
   
-The following Custom-Tools functions can help to find out the tools available.  
+**Simple Custom-Tools functions:**  
 To view all installed Modules, use `mods`  
 To drill in on a single module (such as Custom-Tools), use `mod custom-tools`  
 To show just those functions that contain a given string, e.g. `mod custom-tools date`  
   
-Custom-Tools contains some shorthand functions to explore functions:  
+**Shorthand tools to explore functions in the Module:**  
 To see the entire definition for a given function, use `def`, e.g. `def touch`  
+The function `m` is used to provide access to all help functions *and* to the `about_` Topics.
+• `m Para` - Show all `about_` Topics containing "Para".
+• `m Foreach` - Show all `about_` Topics containing "Para".
+• `m Foreach` - Show all `about_` Topics containing "Para".
 Help works, but extensive help is not built into many Custom-Tools functions. e.g. `help def` and help can sometimes be awkward to navigate, so Custom-Tools containes some helpers to quickly get to Cmdlet and Function information:  
 • `mm` (man module), quick way to get info on a module, so `mm pester`, but `mod pester` is more compact/efficient.
 • `ms` (man syntax), can also use `syn`, so `syn def`, and `mparam` (man parameter) (can't use `mp` as that is a built-in alias), quick way to get info on a function parameter. These are very useful together to just get specific info on a command, e.g. To first see the syntax of a command, use `ms` and then to drill down and see detauled info on the `Filter` parameter:
@@ -48,14 +51,18 @@ https://superuser.com/questions/1503345/i-disabled-real-time-monitoring-of-windo
 
 If there are any Windows Defender issues, this can be bypassed by disabling Windows Defender briefly before installing (some people at Chocolatey thought that use of 'iex' / 'Invoke-Expression' or 'iwr' / 'Invoke-WebRequest' might have been the reason for this block, but I've not seen that confirmed) as follows:  
 ```
-# Temporarily stop Windows Defender (must be Administrator!)  
-sc stop WinDefend   # Stop the Windows Defeder Service  
-# Set-MpPreference -DisableRealtimeMonitoring $true   # As an alternative, disable RealTimeMonitoring  
+`# Temporarily stop Windows Defender (must be Administrator)`  
+`# However, the above probably won't work as Windows Defender tries to protect itself and prevents this.`  
+`sc.exe stop WinDefend   # Stop the Windows Defeder Service   # Stop the service`  
+`... Now install Custon-Tools ...`  
+`sc.exe start WinDefend   # Start the Windows Defeder Service  # Start the service`  
   
-# Now install the Custom-Tools module  
-iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))  
-
-# Now restart Windows Defender  
-sc start WinDefend   # Start the Windows Defeder Service  
-# Set-MpPreference -DisableRealtimeMonitoring $false   # As an alternative, enable RealTimeMonitoring  
+`# Disable RealTimeMonitoring (again, must be Administrator)`  
+`Set-MpPreference -DisableRealtimeMonitoring $true    # Disable`  
+`... Now install Custon-Tools ...`  
+`Set-MpPreference -DisableRealtimeMonitoring $false   # Enable`  
 ```
+
+# Notes
+
+Used to remove all commit history (to reduce size of the `.git` folder): https://www.shellhacks.com/git-remove-all-commits-clear-git-history-local-remote/
