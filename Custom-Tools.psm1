@@ -8418,6 +8418,7 @@ function whdups {
 }
 
 Set-Alias which wh   # Might as well just alias 'which' to 'wh' in case type it while in PowerShell
+Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it while in PowerShell
 
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # zip a folder (by default recursively). Possibly add $password and [switch]$mincompress (-mx1) / $maxcompress (-mx9)
