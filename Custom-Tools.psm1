@@ -1200,11 +1200,16 @@ function hh {
     "Help files (stored separately for PowerShell, ISE, VSCode) are saved in:`n`$HOME\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt`n"
     $System = get-wmiobject -class "Win32_ComputerSystem"
     $Mem = [math]::Ceiling($System.TotalPhysicalMemory / 1024 / 1024 / 1024)
-    $wmi = gwmi -class Win32_OperatingSystem -computer "."
-    $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
-    [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
-    $s = "" ; if ($uptime.Days -ne 1) {$s = "s"}
+
+    # $wmi = gwmi -class Win32_OperatingSystem -computer "."   # Removed this method as not CIM compliant
+    # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
+    # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
+    $BootUpTime = (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
+    $CurrentDate = Get-Date
+    $Uptime = $CurrentDate - $BootUpTime
+    $s = "" ; if ($Uptime.Days -ne 1) {$s = "s"}
     $uptime_string = "$($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min $($uptime.seconds) sec"
+    
     "Hostname (Domain): $($System.Name) ($($System.Domain)),   Make/Model: $($System.Manufacturer)/($($System.Model))"
     "PowerShell $($PSVersionTable.PSVersion),   Windows Version: $($PSVersionTable.BuildVersion),   Windows ReleaseId: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'ReleaseId').ReleaseId)"
     "Last Boot Time:  $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem | select 'LastBootUpTime').LastBootUpTime)),   Uptime: $uptime_string"
@@ -3843,10 +3848,13 @@ function sys {
     $System = get-wmiobject -class "Win32_ComputerSystem"
     $Mem = [math]::Ceiling($System.TotalPhysicalMemory / 1024 / 1024 / 1024)
     
-    $wmi = gwmi -class Win32_OperatingSystem -computer "."
-    $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
-    [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
-    $s = "" ; if ($uptime.Days -ne 1) {$s = "s"}
+    # $wmi = gwmi -class Win32_OperatingSystem -computer "."   # Removed this method as not CIM compliant
+    # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
+    # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
+    $BootUpTime = (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
+    $CurrentDate = Get-Date
+    $Uptime = $CurrentDate - $BootUpTime
+    $s = "" ; if ($Uptime.Days -ne 1) {$s = "s"}
     $uptime_string = "$($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min $($uptime.seconds) sec"
 
     # $temp_cpu = "$($env:TEMP)\ps_temp_cpu.txt"
@@ -7794,13 +7802,22 @@ function PromptSlightlyBroken {
     # $Shell.WindowTitle="Console PowerShell"
 
     function global:Get-Uptime {
-        $os = Get-WmiObject win32_operatingsystem
-        $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
-        $days = $Uptime.Days ; if ($days -eq "1") { $days = "$days day" } else { $days = "$days days"}
-        $hours = $Uptime.Hours ; if ($hours -eq "1") { $hours = "$hours hr" } else { $hours = "$hours hrs"}
-        $minutes = $Uptime.Minutes ; if ($minutes -eq "1") { $minutes = "$minutes min" } else { $minutes = "$minutes mins"}
-        $Display = "$days, $hours, $minutes"
-        Write-Output $Display
+
+        # $wmi = gwmi -class Win32_OperatingSystem -computer "."   # Removed this method as not CIM compliant
+        # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
+        # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
+        $BootUpTime = (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
+        $CurrentDate = Get-Date
+        $Uptime = $CurrentDate - $BootUpTime
+        $s = "" ; if ($Uptime.Days -ne 1) {$s = "s"}
+        $uptime_string = "$($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min $($uptime.seconds) sec"
+        # $os = Get-WmiObject win32_operatingsystem
+        # $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
+        # $days = $Uptime.Days ; if ($days -eq "1") { $days = "$days day" } else { $days = "$days days"}
+        # $hours = $Uptime.Hours ; if ($hours -eq "1") { $hours = "$hours hr" } else { $hours = "$hours hrs"}
+        # $minutes = $Uptime.Minutes ; if ($minutes -eq "1") { $minutes = "$minutes min" } else { $minutes = "$minutes mins"}
+        # $Display = "$days, $hours, $minutes"
+        Write-Output $uptime_string
     }
     function Spaces ($numspaces) { for ($i = 0; $i -lt $numspaces; $i++) { Write-Host " " -NoNewline } }
 
@@ -8421,6 +8438,7 @@ Set-Alias which wh   # Might as well just alias 'which' to 'wh' in case type it 
 Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it while in PowerShell
 
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
+    if ($FilesAndOrFoldersToZip -eq "") { break }
     # zip a folder (by default recursively). Possibly add $password and [switch]$mincompress (-mx1) / $maxcompress (-mx9)
     # Always append date-time "2021-04-13__96_46_13" to every archive as means always unique and good for backups etc
 
