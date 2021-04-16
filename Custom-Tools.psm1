@@ -8438,7 +8438,19 @@ Set-Alias which wh   # Might as well just alias 'which' to 'wh' in case type it 
 Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it while in PowerShell
 
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
-    if ($FilesAndOrFoldersToZip -eq "") { break }
+    # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
+    # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
+    # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
+    # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
+    if (!$FilesAndOrFoldersToZip) { 
+        "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
+        "   By default, will try to find and use 7z.exe to create a .zip."
+        "   Output archive gets date-time string by default. e.g. 'MyZip' => 'MyZip__2021-03-17__19-07-31.zip'."
+        "   Compress-Archive will be used if 7z.exe is not found."
+        "   -sevenzip will create a .7z archive instead of .zip"
+        "   -maxcompress=-mx9 / -mincompress=-mx1 / -nocompress=-mx0"
+        break
+    }
     # zip a folder (by default recursively). Possibly add $password and [switch]$mincompress (-mx1) / $maxcompress (-mx9)
     # Always append date-time "2021-04-13__96_46_13" to every archive as means always unique and good for backups etc
 
