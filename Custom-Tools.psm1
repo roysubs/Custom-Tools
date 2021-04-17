@@ -8442,7 +8442,7 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [s
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
     # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
     # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
-    if (!$FilesAndOrFoldersToZip) { 
+    if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
         "   By default, will try to find and use 7z.exe to create a .zip."
         "   Output archive gets date-time string by default. e.g. 'MyZip' => 'MyZip__2021-03-17__19-07-31.zip'."
