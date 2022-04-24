@@ -8299,7 +8299,11 @@ function logview ($app, $num) {
 }
 
 function wh ($search, $path, $index, [switch]$size, [switch]$bare) { 
-    # Add functionality to try and run the command with --version, -version, --ver, -ver, --v, -v to see if get output
+    # Could add a switch to tries --version, -version, --ver, -ver, --v, -v, /?  to see if get output from the program
+    # Could add a switch to get internal version of executable:
+    #    (Get-Item C:\Windows\System32\Lsasrv.dll).VersionInfo.FileVersion
+    #    (Get-Command C:\Windows\System32\Lsasrv.dll).Version     # get updated (patched) ProductVersion by using this:
+    # "original" vs "patched" is due to the way the FileVersion is calculated (see the docs here) https://stackoverflow.com/questions/30686/get-file-version-in-powershell
 
     if ([string]::IsNullOrWhiteSpace($search)) {
         ""
@@ -8405,6 +8409,8 @@ function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
         }
     }
 }
+
+Set-Alias whereis wh
 
 function whdups {
     # Extend "wh" to find all duplicates on system on all Path folders. Do this by checking for names that exist more than once.
@@ -8834,6 +8840,28 @@ https://chocolatey.org/docs/features-create-packages-from-installers
 
 "
 }
+
+function Help-Git {
+    "
+Quick notes on basic git operations:
+
+To CONFIGURE:
+git config --global user.email 'roysubs@hotmail.com'
+git config --global user.name 'Roy Subs'
+
+To DOWNLOAD:
+git clone https://github.com/roysubs/custom-tools.git   # Will clone into a subfolder of the currect folder with name 'custom-tools'
+git clone https://roysubs:<GITHUB_ACCESS_TOKEN>@github.com/roysubs/custom-tools.git   # Clone with full access rights (so git push works automatically)
+
+To UPLOAD (always add / commit first!)
+git add .     # Add all files
+git commit    # On Windows this requires a message
+git reset --soft HEAD~1   # Undo to HEAD minus 1
+git push https://<GITHUB_ACCESS_TOKEN>@github.com/roysubs/custom-tools.git
+"
+}
+
+
 
 function Help-Chrome {
     "

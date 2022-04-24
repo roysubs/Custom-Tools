@@ -1,5 +1,17 @@
+# Custom-Tools Basics  
+Provides a set of tools and functions that integrate with the PowerShell console to make it more comfortable to use. The functions in the Custom-Tools.psm1 module will then be available in every session. The functions also serve as a useful set of techniques to pick from for creating other scripts.  
+
+
+# Custom-Tools Scripts  
+• `BeginSystemConfig.ps1` configures the profile to load the `ProfileExtensions.ps1` tools that are dot-sourced into every session, and to setup the latest version of the `Custom-Tools.psm1` function collection.  
+• To keep the profile clean, this is done by inserting two lines only into `$profile`. These call the ProfileExtensions (the extensions script is placed in the PowerShell profile folder). The ProfileExtensions holds only fundamental functions and definitions required for essential tooling (the 'cd' function for fast system navitation, recovery tools, and resizing functions for consoles `Custom-Tools` etc).  
+• `Custom-Tools.psm1` is installed under the users profile Module folder (type `$Env:PSModulePath` to see that).  
+• Each of the functions in here is deliberately stand-alone; there are no dependencies on each other so that each function can be completely portable for other projects as required.  
+• To uninstall: simply remove the last two lines from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools` and the toolkit is completely uninstalled upon opening a new PowerShell console.  
+  
+
 # How to install Custom-Tools  
-Installation does *not* require Administrator privileges and can run from a normal user console.  
+All functions run under normal user space, no requirement for Administrator privileges.  
   
 `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
 
@@ -9,12 +21,6 @@ If there are any problems with installation, this is probably due to the recentl
 `Set-MpPreference -DisableRealtimeMonitoring $false   # Enable`  
 
 
-# Custom-Tools Basics  
-• `BeginSystemConfig.ps1` controls setup of `ProfileExtensions.ps1` and `Custom-Tools.psm1`.  
-• A single line is inserted into `$profile` that calls the ProfileExtensions (and the extensions script is placed in the profile folder). The ProfileExtensions holds only fundamental functions and definitions required to make changes to the `Custom-Tools` etc (to easily recover if something goes wrong with `Custom-Tools` etc).  
-• `Custom-Tools.psm1` is installed under the users profile Module folder (see `$Env:PSModulePath`). Each of the functions in here is intended to be a completely stand-alone and portable so can extract anything to use for other projects.  
-• To uninstall is easy simply remove the line from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools`.  
-  
 **Simple Custom-Tools functions:**  
 To view all installed Modules, use `mods`  
 To drill in on a single module (such as Custom-Tools), use `mod custom-tools`  
