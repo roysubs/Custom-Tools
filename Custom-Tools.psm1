@@ -8858,6 +8858,18 @@ git add .     # Add all files
 git commit    # On Windows this requires a message
 git reset --soft HEAD~1   # Undo to HEAD minus 1
 git push https://<GITHUB_ACCESS_TOKEN>@github.com/roysubs/custom-tools.git
+
+Enumerating objects: 11, done.
+Counting objects: 100% (11/11), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 2.80 KiB | 409.00 KiB/s, done.
+Total 6 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (4/4), completed with 4 local objects.
+remote: This repository moved. Please use the new location:
+remote:   https://github.com/roysubs/Custom-Tools.git
+To https://github.com/roysubs/custom-tools.git
+   d1df5b1..0a88586  main -> main
 "
 }
 

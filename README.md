@@ -15,9 +15,9 @@ All functions run under normal user space, no requirement for Administrator priv
   
 `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
 
-If there are any problems with installation, this is probably due to the recently more aggressive Windows Defender. This is not a bad thing, it's good for Microsoft to protect against viruses, but this toolkit is just a collection of functions and all of the function code is open on the Github project so there is nothing malicious in here.
+If there are any problems with installation, this is probably due to the recently more aggressive Windows Defender. It's good that Microsoft update Defender often, but this toolkit is just a collection of functions and all of the function code is open on the Github project so it is all safe.
 `Set-MpPreference -DisableRealtimeMonitoring $true    # Disable`  
-`... Now install Custon-Tools ...`  
+`# Now install Custon-Tools here ...`  
 `Set-MpPreference -DisableRealtimeMonitoring $false   # Enable`  
 
 
@@ -48,7 +48,7 @@ Quick stuff: PowerShell variables, Environment Variables, useful system info:
 • `sys` : Systems diagnostics, display a large amount of system information  
 
 # Windows Defender  
-Note that the following may or may not be required as Windows Defender changes quite often. So try the above installer first and see if it works. Only temporarily stop Windows Defender if the above fails. This is sometimes required, as Windows Defender recently started heavily blocking many projects, even including big projects like Chocolatey (the main installer was completely blocked for a while unless you disabled Windows defender):  
+Note that the following may or may not be required as Windows Defender changes quite often. So try the above installer first and see if it works. Only temporarily stop Windows Defender if the above fails. This is sometimes required, as Windows Defender recently started heavily blocking many projects, even including big projects like Chocolatey (the main installer was completely blocked for a while unless you disabled Windows Defender):  
 https://github.com/chocolatey/choco/issues/2132  
 https://theitbros.com/managing-windows-defender-using-powershell/  1
 https://technoresult.com/how-to-disable-windows-defender-using-powershell-command-line/  
@@ -57,16 +57,20 @@ https://superuser.com/questions/1503345/i-disabled-real-time-monitoring-of-windo
 
 If there are any Windows Defender issues, this can be bypassed by disabling Windows Defender briefly before installing (some people at Chocolatey thought that use of 'iex' / 'Invoke-Expression' or 'iwr' / 'Invoke-WebRequest' might have been the reason for this block, but I've not seen that confirmed) as follows:  
 ```
-`# Temporarily stop Windows Defender (must be Administrator)`  
-`# However, the above probably won't work as Windows Defender tries to protect itself and prevents this.`  
-`sc.exe stop WinDefend   # Stop the Windows Defeder Service   # Stop the service`  
-`... Now install Custon-Tools ...`  
-`sc.exe start WinDefend   # Start the Windows Defeder Service  # Start the service`  
+# Temporarily stop Windows Defender (must be Administrator)  
+# However, the above probably won't work as Windows Defender tries to protect itself and prevents this.  
+sc.exe stop WinDefend   # Stop the Windows Defeder Service   # Stop the service  
+
+# Now install Custon-Tools here ...  
+sc.exe start WinDefend   # Start the Windows Defeder Service  # Start the service  
   
-`# Disable RealTimeMonitoring (again, must be Administrator)`  
-`Set-MpPreference -DisableRealtimeMonitoring $true    # Disable`  
-`... Now install Custon-Tools ...`  
-`Set-MpPreference -DisableRealtimeMonitoring $false   # Enable`  
+# If the above did not work, try disabling RealTimeMonitoring ...
+  
+# Disable RealTimeMonitoring (again, must be Administrator)  
+Set-MpPreference -DisableRealtimeMonitoring $true    # Disable  
+  
+# Now install Custon-Tools here...  
+Set-MpPreference -DisableRealtimeMonitoring $false   # Enable  
 ```
 
 # Notes
