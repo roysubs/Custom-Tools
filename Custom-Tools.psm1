@@ -8596,7 +8596,7 @@ function fff {
     }
 }
 
-
+Set-Alias mmm fff
 
 ####################
 #
@@ -8874,6 +8874,23 @@ To https://github.com/roysubs/custom-tools.git
 }
 
 
+function Help-robocopy {
+    "
+To duplicate a folder:
+robocopy . D:\Backup\`$(Get-Date -Format yyyyMMdd_HHmm)_Robocopy_Backup /mir /r:1 /w:1 /create
+/mir 'mirror', /r:1 'retry 1 time', /w:1 'wait 1 sec between retry', /create 'create zero-size files only'
+
+robocopy . D:\Backup\`$(Get-Date -Format yyyyMMdd_HHmm)_Robocopy_Backup /mir /create /copy:DAT /DCOPY:T
+/COPY:copyflag[s] :: What to copy for files (default is /COPY:DAT) : D=Data, A=Attributes, T=Timestamps, S=Security=NTFS ACLs, O=Owner info, U=aUditing info).
+/DCOPY:T :: Copy Directory Timestamps.
+
+Without using /mir
+robocopy . D:\Backup\`$(Get-Date -Format yyyyMMdd_HHmm)_Robocopy_Backup /COPYALL /E /SECFIX /DCOPY:T
+/E copies empty folders (remove if not needed)
+/SECFIX copy NTFS permissions (remove if not needed)
+/XO can be added to exclude older (ie if doing a true-up for a folder migration)
+"
+}
 
 function Help-Chrome {
     "
