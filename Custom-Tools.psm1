@@ -8552,6 +8552,7 @@ function lll {
     $h = $height + 8
     $x = -7
     $y = 0
+    Set-WindowNormal
     Set-ConsolePosition $x $y $w $h
 
     $MyBuffer = $Host.UI.RawUI.BufferSize
@@ -8569,6 +8570,7 @@ function rrr {
     $h = $height + 8
     $x = $w - 20
     $y = 0
+    Set-WindowNormal
     Set-ConsolePosition $x $y $w $h
 
     $MyBuffer = $Host.UI.RawUI.BufferSize
@@ -8584,6 +8586,8 @@ function fff {
         $MaxWidth = $host.UI.RawUI.MaxPhysicalWindowSize.Width
         $MyBuffer = $Host.UI.RawUI.BufferSize
         $MyWindow = $Host.UI.RawUI.WindowSize
+
+        Set-WindowNormal
         $MyWindow.Height = $MaxHeight
         $MyWindow.Width = $Maxwidth
         $MyBuffer.Height = 9999

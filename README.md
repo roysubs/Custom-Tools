@@ -1,19 +1,17 @@
 # Custom-Tools Basics  
-Provides a set of tools and functions that integrate with the PowerShell console to make it more comfortable to use. The functions in the Custom-Tools.psm1 module will then be available in every session. The functions also serve as a useful set of techniques to pick from for creating other scripts.  
+Tools and functions that integrate with the PowerShell console to make it more comfortable to use. There are no mass modifications to the environment, and the functions are all stand-alone so can be used as templates to build on or reuse in other scripts.  
 
 
 # Custom-Tools Scripts  
-• `BeginSystemConfig.ps1` configures the profile to load the `ProfileExtensions.ps1` tools that are dot-sourced into every session, and to setup the latest version of the `Custom-Tools.psm1` function collection.  
-• To keep the profile clean, this is done by inserting two lines only into `$profile`. These call the ProfileExtensions (the extensions script is placed in the PowerShell profile folder). The ProfileExtensions holds only fundamental functions and definitions required for essential tooling (the 'cd' function for fast system navitation, recovery tools, and resizing functions for consoles `Custom-Tools` etc).  
+All functions install and run under normal user space, there is no requirement for Administrator privileges. Full install is done from `BeginSystemConfig.ps1` which can be invoked directly by `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
+
+`BeginSystemConfig.ps1` adds the `Custom-Tools.psm1` Module and adds two lines to the profile so that `ProfileExtensions.ps1` tools that are dot-sourced in all sessions. `ProfileExtensions` hold fundamental functions and definitions (such as the 'cd' alias which has been replaced by a superset of `Set-Location` to add more functionality. function for fast system navitation, recovery tools, and resizing functions for consoles `Custom-Tools` etc).  
 • `Custom-Tools.psm1` is installed under the users profile Module folder (type `$Env:PSModulePath` to see that).  
 • Each of the functions in here is deliberately stand-alone; there are no dependencies on each other so that each function can be completely portable for other projects as required.  
 • To uninstall: simply remove the last two lines from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools` and the toolkit is completely uninstalled upon opening a new PowerShell console.  
   
 
 # How to install Custom-Tools  
-All functions run under normal user space, no requirement for Administrator privileges.  
-  
-`iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
 
 If there are any problems with installation, this is probably due to the recently more aggressive Windows Defender. It's good that Microsoft update Defender often, but this toolkit is just a collection of functions and all of the function code is open on the Github project so it is all safe.
 `Set-MpPreference -DisableRealtimeMonitoring $true    # Disable`  
