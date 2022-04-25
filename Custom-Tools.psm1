@@ -434,20 +434,31 @@ Set-Alias ip Get-IPAddress
 # function ipv6 { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv6" } } ; Set-Alias ip6 ipv6
 # function ip { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv4|IPv6" } }
 
-function Enable-DirColors {   # Enable colour directory listings
+function Enable-PSColor {   # Enable colour directory listings
     ""
     "Importing PSColor Module ..."
     if (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
     if (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
     ""
+    "To view all Console Colors:   [System.Enum]::GetValues('ConsoleColor')"
+    ""
     "Test Color Pallete:"
     [Console]::ResetColor()
-    "Test Color Pallete"
-    "Also note: [System.Enum]::GetValues('ConsoleColor')"
-    foreach($color1 in (0..15))
-    { foreach($color2 in (0..15)) { Write-Host -ForegroundColor ([ConsoleColor]$color1) -BackgroundColor ([ConsoleColor]$color2) -Object "X" -NoNewline } ; "" } 
+    ""
+    "Running 'ConsoleArt' script imported by 'BeginSystemConfig.ps1' to the default"
+    "PowerShell script repository at:   C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Scripts"
+    ""
     ConsoleArt
+    foreach($color1 in (0..15)) {
+        Write-Host "    " -NoNewline
+        foreach($color2 in (0..15)) { Write-Host -ForegroundColor ([ConsoleColor]$color1) -BackgroundColor ([ConsoleColor]$color2) -Object "X" -NoNewline } ; ""
+    }
 }
+
+Set-Alias pscolor Enable-PSColor
+Set-Alias gcicolor Enable-PSColor
+Set-Alias dircolor Enable-PSColor
+Set-Alias lscolor Enable-PSColor
 
 function Enable-DirFriendlySizes {
     # After running this, dir/ls/gci will show friendly sizes (but also sortable etc)
@@ -1386,17 +1397,38 @@ function Help-ToolkitConfig {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host ""
-    Write-Host "ProfileExtensions are placed in `$profile folder and will be called (dotsourced) on" -ForegroundColor Green
-    Write-Host "starting a new console session. They contain the core tools for all sessions." -ForegroundColor Green
+    Write-Host "To update to the latest version of 'ProfileExtensions.ps1' and 'Custom-Tools.psm1':" -ForegroundColor Green
+    Write-Host "   . Update-Toolkit" -ForegroundColor Yellow
+    Write-Host "This function simply redirects to:"
+    Write-Host "   iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))"
     Write-Host ""
-    Write-Host "To view the extensions:   " -ForegroundColor Green -NoNewline ; Write-Host "cd (Split-Path `$Profile)" -ForegroundColor Yellow
-    Write-Host "Profile extensions includes various functions by default."
-    Write-Host "In addition, the bulk of commands are added to the Custom-Tools.psm1 Module"
+    Write-Host "ProfileExtensions is placed in the `$profile folder and is called on all new console sessions." -ForegroundColor Green
+    Write-Host "Type 'more `"`$(`$Profile)_extensions.ps1'`" to review all contents." -ForegroundColor Green
     Write-Host ""
-    Write-Host "To view all exposed functions:   " -ForegroundColor Green -NoNewline ; Write-Host "myfunctions" -ForegroundColor Yellow
-    Write-Host "elevate/sudo function: run on own to elevate current shell or will elevate any given command supplied."
-    Write-Host "help extensions: m (advanced man/help that includes all about_* documentation,"
-    Write-Host "def (check definitions for any command)."
+    Write-Host "To view the profile extensions:   " -ForegroundColor Green -NoNewline ; Write-Host "cd (Split-Path `$Profile); dir" -ForegroundColor Yellow
+    Write-Host "The profile extensions includes various essential aliases and core functions (~0.1 sec load time)." -ForegroundColor Green
+    Write-Host "To view functions from 'ProfileExtensions.ps1':   " -ForegroundColor Green -NoNewline ; Write-Host "myfunctions" -ForegroundColor Yellow
+    Write-Host "To view functions from 'Custom-Tools.psm1'    :   " -ForegroundColor Green -NoNewline ; Write-Host "mod Custom-Tools" -ForegroundColor Yellow
+    Write-Host "To elevate (sudo) a function: run 'sudo' to elevate the current shell, or 'sudo <command> to elevate any given command supplied." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Help Extensions:   m <string>   # advanced man/help that includes all about_* documentation, and <Alias|Cmdlet|Function|ExternalScript|Application> info" -ForegroundColor Green
+    Write-Host "   e.g.  m Para      # Try exactly this to show all variants of 'Para' in help files, note no need for wildcards."
+    Write-Host "  'm' is a help wrapper tool that has much more functionality. Type 'm' on its own for more information."
+    Write-Host "def <command>   # show the definitions for any command: Alias, Cmdlet, Function, ExternalScript, Application"
+    Write-Host ""
+    Write-Host "Examples:" -ForegroundColor Green
+    Write-Host "   mods        # All currently installed modules and installed locations."
+    Write-Host "   mods W*     # Show modules starting with 'w' and their installed locations."
+    Write-Host "   mod <name>  # See details on a specific module"
+    Write-Host "   mod <name> <function_in_mod>   # Show the 'def' (definitions) for function_in_mod that is in the module."
+    Write-Host " e.g.  mod Custom-Tools"
+    Write-Host "       mod Custom-Tools Help-sls"
+    Write-Host "   def sudo    # To view sudo definition"
+    Write-Host ""
+    Write-Host "'cd' includes additional functionality over Set-Location" -ForegroundColor Green
+    Write-Host "Type 'cd' on its own to see additional Set-Location functionality."
+    Write-Host
+    Write-Host "More Examples (type 'myfunctions' or 'mod custom-tools' for more infor, or 'def uptime' etc):" -ForegroundColor Green
     Write-Host "cd.. is a function in PowerShell (test that by using 'def cd..'), so have defined cd... and cd.... in same way."
     Write-Host "uptime (Show uptime of computer), get-errors (get count of recent Event Log errors), touch `$file"
     Write-Host "tls, tls12 (set TLS, important for GitHub), securityprotocol to view status"
@@ -1404,7 +1436,6 @@ function Help-ToolkitConfig {
     Write-Host "BackupProfile (use robocopy to backup current Profile folder to D:\Backup\`$env:USERNAME_`$DateTimeNowStringMinutes"
     Write-Host "sys function (get summary of most used system details)"
     Write-Host "Various 'prompt' functions are included in Custom-Tools. Type 'prompt' then his Ctrl-Space to view." -ForegroundColor Green
-    # Write-Host "Use 'more `"`$(`$Profile)_extensions.ps1'`" to review all contents." -ForegroundColor Green
     Write-Host ""
     Write-Host "Custom-Tools.psm1 Module installed to user Module folder." -ForegroundColor Green
     Write-Host "Keep this mainly for usually longer functions that will only be fully loaded when the Module is called." -ForegroundColor Green
@@ -1425,20 +1456,6 @@ function Help-ToolkitConfig {
     # Write-Host "Review script actions above if required as this window will close after this" -ForegroundColor White -BackgroundColor Red
     # Write-Host "point if this script was called from another console." -ForegroundColor White -BackgroundColor Red
     Write-Host ""
-    Write-Host "Some quick commands to try:" -ForegroundColor Green
-    Write-Host "   mods        # All currently installed modules and installed locations."
-    Write-Host "   mods W*     # Show modules starting with 'w' and their installed locations."
-    Write-Host "   mod <name>  # See details on a specific module"
-    Write-Host "   mod <name> <function_in_mod>   # Show the 'def' (definitions) for function_in_mod that is in the module."
-    Write-Host " e.g.  mod Custom-Tools"
-    Write-Host "       mod Custom-Tools Help-sls"
-    Write-Host ""
-    Write-Host "Help Tools" -ForegroundColor Green
-    Write-Host "   def <command>   # show the definitions for any command: Alias, Cmdlet, Function, ExternalScript, Application"
-    Write-Host "e.g.  def Install-NotepadPlusPlus"
-    Write-Host "   m <Alias|Cmdlet|Function|ExternalScript|Application>"
-    Write-Host "e.g.  m Para      # Try exactly this to show all variants of 'Para' in help files, note no need for wildcards."
-    Write-Host "  'm' is a help wrapper tool that has much more functionality. Type 'm' on its own for more information."
     Write-Host ""
     try { screenfetch } catch { "ScreenFetch hit an error and could not load; possibly a hard disk is full, or exploded, or on fire.`n" }
     # Write-Host "Final prompt in case this was called in a separate console (which will immediately close"
@@ -1461,6 +1478,7 @@ function Help-ToolkitConfig {
     # When cmd.exe is disabled by a policy open task manager and then ctrl cmd opens a cmd.exe
     # Without ctrl the run doesn't open it
 }
+Set-Alias Help-CustomTools Help-Toolkit
 
 function Help-PowershellConsole {
     Write-Host "========================================" -ForegroundColor Green
@@ -6427,16 +6445,26 @@ Function Test-IsWindowsTerminal {
     } #PowerShell 5.1
 } #close function
 
-function color ($bc, $fc) {
-    # e.g. color "cyan" "black"
-    $a = (Get-Host).UI.RawUI
-    $a.BackgroundColor = $bc
-    $a.ForegroundColor = $fc ; cls
-
+function color {
+    # color "cyan" "black" will set background colour to cyan and foreground (text) color to black
     # Powershell color names are:
-    # Black White Gray DarkGray
-    # Red DarkRed Blue DarkBlue Green DarkGreen
-    # Yellow DarkYellow Cyan DarkCyan Magenta DarkMagenta
+    #    Black White
+    #    Gray DarkGray
+    #    Red DarkRed
+    #    Blue DarkBlue
+    #    Green DarkGreen
+    #    Yellow DarkYellow
+    #    Cyan DarkCyan
+    #    Magenta DarkMagenta
+
+    [CmdletBinding()]
+    param( [Parameter(Mandatory)] [string] $BackgroundColor, 
+           [Parameter(Mandatory)] [string] $ForegroundColor )
+
+    $a = (Get-Host).UI.RawUI
+    $a.BackgroundColor = $BackgroundColor
+    $a.ForegroundColor = $ForegroundColor
+    cls
 }
 
 function SwapTitleAuthor($separator) {
@@ -8560,7 +8588,7 @@ function lll {
     $MyWindow = $Host.UI.RawUI.WindowSize
     $MyBuffer.Height = 9999
     "`nWindowSize $($MyWindow.Width)x$($MyWindow.Height) (Buffer $($MyBuffer.Width)x$($MyBuffer.Height))"
-    "Position : Left:$x Top:$y Width:$w Height:$h`n"
+    "Position : Left:$x Top:$y Width:$w Height:$h (pixels)`n"
 }
 
 function rrr {
@@ -8580,16 +8608,16 @@ function rrr {
     $MyWindow = $Host.UI.RawUI.WindowSize
     $MyBuffer.Height = 9999
     "`nWindowSize $($MyWindow.Width)x$($MyWindow.Height) (Buffer $($MyBuffer.Width)x$($MyBuffer.Height))"
-    "Position : Left:$x Top:$y Width:$w Height:$h`n"
+    "Position : Left:$x Top:$y Width:$w Height:$h (pixels)`n"
 }
 function fff {
     # Adjust console window position, full size (non-maximised)
     Set-ConsolePosition -7 0 600 600
     if ($Host.Name -match "console") {
+        $MaxWidth  = $host.UI.RawUI.MaxPhysicalWindowSize.Width
         $MaxHeight = $host.UI.RawUI.MaxPhysicalWindowSize.Height - 1
-        $MaxWidth = $host.UI.RawUI.MaxPhysicalWindowSize.Width
-        $MyBuffer = $Host.UI.RawUI.BufferSize
-        $MyWindow = $Host.UI.RawUI.WindowSize
+        $MyBuffer  = $Host.UI.RawUI.BufferSize
+        $MyWindow  = $Host.UI.RawUI.WindowSize
 
         Set-WindowNormal
         $MyWindow.Height = $MaxHeight
@@ -8600,7 +8628,7 @@ function fff {
         # $host.UI.RawUI.set_windowSize($MyWindow)
         $host.UI.RawUI.BufferSize = $MyBuffer
         $host.UI.RawUI.WindowSize = $MyWindow
-        "`nWindowSize $($MyWindow.Width)x$($MyWindow.Height) (Buffer $($MyBuffer.Width)x$($MyBuffer.Height))`n"
+        "`nWindowSize $($MyWindow.Width)x$($MyWindow.Height) (Buffer $($MyBuffer.Width)x$($MyBuffer.Height))`nPosition : Left:-7 Top:0 Width:$MaxWidth Height:$MaxHeight (pixels)"
     }
 }
 
