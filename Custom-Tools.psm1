@@ -1403,7 +1403,7 @@ function Help-ToolkitConfig {
     Write-Host "   iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))"
     Write-Host ""
     Write-Host "ProfileExtensions is placed in the `$profile folder and is called on all new console sessions." -ForegroundColor Green
-    Write-Host "Type 'more `"`$(`$Profile)_extensions.ps1'`" to review all contents." -ForegroundColor Green
+    Write-Host "Type 'more `"`$(`$Profile)_extensions.ps1`"' to review all contents."
     Write-Host ""
     Write-Host "To view the profile extensions:   " -ForegroundColor Green -NoNewline ; Write-Host "cd (Split-Path `$Profile); dir" -ForegroundColor Yellow
     Write-Host "The profile extensions includes various essential aliases and core functions (~0.1 sec load time)." -ForegroundColor Green
@@ -3955,6 +3955,149 @@ function sys {
     # https://superuser.com/questions/769679/powershell-get-list-of-folders-shared
     (get-WmiObject -class Win32_Share | ft | Out-String) -replace '(?m)^\r?\n'
 }
+
+function Get-PCInfo {
+<# 
+ .SYNOPSIS
+  Function to ping and report on given one or more Windows computers.
+
+ .DESCRIPTION
+  Function to ping and report on given one or more Windows computers.
+  If the computer has more than one network interface, this function will report all IP and MAC addresses
+
+ .PARAMETER ComputerName
+  One or more computer names to be reported on. This defaults to the current computer.
+
+ .PARAMETER Cred
+  PS Credential object that can be obtained from Get-Credential or Get-SBCredential
+
+ .PARAMETER Refresh
+  This switch will supress progress messages to speed up processing.
+
+ .OUTPUTS 
+  The function returns a PS object that has the following properties/example:
+    ComputerName   : WIN10G2-Sam1
+    Status         : Online
+    IPAddress      : 192.168.214.118
+    MACAddress     : 00:xx:xx:xx:xx:xx
+    DateBuilt      : 9/6/2019 10:38:13 AM
+    OSVersion      : 10.0.18363
+    OSCaption      : Microsoft Windows 10 Enterprise
+    OSArchitecture : 64-bit
+    Model          : Virtual Machine
+    Manufacturer   : Microsoft Corporation
+    VM             : True
+    LastBootTime   : 3/26/2020 9:38:45 PM
+
+ .EXAMPLE
+  Get-PCInfo 
+  This returns the current PC information
+
+ .EXAMPLE
+  $PCInfo = Get-PCInfo -ComputerName @('PC1','PC2','PC3')
+  This checks the listed computers and saves the collected information in $PCInfo variable
+
+ .EXAMPLE
+  (Import-Csv .\ComputerList1.csv).ComputerName | Get-PCInfo | Export-Csv .\ComputerReport.csv -NoType
+  This example will read a list of computer names from the CSV file provided which has a 'ComputerName' column,
+  gather each computer information and save it to the provided CSV output file.
+
+ .EXAMPLE
+  Get-PCInfo -ComputerName Server111 -Cred (Get-SBCredential 'domain\user')
+  This example will report on information of the provided computer using the provided credentials
+
+ .LINK 
+  https://superwidgets.wordpress.com/2017/01/04/powershell-script-to-report-on-computer-inventory/
+
+ .NOTES
+  Function by Sam Boutros
+    31 October 2014 v0.1 
+    4  January 2017 v0.2
+    17 March   2017 v0.3 - chnaged the logic to output 1 record per computer even when it has several NICs
+    2  April   2020 v0.4 - Added Silent switch to speed up processing of large number of computers
+        Switched to using Get-SBWMI instead of Get-WMIObject
+        Added Cred Parameter to be able to query computers outside the domain
+    16 December 2021 v0.5 - Added FreeRAM (percent) and CPU (used percent) metrics.
+
+#>
+
+    [CmdletBinding(ConfirmImpact='Low')] 
+    Param(
+        [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+            [String[]]$ComputerName = $env:COMPUTERNAME,
+        [Parameter(Mandatory=$false)][PSCredential]$Cred,
+        [Parameter(Mandatory=$false)][Switch]$Silent
+    )
+
+    Begin { }
+
+    Process {
+        
+        foreach ($PC in $ComputerName) {
+            if (-not $Silent) { Write-Log 'Checking computer',$PC Green,Cyan -NoNewLine }
+            
+            try {
+                $Result = Test-Connection -ComputerName $PC -Count 2 -ErrorAction Stop 
+                if ($Cred) {
+                    $OS  = Get-SBWMI -ComputerName $PC -Class Win32_OperatingSystem -Cred $Cred -EA 0
+                    $Mfg = Get-SBWMI -ComputerName $PC -Class Win32_ComputerSystem  -Cred $Cred -EA 0
+                    $CPU = Get-SBWMI -ComputerName $PC -Class Win32_Processor       -Cred $Cred -EA 0
+                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 | 
+                            Where { $_.IpEnabled }).IPAddress | where { $_ -match "\." } # IPv4 only
+                } else {
+                    $OS  = Get-SBWMI -ComputerName $PC -Class Win32_OperatingSystem -EA 0
+                    $Mfg = Get-SBWMI -ComputerName $PC -Class Win32_ComputerSystem  -EA 0
+                    $CPU = Get-SBWMI -ComputerName $PC -Class Win32_Processor       -EA 0
+                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 | 
+                            Where { $_.IpEnabled }).IPAddress | where { $_ -match "\." } # IPv4 only
+                }
+                $MACs = foreach ($IPAddress in $IPs) {
+                    if ($Cred) {
+                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 | 
+                            Where { $_.IPAddress -eq $IPAddress }).MACAddress
+                    } else {
+                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 | 
+                            Where { $_.IPAddress -eq $IPAddress }).MACAddress
+                    }                        
+                }
+                if (-not $Silent) { Write-Log 'done' Green }
+                [PSCustomObject]@{
+                    ComputerName   = $PC
+                    Status         = 'Online'
+                    IPAddress      = $IPs -join ', '
+                    MACAddress     = $MACs -join ', '
+                    DateBuilt      = ([WMI]'').ConvertToDateTime($OS.InstallDate)
+                    OSVersion      = $OS.Version
+                    OSCaption      = $OS.Caption
+                    OSArchitecture = $OS.OSArchitecture
+                    Model          = $Mfg.model
+                    Manufacturer   = $Mfg.Manufacturer
+                    VM             = $(if ($Mfg.Manufacturer -match 'vmware' -or $Mfg.Manufacturer -match 'microsoft') { $true } else { $false })
+                    LastBootTime   = ([WMI]'').ConvertToDateTime($OS.LastBootUpTime)
+                    FreeRAM        = 100 - [math]::Round(($OS.FreePhysicalMemory/$OS.TotalVisibleMemorySize)*100,0)
+                    CPU            = [math]::Round(($CPU | measure LoadPercentage -Average).Average,0)
+                }
+            } catch { # either ping failed or access denied 
+                if ($Result) {
+                    if (-not $Silent) { Write-Log 'done' Magenta }
+                    [PSCustomObject]@{
+                        ComputerName   = $PC
+                        Status         = $Error[0].Exception
+                    }
+                } else {
+                    if (-not $Silent) { Write-Log 'done' Yellow }
+                    [PSCustomObject]@{
+                        ComputerName   = $PC
+                        Status         = 'No response to ping'
+                    }
+                }
+            }
+        }
+    }
+
+    End { }
+}
+
 
 ##### Registry #####
 # https://gallery.technet.microsoft.com/scriptcenter/Get-RegistryKeyLastWriteTim-63f4dd96
