@@ -8544,6 +8544,7 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [s
 
 # https://blogs.msmvps.com/russel/2017/04/28/resizing-the-powershell-console/
 function lll {
+    # Adjust console window position, half-screen, left side
     Add-Type -AssemblyName System.Windows.Forms
     $Screen = [System.Windows.Forms.Screen]::PrimaryScreen
     $width = $Screen.WorkingArea.Width   # .WorkingArea ignores the taskbar, .Bounds is whole screen
@@ -8561,7 +8562,9 @@ function lll {
     "`nWindowSize $($MyWindow.Width)x$($MyWindow.Height) (Buffer $($MyBuffer.Width)x$($MyBuffer.Height))"
     "Position : Left:$x Top:$y Width:$w Height:$h`n"
 }
+
 function rrr {
+    # Adjust console window position, half-screen, right side
     Add-Type -AssemblyName System.Windows.Forms
     $Screen = [System.Windows.Forms.Screen]::PrimaryScreen
     $width = $Screen.WorkingArea.Width   # .WorkingArea ignores the taskbar, .Bounds is whole screen
@@ -8580,6 +8583,7 @@ function rrr {
     "Position : Left:$x Top:$y Width:$w Height:$h`n"
 }
 function fff {
+    # Adjust console window position, full size (non-maximised)
     Set-ConsolePosition -7 0 600 600
     if ($Host.Name -match "console") {
         $MaxHeight = $host.UI.RawUI.MaxPhysicalWindowSize.Height - 1
@@ -8601,6 +8605,16 @@ function fff {
 }
 
 Set-Alias mmm fff
+
+function ccc {
+    # Adjust console window position, centre top
+    Set-ConsolePosition -7 0 600 600
+    if ($Host.Name -match "console") {
+        Set-ConsolePosition 75 0 600 600
+        Set-WindowNormal
+        Set-MaxWindowSize
+    }
+}
 
 ####################
 #
