@@ -1,7 +1,7 @@
 #################### 
 # 
 # Custom-Tools.psm1
-# Current Version: 2020-10-24
+# 2019-11-25 Initial setup
 #
 # Module is installed to the Module folder visible to all users (but can only be modified by Administrators):
 #    C:\Program Files\WindowsPowerShell\Modules\Custome-Tools
@@ -8775,7 +8775,7 @@ function fff {
     }
 }
 
-Set-Alias mmm fff
+Set-Alias mmm fff   # fff for "full size", also allow mmm for "maximum size"
 
 function ccc {
     # Adjust console window position, centre top
