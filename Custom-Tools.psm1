@@ -2089,10 +2089,10 @@ function Install-Toolkit {
     # https://social.technet.microsoft.com/Forums/sqlserver/en-US/8e4d9f20-8479-40c1-b09f-982ab485e56e/how-to-find-out-if-a-script-is-ran-or-dotsourced?forum=winserverpowershell
     if ( $MyInvocation.InvocationName -eq 'Update-Toolkit') { "`nWarning: Command cannot run without being dotsourced! Please rerun as:`n`n   . Update-Toolkit`n" }
     else {
-        echo "`niex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/roysubs/Custom-Tools/master/BeginSystemConfig.ps1'))`n"
+        echo "`niex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/roysubs/Custom-Tools/main/BeginSystemConfig.ps1'))`n"
         $answer = read-host "Would you like to reconfigure Toolkit using latest version from internet (y/n)? "
         if ($answer -eq 'y' -or $intput -eq '') {
-            . iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/roysubs/Custom-Tools/master/BeginSystemConfig.ps1'))
+            . iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/roysubs/Custom-Tools/main/BeginSystemConfig.ps1'))
         }
     }
 }
