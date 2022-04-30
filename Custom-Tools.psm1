@@ -2029,6 +2029,40 @@ You can share a Windows $Profile into WSL 2 from Windows PowerShell 5.1 without 
 echo $out | more
 }
 
+function Help-Timers {
+
+Measure-Comment:
+    $out = @'
+
+$Collection = 1..10
+# PowerShell 2+:
+(Measure-Command { $Collection | ForEach-Object { Write-Host $_ }}).TotalMilliseconds                     #     4.8004 milliseconds
+(Measure-Command { $Collection | ForEach-Object { Sleep 1; Write-Host $_ }}).TotalMilliseconds            # 10008.0906 milliseconds
+# PowerShell 6+ only:
+(Measure-Command { $Collection | ForEach-Object -Parallel { Write-Host $_ }}).TotalMilliseconds           #    40.8558 milliseconds
+(Measure-Command { $Collection | ForEach-Object -Parallel { Sleep 1; Write-Host $_ }}).TotalMilliseconds  #  2095.7144 milliseconds
+
+$Collection 1..254
+(Measure-Command { $Collection | ForEach-Object { Get-WmiObject Win32_PingStatus -Filter "Address='192.168.1.$_' and Timeout=200 and ResolveAddressNames='true' and StatusCode=0" | select ProtocolAddress* } }).TotalMilliseconds
+(Measure-Command { $Collection | ForEach-Object -Parallel { Get-WmiObject Win32_PingStatus -Filter "Address='192.168.1.$_' and Timeout=200 and ResolveAddressNames='true' and StatusCode=0" | select ProtocolAddress* } }).TotalMilliseconds
+
+'@
+    echo $out | more
+}
+
+function Help-PowershellSetup {
+    $out = @'
+
+choco upgrade -y PowerShell-Core   # Chocolatey for PowerShell-Core (i.e. latest pwsh 7+)
+winget install powershell          # winget is built in on Windows 10+
+wget https://aka.ms/install-powershell.sh; sudo bash install-powershell.sh; rm install-powershell.sh   # Linux
+
+'@
+    echo $out | more
+}
+
+
+
 function Help-Timeline {
     $out = @'
 
@@ -5016,12 +5050,6 @@ function IfExistSkipCommand ($toCheck, $toRun) {
     }
 }
 
-function Install-PowershellCore {
-    Write-Host "Get latest PowerShell Core"
-    # PowerShell Core, get latest version
-    choco upgrade -y PowerShell-Core
-}
-
 function Install-Firefox {
 
     Write-Wrap "When you continue, Firefox processes will be killed and redundant copies of Firefox will be uninstalled from the Users AppData folder and from C:\Program Files (x86). The 64-bit Firefox only will be left, or will be installed if not present."
@@ -6722,136 +6750,6 @@ function Update-LastWriteTime ($file)
 }
 Set-Alias -Name touch -Value Update-LastWriteTime
 
-function Install-ModuleToDirectory {
-    [CmdletBinding()] [OutputType('System.Management.Automation.PSModuleInfo')]
-    param(
-        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
-        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
-    )
-
-    if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
-        if (Test-Administrator -eq $true) {
-            # Nothing in here will happen unless working on laptop with a network share
-            Uninstall-Module $Name -Force -Verbose
-            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
-            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
-            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
-        }
-        else {
-            "Module found on network share module path but need to be administrator and connected to VPN"
-            "to correctly move Modules into the users module folder on C:\"
-            pause
-        }
-    }
-    elseif (($Profile -like "\\*") -and (Test-Path (Join-Path $Profile $Name))) {
-        if (Test-Administrator -eq $true) {
-            # Nothing in here will happen unless working on laptop with a network share
-            Uninstall-Module $Name -Force -Verbose
-            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
-            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
-            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
-        }
-        else {
-            "Module found on network share module path but need to be administrator and connected to VPN"
-            "to correctly move Modules into the users module folder on C:\"
-            pause
-        }
-    }
-    elseif (Test-Path (Join-Path $AdminModulePath $Name)) {
-        if (Test-Administrator -eq $true) {
-            # Nothing in here will happen unless working on laptop with a network share
-            Uninstall-Module $Name -Force -Verbose
-            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
-            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
-            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
-        }
-        else {
-            "Module found on in Admin Modules folder: C:\Program Files\WindowsPowerShell\Modules."
-            "Need to be Admin to correctly move Modules into the users module folder on C:\"
-            pause
-        }
-    }
-    else {
-        Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
-        Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
-    }
-    $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $x.trimstart(", ") ; ""
-    # return (Get-Module)
-}
-
-# Install-ModuleToDirectory -Name 'XXX' -Destination 'E:\Modules'
-# try {
-#     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
-#     # If the module is already installed, use Update, otherwise use Install
-#     if ([bool](Get-Module $Name -ListAvailable)) {
-#          Update-Module $Name -Verbose -ErrorAction Stop 
-#     } else {
-#          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
-#     }
-# } catch {
-#     # But if something went wrong, just -Force it, hard.
-#     Install-Module $Name -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
-# }
-
-
-# $ModuleNetShare = "$(Split-Path $ProfileNetShare)\Modules\$MyModule"
-# $ModuleCProfile = "C:\Users\$env:Username\Documents\WindowsPowerShell\Modules\$MyModule"
-# $ModuleNetShare
-# $ModuleCProfile
-
-#     $success = 0
-#     # if ($null -ne $(Test-Path $ModuleNetShare)) {
-#     # Only run this if $Profile is pointing at Net Share
-#     # Note that the uninstalls will fail unless connected to the VPN!
-#     if ((Test-Path $ModuleNetShare) -and ($Profile -like "\\*")) {
-#         if (Test-Administrator -eq $true) {
-#             # Nothing in here will happen unless working on laptop with a network share
-#             # First uninstall, then reinstall to get latest version, then move it to $Profile
-#             Uninstall-Module $MyModule -Force -Verbose
-#             Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!)
-#             Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
-#             Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
-#             Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
-#             $success = 1
-#         }
-#         else {
-#             "Module found on network share module path but need to be administrator and connected to VPN"
-#             "to correctly move Modules into the users module folder on C:\"
-#             pause
-#         }
-#     }
-#     if ((Test-Path "C:\Program Files\WindowsPowerShell\Modules\$MyModule") -and (Test-Administrator -eq $true)) {
-#         # This is if the module has been loaded into the Administrator folder.
-#         # This will move it to the user folder and update
-#         Uninstall-Module $MyModule -Force -Verbose
-#         Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!), so same situation as before
-#         Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
-#         Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
-#         Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
-#         $success = 1
-#     }
-#     else {
-#         "Module $MyModule found in 'C:\Program Files\WindowsPowerShell\Modules' but need to be administrator"
-#         "to correctly move Modules into the users module folder on C:\"
-#         pause
-#     }
-# 
-#     if ($success -eq 0) {
-#         try {
-#             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
-#             # If the module is already installed, use Update, otherwise use Install
-#             if ([bool](Get-Module $MyModule -ListAvailable)) {
-#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
-#             } else {
-#                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
-#             }
-#         } catch {
-#             # But if something went wrong, just -Force it, hard.
-#             Install-Module $MyModule -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
-#         }
-#     }
-# }
-
 function Install-ProfileForceLocalForFasterLoading {
     # To get around the VPN console load time issue when opening PowerShell consoles while
     # connected to a network share on a corporate VPN. i.e. ING(!)
@@ -8335,6 +8233,7 @@ function Invoke-Elevate {
 }
 Set-Alias sudo Invoke-Elevate
 Set-Alias elevate Invoke-Elevate
+
 function sudops { sudo powershell.exe }
 
 # No parameters but will use $args[0], $args[1]
@@ -8586,7 +8485,7 @@ Set-Alias whereis wh
 function whdups {
     # Extend "wh" to find all duplicates on system on all Path folders. Do this by checking for names that exist more than once.
     # Good example of Group-Object to take a count on the items
-    # Tried this technique but was a failure, Group-Object was better:   Compare-Object -ReferenceObject $files -DifferenceObject $files_sorted
+    # Tried Compare-Object but was a failure, Group-Object was better:   Compare-Object -ReferenceObject $files -DifferenceObject $files_sorted
 
     $paths = [Environment]::GetEnvironmentVariable("Path") -split ";" | select -unique | sort   # All paths (both Machine + User), remove duplcate paths and sort into an array
     $files = @()
@@ -8845,8 +8744,9 @@ function Install-NotepadPlusPlus {
     #>
 
     if ((New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator) -ne $true) {
-        "Chocolatey operations require Administrator elevation.`nTry 'sudo <command>   , or   sudo { <command1> ; <command2> ; ... }`n" ; break }
-
+        "Chocolatey operations require Administrator elevation.`nTry 'sudo <command>   , or   sudo { <command1> ; <command2> ; ... }`n"
+        break
+    }
     ""
     # First, test if notepad++.exe is currently running, and if so prompt to close it
     while (ps *notepad++*) {
@@ -9361,7 +9261,9 @@ function Install-7Zip {
     # For silent uninstall, /S works, but /s does not
     # Possibly use PeaZip instead of 7-Zip?
     if ((New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator) -ne $true) {
-        "Chocolatey operations require Administrator elevation.`nTry 'sudo <command>   , or   sudo { <command1> ; <command2> ; ... }`n" ; break }
+        "Chocolatey operations require Administrator elevation.`nTry 'sudo <command>   , or   sudo { <command1> ; <command2> ; ... }`n"
+        break
+    }
 
     # Note: if you use "ps 7zFM" this will generate an error, but "ps *7zFM*" will not as it is a wildcard sweep!
     while (ps *7zFM*) { read-host "Cannot contiune while 7-Zip Manager is open, please close manually then continue, or Ctrl-C to quit this function." }
@@ -11167,9 +11069,17 @@ function Install-ModuleToDirectory {
         [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
     )
 
-    if (!(Test-Path $ModulesPath)) { New-Item $ModulesPath -ItemType Directory -Force }
+    # Force installation to User Modules, even if running as Admin. i.e. keep all installations in User space.
+    # Default user space location for Modules is here, but if Admin, it will try to install to C:\Program Files\WindowsPowerShell
+    # We want to force installation into user space, but there is no command to do this
+    # There is a command to force installation to AllUser space: Install-Module <Name> -Scope AllUsers
+    # $ModulePath = "$(Split-Path $Profile)\Modules1"   # This is where all modules must go. It should be on path (must add if required)
+    # $ModulePathTest = foreach ($i in ($env:PSModulePath).split(";")) { if ($i -like $ModulePath) { $True } }   # Get 
+    # if ($ModulePathTest -eq $null) { }   # Need to add this if not present
 
-    if (($Profile -like "\\*") -and (Test-Path (Join-Path $ModulesPath $Name))) {
+    if (!(Test-Path $UserModulePath)) { New-Item $UserModulePath -ItemType Directory -Force }
+
+    if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
         if (Test-Administrator -eq $true) {
             "remove module from network share and move to $Destination"
             # Nothing in here will happen unless working on laptop with a network share
@@ -11235,6 +11145,135 @@ function Install-ModuleToDirectory {
     # return (Get-Module)
 }
 
+# function Install-ModuleToDirectory {
+#     [CmdletBinding()] [OutputType('System.Management.Automation.PSModuleInfo')]
+#     param(
+#         [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
+#         [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
+#     )
+# 
+#     if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             Uninstall-Module $Name -Force -Verbose
+#             # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+#             Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+#             Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+#         }
+#         else {
+#             "Module found on network share module path but need to be administrator and connected to VPN"
+#             "to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     elseif (($Profile -like "\\*") -and (Test-Path (Join-Path $Profile $Name))) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             Uninstall-Module $Name -Force -Verbose
+#             # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+#             Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+#             Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+#         }
+#         else {
+#             "Module found on network share module path but need to be administrator and connected to VPN"
+#             "to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     elseif (Test-Path (Join-Path $AdminModulePath $Name)) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             Uninstall-Module $Name -Force -Verbose
+#             # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+#             Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+#             Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+#         }
+#         else {
+#             "Module found on in Admin Modules folder: C:\Program Files\WindowsPowerShell\Modules."
+#             "Need to be Admin to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     else {
+#         Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+#         Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+#     }
+#     $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $x.trimstart(", ") ; ""
+#     # return (Get-Module)
+# }
+# 
+# Install-ModuleToDirectory -Name 'XXX' -Destination 'E:\Modules'
+# try {
+#     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#     # If the module is already installed, use Update, otherwise use Install
+#     if ([bool](Get-Module $Name -ListAvailable)) {
+#          Update-Module $Name -Verbose -ErrorAction Stop 
+#     } else {
+#          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
+#     }
+# } catch {
+#     # But if something went wrong, just -Force it, hard.
+#     Install-Module $Name -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+# }
+#
+# $ModuleNetShare = "$(Split-Path $ProfileNetShare)\Modules\$MyModule"
+# $ModuleCProfile = "C:\Users\$env:Username\Documents\WindowsPowerShell\Modules\$MyModule"
+# $ModuleNetShare
+# $ModuleCProfile
+#
+#     $success = 0
+#     # if ($null -ne $(Test-Path $ModuleNetShare)) {
+#     # Only run this if $Profile is pointing at Net Share
+#     # Note that the uninstalls will fail unless connected to the VPN!
+#     if ((Test-Path $ModuleNetShare) -and ($Profile -like "\\*")) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             # First uninstall, then reinstall to get latest version, then move it to $Profile
+#             Uninstall-Module $MyModule -Force -Verbose
+#             Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!)
+#             Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#             Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#             Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#             $success = 1
+#         }
+#         else {
+#             "Module found on network share module path but need to be administrator and connected to VPN"
+#             "to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     if ((Test-Path "C:\Program Files\WindowsPowerShell\Modules\$MyModule") -and (Test-Administrator -eq $true)) {
+#         # This is if the module has been loaded into the Administrator folder.
+#         # This will move it to the user folder and update
+#         Uninstall-Module $MyModule -Force -Verbose
+#         Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!), so same situation as before
+#         Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#         Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#         Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#         $success = 1
+#     }
+#     else {
+#         "Module $MyModule found in 'C:\Program Files\WindowsPowerShell\Modules' but need to be administrator"
+#         "to correctly move Modules into the users module folder on C:\"
+#         pause
+#     }
+# 
+#     if ($success -eq 0) {
+#         try {
+#             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#             # If the module is already installed, use Update, otherwise use Install
+#             if ([bool](Get-Module $MyModule -ListAvailable)) {
+#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
+#             } else {
+#                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
+#             }
+#         } catch {
+#             # But if something went wrong, just -Force it, hard.
+#             Install-Module $MyModule -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+#         }
+#     }
+# }
+
 function Install-ModuleExamples {
     Write-Host ''
     Write-Host ''
@@ -11298,14 +11337,14 @@ function Install-ModuleExamples {
     # Write-Host "   Get-ScriptAnalyzerRule, Invoke-Formatter, Invoke-ScriptAnalyzer"
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module PSScriptAnalyzer" -ForegroundColor Yellow
     # if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) { Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory PSScriptAnalyzer $ModulesPath
+    Install-ModuleToDirectory PSScriptAnalyzer $UserModulesPath
 
     Write-Host ''
     Write-Host "Install-Module Sudo" -ForegroundColor Yellow -BackgroundColor Black
     # Write-Host "   New-SudoSession, Remove-SudoSession, Restore-OriginalSystemConfig, Start-SudoSession"
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module sudo" -ForegroundColor Yellow
     # if (-not (Get-Module -ListAvailable Sudo)) { Install-Module Sudo -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory Sudo $ModulesPath
+    Install-ModuleToDirectory Sudo $UserModulesPath
 
     Write-Host ''
     Write-Host "Install-Module Posh-Git (Git Management Cmdlets)" -ForegroundColor Yellow -BackgroundColor Black
@@ -11317,14 +11356,14 @@ function Install-ModuleExamples {
     Write-Host "Write-GitStatus, Write-Prompt, Write-VcsStatus"
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module posh-git" -ForegroundColor Yellow
     # if (-not (Get-Module -ListAvailable Posh-Git)) { Install-Module Posh-Git -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory Posh-Git $ModulesPath
+    Install-ModuleToDirectory Posh-Git $UserModulesPath
 
     Write-Host ''
     Write-Host "Install-Module Posh-Gist (Gist Management Cmdlets)" -ForegroundColor Yellow -BackgroundColor Black
     # Write-Host "   Get-Gist, Get-GistCommits, Get-GistStar, New-Gist, Remove-Gist, Update-Gist"
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module posh-gist" -ForegroundColor Yellow
     # if (-not (Get-Module -ListAvailable Posh-Gist)) { Install-Module Posh-Gist -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory Posh-Gist $ModulesPath
+    Install-ModuleToDirectory Posh-Gist $UserModulesPath
 
     # Write-Host ''
     # Write-Host "Install-Module PowerShellForGitHub   # (GitHub Management Cmdlets)" -ForegroundColor Yellow -BackgroundColor Black
@@ -11351,7 +11390,7 @@ function Install-ModuleExamples {
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module posh-ssh" -ForegroundColor Yellow -NoNewline ; Write-Host "   # fimo *ssh* for other SSH tools" -ForegroundColor Green
     # if (-not (Get-Module -ListAvailable Posh-SSH)) { Install-Module Posh-SSH -Scope CurrentUser -Force -Verbose }
     # (gcm -mod posh-ssh | select Name | % { $_.Name + "," } | Out-String).replace("`r`n", " ").trim(", ")
-    Install-ModuleToDirectory Posh-SSH $ModulesPath
+    Install-ModuleToDirectory Posh-SSH $UserModulesPath
 
     Write-Host ''
     Write-Host "Install-Module PSColor (Color Get-ChildItem / gci / dir / ls output)" -ForegroundColor Yellow -BackgroundColor Black
@@ -11360,13 +11399,13 @@ function Install-ModuleExamples {
     Write-Host "Note: modifies Out-Default, so do not import by default, have setup 'color' function"
     Write-Host "in profile extensions to activate this when required."
     # if (-not (Get-Module -ListAvailable PSColor)) { Install-Module PSColor -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory PSColor $ModulesPath
+    Install-ModuleToDirectory PSColor $UserModulesPath
 
     Write-Host ''
     Write-Host "Install-Module Windows-ScreenFetch (System Utility)" -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "View Module Contents: " -NoNewLine ; Write-Host "get-command -module windows-screenfetch" -ForegroundColor Yellow
     # if (-not (Get-Module -ListAvailable Windows-ScreenFetch)) { Install-Module Windows-ScreenFetch -Scope CurrentUser -Force -Verbose }
-    Install-ModuleToDirectory Windows-ScreenFetch $ModulesPath
+    Install-ModuleToDirectory Windows-ScreenFetch $UserModulesPath
 
     # Write-Host ''
     # Write-Host "Install-Module HistoryPx -AllowClobber (Enhanced Get-History tools)" -ForegroundColor Yellow -BackgroundColor Black
