@@ -93,7 +93,7 @@
 
 function Test-ConnectionAsync {
     # https://github.com/proxb/AsyncFunctions
-    $toImport = irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1"
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
     New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
     $MyInvocation.Line | iex
 }
