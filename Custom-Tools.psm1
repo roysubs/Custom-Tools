@@ -2030,8 +2030,6 @@ echo $out | more
 }
 
 function Help-Timers {
-
-Measure-Comment:
     $out = @'
 
 $Collection = 1..10
@@ -2057,11 +2055,15 @@ choco upgrade -y PowerShell-Core   # Chocolatey for PowerShell-Core (i.e. latest
 winget install powershell          # winget is built in on Windows 10+
 wget https://aka.ms/install-powershell.sh; sudo bash install-powershell.sh; rm install-powershell.sh   # Linux
 
+See here for detailed switches and usage:
+https://www.thomasmaurer.ch/2019/07/how-to-install-and-update-powershell-7/
+
+PowerShell for every system
+https://github.com/proxb/PowerShell
+
 '@
     echo $out | more
 }
-
-
 
 function Help-Timeline {
     $out = @'
@@ -2078,11 +2080,11 @@ Timeline introduces a new way to resume past activities that you started on this
 
 The default view of Timeline shows snapshots of the most relevant activities from earlier in the day or a specific past date. A new annotated scrollbar makes it easy to get back to past activities.
 
-There’s also a way to see all the activities that happened in a single day. You need to click the See all link next to the date header. Your activities will be organized into groups by hour to help you find tasks you know you worked on that morning, or whenever.
+There's also a way to see all the activities that happened in a single day. You need to click the See all link next to the date header. Your activities will be organized into groups by hour to help you find tasks you know you worked on that morning, or whenever.
 
 Click on the See only top activities link next to the day's header to restore the default view of Timeline.
 
-If you can’t find the activity you’re looking for in the default view, search for it. There is a search box in the upper-right corner of Timeline if you can't easily locate the task you wish to restore.
+If you can't find the activity you're looking for in the default view, search for it. There is a search box in the upper-right corner of Timeline if you can't easily locate the task you wish to restore.
 
 Windows 10's Telemetry and Data Collection services are often being criticized by many users for collecting private or sensitive data. From their point of view, Microsoft collects too much data, especially if you are running one of the Insider Preview builds. Also, Microsoft is not transparent about what data exactly they collect, how they use it currently and what they will use it for in the future. So, this new feature might be welcomed by those who find no use for it. Probably they will be happy to disable the extra data collection option.
 
@@ -2132,12 +2134,6 @@ function Install-Toolkit {
 }
 Set-Alias Setup-Toolkit Install-Toolkit -Description "Start Custom-Tools configuration from the Github repo (or update an existing installation)."
 Set-Alias Update-Toolkit Install-Toolkit -Description "Start Custom-Tools configuration from the Github repo (or update an existing installation)."
-
-function Install-ChrisTitusTools {
-    # https://christitus.com/debloat-windows-10-2020/
-    . iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JJ8R4'))
-}
-
 
 function git-push {
     if (!(Test-Path ".git")) { 
@@ -7457,11 +7453,6 @@ function Example-Splatting {
     $color = 'red'
     $count = " "*6
     write-host $count -BackgroundColor $color -NoNewline:$nonewline
-}
-
-function RiskASCII {
-    # Rick Astley
-    iex (New-Object Net.WebClient).DownloadString("http://bit.ly/e0Mw9w")
 }
 
 function Convert-ImageToAsciiArt {
