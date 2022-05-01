@@ -29,45 +29,45 @@
 # DeBloater:   https://freetimetech.com/windows-10-clean-up-debloat-tool-by-ftt/
 # https://github.com/eccko/TrashEraser-Debloat-Windows-10  
 
-# function Enable-OnlineFunction {
-# 
-#     # using statements must be at the top of a script, i.e. cannot be inside a function
-#     # using namespace System.Management.Automation.Language
-#     # If this is not possible, need to inject "System.Management.Automation.Language" before Parser and FunctionDefinitionAst
-#     # https://stackoverflow.com/questions/72069554/powershell-auto-load-functions-from-internet-on-demand
-#     # Load-Function https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
-#     # Ping-Subnet            # => now is available in your current session.
-#     # Test-ConnectionAsync   # => now is available in your current session.
-#     
-#     [cmdletbinding()]
-#     param(
-#         [parameter(Mandatory, ValueFromPipeline)]
-#         [uri] $URI
-#     )
-# 
-#     process {
-#         try {
-#             $funcs = Invoke-RestMethod $URI
-#             $ast = [System.Management.Automation.Language.Parser]::ParseInput($funcs, [ref] $null, [ref] $null)
-#             foreach($func in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {   # [FuntionDefinitionAst]
-#                 if($func.Name -in (Get-Command -CommandType Function).Name) {
-#                     Write-Warning "$($func.Name) is already loaded! Skipping"
-#                     continue
-#                 }
-#                 New-Item -Name "script:$($func.Name)" -Path function: -Value $func.Body.GetScriptBlock()
-#             }
-#         }
-#         catch {
-#             Write-Warning $_.Exception.Message
-#         }
-#     }
-# }
-# 
-# functions Enable-PingDNSTools {
-#     Enable-OnlineFunction https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
-#     echo "'Ping-Subnet' is now available in your current session."
-#     echo "'Test-ConnectionAsync'  is now available in your current session."
-# }
+function Enable-OnlineFunction {
+
+    # using statements must be at the top of a script, i.e. cannot be inside a function
+    # using namespace System.Management.Automation.Language
+    # If this is not possible, need to inject "System.Management.Automation.Language" before Parser and FunctionDefinitionAst
+    # https://stackoverflow.com/questions/72069554/powershell-auto-load-functions-from-internet-on-demand
+    # Load-Function https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
+    # Ping-Subnet            # => now is available in your current session.
+    # Test-ConnectionAsync   # => now is available in your current session.
+    
+    [cmdletbinding()]
+    param(
+        [parameter(Mandatory, ValueFromPipeline)]
+        [uri] $URI
+    )
+
+    process {
+        try {
+            $funcs = Invoke-RestMethod $URI
+            $ast = [System.Management.Automation.Language.Parser]::ParseInput($funcs, [ref] $null, [ref] $null)
+            foreach($func in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {   # [FuntionDefinitionAst]
+                if($func.Name -in (Get-Command -CommandType Function).Name) {
+                    Write-Warning "$($func.Name) is already loaded! Skipping"
+                    continue
+                }
+                New-Item -Name "script:$($func.Name)" -Path function: -Value $func.Body.GetScriptBlock()
+            }
+        }
+        catch {
+            Write-Warning $_.Exception.Message
+        }
+    }
+}
+
+functions Enable-PingDNSTools {
+    Enable-OnlineFunction https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
+    echo "'Ping-Subnet' is now available in your current session."
+    echo "'Test-ConnectionAsync'  is now available in your current session."
+}
 
 # Import Online Functions
 # Boe Prox https://github.com/proxb/
