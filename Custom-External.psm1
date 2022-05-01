@@ -29,7 +29,7 @@
 # DeBloater:   https://freetimetech.com/windows-10-clean-up-debloat-tool-by-ftt/
 # https://github.com/eccko/TrashEraser-Debloat-Windows-10  
 
-function Load-Function {
+function Enable-OnlineFunction {
 
     # using statements must be at the top of a script, i.e. cannot be inside a function
     # using namespace System.Management.Automation.Language
@@ -65,12 +65,10 @@ function Load-Function {
 
 
 # functions Enable-PingDNSTools {
-#     Load-Function https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
+#     Enable-OnlineFunction https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
 #     echo "'Ping-Subnet' is now available in your current session."
 #     echo "'Test-ConnectionAsync'  is now available in your current session."
 # }
-
-
 
 # Import Online Functions
 # Boe Prox https://github.com/proxb/
@@ -78,7 +76,7 @@ function Load-Function {
 # function Invoke-RegExHelper {
 # <#
 # Invoke-RegExHelper
-# .SYNOPSIS 
+####...SYNOPSIS 
 # A UI to help with writing Regular Expressions.
 # https://github.com/proxb/RegExHelper
 # This is a UI built using PowerShell and WPF that allows for simple Regular Expression checking by displaying the results in real time.
@@ -124,7 +122,7 @@ function Test-Port {
 
 function Get-TCPResponse {
     # https://github.com/proxb/PowerShell_Scripts
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Get-TCPResponse.ps1".Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Get-TCPResponse.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
     New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
     $MyInvocation.Line | iex
 }
