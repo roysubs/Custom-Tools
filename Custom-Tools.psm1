@@ -8665,7 +8665,10 @@ function fff {
     }
 }
 
-Set-Alias mmm fff   # fff for "full size", also allow mmm for "maximum size"
+function mmm {
+    # mmm for "maximize"
+    Set-WindowMax
+}
 
 function ccc {
     # Adjust console window position, centre top
