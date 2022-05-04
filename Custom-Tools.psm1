@@ -1478,7 +1478,7 @@ function Help-ToolkitConfig {
     # When cmd.exe is disabled by a policy open task manager and then ctrl cmd opens a cmd.exe
     # Without ctrl the run doesn't open it
 }
-Set-Alias Help-CustomTools Help-Toolkit
+Set-Alias Help-CustomTools Help-ToolkitConfig
 
 function Help-PowershellConsole {
     Write-Host "========================================" -ForegroundColor Green
@@ -4832,9 +4832,10 @@ function def {
     param (
         [Parameter(Mandatory)]
         [ArgumentCompleter({ [Management.Automation.CompletionResult]::Command })]
-        [string]$cmd,
+        $cmd,
         [switch]$Examples
     )
+    # Previously fixed $cmd as [string]$cmd but this was wrong as cannot then handle arrays or anything else
 
     function Write-Wrap {
         [CmdletBinding()]Param( [parameter(Mandatory=1, ValueFromPipeline=1, ValueFromPipelineByPropertyName=1)] [Object[]]$chunk )
@@ -4860,10 +4861,10 @@ function def {
 
     if ($deferr -eq 1) {
         if ($cmd -eq $null) { Write-Host "Object is `$null" ; return } 
-        Write-Host "`$object | Convert-Json:" -F Cyan
+        Write-Host "`$object | ConvertTo-Json:" -F Cyan
         $cmd | ConvertTo-Json
         ""
-        Write-Host "(`$object).GetType()" -F Cyan -NoNewline ; Write-Host " :: [BaseType|Name|IsPublic|IsSerial|Module]"
+        Write-Host "(`$object).GetType()" -F Cyan -NoNewline ; Write-Host " (Below is: BaseType, Name, IsPublic, IsSerial, Module)"
         ($cmd).GetType() | % { "$($_.BaseType), $($_.Name), $($_.IsPublic), $($_.IsSerializable), $($_.Module)" }
         ""
         Write-Host "`$object | Get-Member -Force" -F Cyan
@@ -4928,12 +4929,19 @@ function def {
             Write-Host "`n'$cmd' is an Alias.  " -F Green -NoNewLine ; Write-Host "This Alias is in the '$((get-command -type alias $cmd).ModuleName).' Module"
             Write-Host ""
             Write-Host "Get-Alias '$cmd'   *or*    cat alias:\$cmd" -F Cyan
-            cat alias:\$cmd   # Write-Host "$(cat alias:\$cmd)"   # "$((Get-Alias $cmd -EA silent).definition)"
+            $aliasdef = $(cat alias:\$cmd)   # Write-Host "$(cat alias:\$cmd)"   # "$((Get-Alias $cmd -EA silent).definition)"
             if ($cmd -eq '?') { $cmd = '`?' }   # To deal correctly with the wildcard '?'
-            "`n'$((Get-Alias $cmd).Name)' is an alias of '$((Get-Alias $cmd).ReferencedCommand)'"
-            $fulldef = (Get-Alias $cmd -EA silent).definition   # Rerun def but using the full cmdlet or function name.
-            def $fulldef
-            if ($Examples -eq $true) { $null = Read-Host 'Press any key to view command examples' ; get-help $fulldef -examples }
+            $cmdref = (Get-Alias $cmd).ReferencedCommand
+            if ($null -eq $cmdref) {
+                "`n'$((Get-Alias $cmd).Name)' is an alias of '$aliasdef', but '$aliasdef' is not a defined command."
+                "cat alias:\$cmd                     =>  $aliasdef"
+                "(Get-Alias $cmd).ReferencedCommand  =>  `$null"
+            } else {
+                "`n'$((Get-Alias $cmd).Name)' is an alias of '$cmdref'"   # $((Get-Alias $cmd).ReferencedCommand)
+                $fulldef = (Get-Alias $cmd -EA silent).definition   # Rerun def but using the full cmdlet or function name.
+                def $fulldef
+                if ($Examples -eq $true) { $null = Read-Host 'Press any key to view command examples' ; get-help $fulldef -examples }
+            }
         }
         elseif ($type -eq 'Function') {
             Write-Host "`n'$cmd' is a Function.  " -F Green -NoNewline
@@ -4980,7 +4988,7 @@ function def {
             Read-Host "Press any key to open cmd.exe and try '$cmd /?'" ; cmd.exe /c $cmd /? | more
             Write-Host ""
         }
-    } elseif ((get-module -ListAvailable -Name $cmd) -ne $null) {
+    } elseif ($null -ne (get-module -ListAvailable -Name $cmd -EA Silent)) {
         # https://stackoverflow.com/questions/28740320/how-do-i-check-if-a-powershell-module-is-installed
         ""
         (get-module $cmd).path
@@ -5576,15 +5584,16 @@ function rdphalf ($hostname, $username) {
 # with saved credentials passing through RDP. From what I have found I will need to edit the group policy underer:
 #   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation 
 
-function Fix-ING {
-    # Can restart these things later any time required
-    # Some require admin to kill (Tight VNC Server)
-    kill -name workpace -force -EA Silent    # WorkPace
+function Fix-WorkLaptop {
+    # Kill bloat put on there by company and reset things required
+    # Some things might require admin to kill (Tight VNC Server)
+    # Note a generic function, has things customised for my laptop
+    kill -name workpace -force -EA Silent    # WorkPace ridiculous tool to make you stretch your back etc
     kill -name Docker* -force -EA Silent     # Docker Desktop & Docker.Watchguard
     kill -name Steam* -force -EA Silent      # Steam
     kill -name AutoHotkey -force -EA Silent  # Restart this with Main and Main-ING to fix any issues
-    kill -name Rainmeter -force -EA Silent   # Rainmeter, until I know how to configure
-    kill -name "My Epson*" -force -EA Silent # Epson printer tools
+    kill -name Rainmeter -force -EA Silent   # Rainmeter, until I know how to configure properly
+    kill -name "My Epson*" -force -EA Silent # My Epson printer tools
     
     $user = [Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -5615,6 +5624,97 @@ function Fix-ING {
     # }
     # Remove-Variable firefox
 }
+
+Set-Alias Fix-ING Fix-WorkLaptop
+
+function Restart-AutoHotkey {
+    # Look for my main projects and start or restart them as required
+    kill -name AutoHotkey -force -EA Silent
+    if (Test-Path "C:\0\Scripts_AHK\Basics.ahk") { Start-Process "C:\0\Scripts_AHK\Basics.ahk" }
+    if (Test-Path "C:\0\Scripts_AHK\Main-ING.ahk") { Start-Process "C:\0\Scripts_AHK\Main-ING.ahk" }
+    if (Test-Path "C:\0\Scripts_AHK\WOTR Toolkit.ahk") { Start-Process "C:\0\Scripts_AHK\WOTR Toolkit.ahk" }
+    if (Test-Path "D:\0 Cloud\OneDrive\0_Scripts_AutoHotkey\Basics-AHK\Basics.ahk") { Start-Process "D:\0 Cloud\OneDrive\0_Scripts_AutoHotkey\Basics-AHK\Basics.ahk" }
+}
+
+function Install-ModuleFromPSGallery {
+    [CmdletBinding()] [OutputType('System.Management.Automation.PSModuleInfo')]
+    param(
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
+    )
+
+    # Force installtaion to a specific location (usually the users own Modules path)
+
+    if (!(Test-Path $UserModulesPath)) { New-Item $UserModulesPath -ItemType Directory -Force }
+
+    # If the Module is installed at a network location path, remove it and move to user Modules path
+    # Nothing will happen here unless working on work laptop with user shares on UNC paths.
+    if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulesPath $Name))) {
+        if (Test-Administrator -eq $true) {
+            "remove module from network share and move to $Destination"
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share if in use so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            Write-Host "Module found on network share module path but need to be administrator and connected to VPN" -ForegroundColor Yellow -BackgroundColor Black
+            Write-Host "to correctly move Modules into the users module folder on C:\" -ForegroundColor Yellow -BackgroundColor Black
+        }
+    }
+    elseif (Test-Path (Join-Path $AdminModulesPath $Name)) {
+        if (Test-Administrator -eq $true) {
+            "remove module from $AdminModulesPath and move to $Destination"
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share if in use so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            Write-Host "Module found on in Admin Modules folder: $(split-path $AdminModulesPath) C:\Program Files\WindowsPowerShell\Modules." -ForegroundColor Yellow -BackgroundColor Black
+            Write-Host "Need to be Admin to correctly move Modules into the users module folder on C:\" -ForegroundColor Yellow -BackgroundColor Black
+        }
+    }
+    # Get-InstalledModule   # Shows only the Modules installed by PowerShellGet.
+    # Get-Module            # Gets the modules that have been imported or that can be imported into the current session.
+    elseif (Test-Path (Join-Path $Destination $Name)) {
+        # https://stackoverflow.com/questions/48424152/compare-system-version-in-powershell
+        # To use the repository, you either need PowerShell 5 or install the PowerShellGet module manually (which is
+        # available for download on powershellgallery.com) to get Find/Save/Install/Update/Remove-Script for Modules.
+        # https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/getting-latest-powershell-gallery-module-version
+        # https://stackoverflow.com/questions/52633919/powershell-sort-version-objects-descending
+        # "1.." -match "\b\d(\.\d{0,5}){0,3}\d$"
+        # https://techibee.com/powershell/check-if-a-string-contains-numbers-in-it-using-powershell/2842
+        $ModVerLocal = (Get-Module $Name -ListAvailable -EA Silent).Version
+        $ModVerOnline = Get-PublishedModuleVersion $Name
+        $ModVerLocal = "$(($ModVerLocal).Major).$(($ModVerLocal).Minor).$(($ModVerLocal).Build)"      # reuse the [version] variable as a [string]
+        $ModVerOnline = "$(($ModverOnline).Major).$(($ModverOnline).Minor).$(($ModverOnline).Build)"  # reuse the [version] variable as a [string]
+        # if ($ModuleVersionOnline -ne "") { $ModuleVersionOnline = "$($ModuleVersionOnline.split(".")[0]).$($ModuleVersionOnline.split(".")[1]).$($ModuleVersionOnline.split(".")[2])" }
+        echo "Local Version:  $ModVerLocal"
+        echo "Online Version: $ModVerOnline"
+        if ($ModVerLocal -eq $ModVerOnline) {
+            echo "$Name is installed and latest version, nothing to do!"
+        }
+        else {
+            if ([bool](Get-Module $Name) -eq $true) { Uninstall-Module $Name -Force -Verbose }
+            rm (Join-Path $Destination $Name) -Force -Recurse -Verbose
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination -Force -Verbose   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name) -Force -Verbose
+        }
+    }
+    else {   # Final case is no module is in network share, or local admin modules, or local user modules so now just install it
+        Get-PublishedModuleVersion $Name
+        Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination -Force -Verbose   # Install the module to the custom destination.
+        Import-Module -FullyQualifiedName (Join-Path $Destination $Name) -Force -Verbose
+    }
+
+    # Finally, output the Path to the newly installed module and the functions contained in it
+    (Get-Module $Name | select Path).Path
+    $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $out.trimstart(", ") ; ""
+    # return (Get-Module)
+}
+
+
 
 
 function Pull-Gist {
