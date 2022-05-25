@@ -439,6 +439,14 @@ function Enable-PSColor {   # Enable colour directory listings
     "Importing PSColor Module ..."
     if (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
     if (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
+}
+
+Set-Alias pscolor Enable-PSColor
+Set-Alias gcicolor Enable-PSColor
+Set-Alias dircolor Enable-PSColor
+Set-Alias lscolor Enable-PSColor
+
+function Test-Colors {
     ""
     "To view all Console Colors:   [System.Enum]::GetValues('ConsoleColor')"
     ""
@@ -448,17 +456,251 @@ function Enable-PSColor {   # Enable colour directory listings
     "Running 'ConsoleArt' script imported by 'BeginSystemConfig.ps1' to the default"
     "PowerShell script repository at:   C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Scripts"
     ""
+
+    # $HomeFix = $HOME
+    # $HomeLeaf = split-path $HOME -leaf   # Just get the correct username in spite of any changes to username (as on Edwin's system where username -ne foldername)
+    # if ($HomeFix -like "\\*") { $HomeFix = "C:\Users\$(Split-Path $HOME -Leaf)" }
+    # # The default Modules and Scripts paths are not created by default in Windows
+    # if (!(Test-Path $HomeFix)) { md $HomeFix -Force -EA silent | Out-Null }
+    # if (!(Test-Path "$HomeFix\Documents\WindowsPowerShell\Modules")) { md "$HomeFix\Documents\WindowsPowerShell\Modules" -Force -EA silent | Out-Null }
+    # if (!(Test-Path "$HomeFix\Documents\WindowsPowerShell\Scripts")) { md "$HomeFix\Documents\WindowsPowerShell\Scripts" -Force -EA silent | Out-Null }
+    # $CustomToolsPath = "$HomeFix\Documents\WindowsPowerShell\Modules\Custom-Tools\Custom-Tools.psm1"
+    # $UserModulesPath = "$HomeFix\Documents\WindowsPowerShell\Modules"   # $UserModulesPath = "C:\Users\$HomeLeaf\Documents\WindowsPowerShell\Modules"
+    # $UserScriptsPath = "$HomeFix\Documents\WindowsPowerShell\Scripts"
+    # $AdminModulesPath = "C:\Program Files\WindowsPowerShell\Modules"
+
+    function Download-Script ($url) {
+        $FileName = ($url -split "/")[-1]   # Could also use:  $url -split "/" | select -last 1   # 'hi there, how are you' -split '\s+' | select -last 1
+        $OutPath = Join-Path $UserScriptsPath $FileName 
+        Write-Host "Downloading  $FileName to $OutPath ..."
+        try { (New-Object System.Net.WebClient).DownloadString($url) | Out-File $OutPath }
+        catch { "Could not download $FileName ..." }
+    }
+
+    Download-Script 'https://gist.github.com/shanenin/f164c483db513b88ce91/raw'
+    if (Test-Path "$UserScriptsPath\raw") { Move-Item "$UserScriptsPath\raw" "$UserScriptsPath\ConsoleArt.ps1" -Force }
+
+    echo $UserScriptsPath
+    echo "Run ConsoleArt script showing a face drawn in the console and a staggered text...`n`n"
     ConsoleArt
+
     foreach($color1 in (0..15)) {
         Write-Host "    " -NoNewline
         foreach($color2 in (0..15)) { Write-Host -ForegroundColor ([ConsoleColor]$color1) -BackgroundColor ([ConsoleColor]$color2) -Object "X" -NoNewline } ; ""
     }
-}
 
-Set-Alias pscolor Enable-PSColor
-Set-Alias gcicolor Enable-PSColor
-Set-Alias dircolor Enable-PSColor
-Set-Alias lscolor Enable-PSColor
+    $colors = [enum]::GetValues([System.ConsoleColor])
+    Foreach ($bgcolor in $colors){
+        Foreach ($fgcolor in $colors) {
+            Write-Host "$fgcolor|"  -ForegroundColor $fgcolor -BackgroundColor $bgcolor -NoNewLine
+        }
+        Write-Host " on $bgcolor"
+    }
+
+    # $host.ui.rawui.ForegroundColor = <ConsoleColor>
+    # $host.ui.rawui.BackgroundColor = <ConsoleColor>
+    # $Host.PrivateData.ErrorForegroundColor = <ConsoleColor>
+    # $Host.PrivateData.ErrorBackgroundColor = <ConsoleColor>
+    # $Host.PrivateData.WarningForegroundColor = <ConsoleColor>
+    # $Host.PrivateData.WarningBackgroundColor = <ConsoleColor>
+    # $Host.PrivateData.DebugForegroundColor = <ConsoleColor>
+    # $Host.PrivateData.DebugBackgroundColor = <ConsoleColor>
+    # $Host.PrivateData.VerboseForegroundColor = <ConsoleColor>
+    # $Host.PrivateData.VerboseBackgroundColor = <ConsoleColor>
+    # $Host.PrivateData.ProgressForegroundColor = <ConsoleColor>
+    # $Host.PrivateData.ProgressBackgroundColor = <ConsoleColor>
+
+    # https://www.delftstack.com/howto/powershell/change-colors-in-powershell/
+    # $host.PrivateData.ErrorBackgroundColor = "White"
+
+    # https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/using-colors-in-powershell-console
+    
+    # https://www.commandline.ninja/easily-display-powershell-console-colors/
+    $List = [enum]::GetValues([System.ConsoleColor]) 
+    
+    ForEach ($Color in $List){
+        Write-Host "      $Color" -ForegroundColor $Color -NonewLine
+        Write-Host "" 
+        
+    } #end foreground color ForEach loop
+
+    ForEach ($Color in $List){
+        Write-Host "                   " -backgroundColor $Color -noNewLine
+        Write-Host "   $Color"
+                
+    } #end background color ForEach loop
+
+    # https://stackoverflow.com/questions/64203354/set-the-text-color-in-powershell
+    # https://stackoverflow.com/questions/36116326/programmatically-change-powershells-16-default-console-colours
+    # https://github.com/lukesampson/concfg
+    # https://stackoverflow.com/questions/70010554/changing-verbose-colors-in-powershell-7-2
+    # https://stackoverflow.com/questions/51001708/background-color-and-console-text-color
+
+    # https://stackoverflow.com/questions/16280402/setting-powershell-colors-with-hex-values-in-profile-script
+    # cd hkcu:/console
+    # $0 = '%systemroot%_system32_windowspowershell_v1.0_powershell.exe'
+    # ni $0 -f
+    # sp $0 ColorTable00 0x00562401
+    # sp $0 ColorTable07 0x00f0edee
+    
+    # https://jdhitsolutions.com/blog/powershell/7753/powershell-color-combos/
+        
+    # https://4sysops.com/wiki/change-powershell-console-syntax-highlighting-colors-of-psreadline/
+    # Get-PSReadlineOption  # list all.  (alias: just 'psreadlineoption')
+    # Set-PSReadLineOption -Colors @{ "Command"="White" }
+    # Set-PSReadLineOption -Colors @{ "Operator"="DarkBlue" }
+    # Set-PSReadLineOption -Colors @{ "String"="Yellow" }
+    # Set-PSReadLineOption -Colors @{ "Parameter"="Blue" }
+    # Set-PSReadLineOption -Colors @{ "Comment"="Gray" }
+    # # which syntax I found here:
+    # get-help Set-PSReadLineOption -examples
+    # Get-PSReadLineOption | out-string -stream | sls "char"
+    # [System.Enum]::getvalues([System.ConsoleColor])
+
+    # I have used all these, many are most likely duplicate colors, but they all work
+    # $Colors = @()
+    # 
+    # $Colors += “AliceBlue”
+    # $Colors += “AntiqueWhite”
+    # $Colors += “Aqua”
+    # $Colors += “Aquamarine”
+    # $Colors += “Azure”
+    # $Colors += “Beige”
+    # $Colors += “Bisque”
+    # $Colors += “Black”
+    # $Colors += “BlanchedAlmond”
+    # $Colors += “Blue”
+    # $Colors += “BlueViolet”
+    # $Colors += “Brown”
+    # $Colors += “BurlyWood”
+    # $Colors += “CadetBlue”
+    # $Colors += “Chartreuse”
+    # $Colors += “Chocolate”
+    # $Colors += “Coral”
+    # $Colors += “CornflowerBlue”
+    # $Colors += “Cornsilk”
+    # $Colors += “Crimson”
+    # $Colors += “Cyan”
+    # $Colors += “DarkBlue”
+    # $Colors += “DarkCyan”
+    # $Colors += “DarkGoldenrod”
+    # $Colors += “DarkGray”
+    # $Colors += “DarkGreen”
+    # $Colors += “DarkKhaki”
+    # $Colors += “DarkMagenta”
+    # $Colors += “DarkOliveGreen”
+    # $Colors += “DarkOrange”
+    # $Colors += “DarkOrchid”
+    # $Colors += “DarkRed”
+    # $Colors += “DarkSalmon”
+    # $Colors += “DarkSeaGreen”
+    # $Colors += “DarkSlateBlue”
+    # $Colors += “DarkSlateGray”
+    # $Colors += “DarkTurquoise”
+    # $Colors += “DarkViolet”
+    # $Colors += “DeepPink”
+    # $Colors += “DeepSkyBlue”
+    # $Colors += “DimGray”
+    # $Colors += “DodgerBlue”
+    # $Colors += “Firebrick”
+    # $Colors += “FloralWhite”
+    # $Colors += “ForestGreen”
+    # $Colors += “Fuchsia”
+    # $Colors += “Gainsboro”
+    # $Colors += “GhostWhite”
+    # $Colors += “Gold”
+    # $Colors += “Goldenrod”
+    # $Colors += “Gray”
+    # $Colors += “Green”
+    # $Colors += “GreenYellow”
+    # $Colors += “Honeydew”
+    # $Colors += “HotPink”
+    # $Colors += “IndianRed”
+    # $Colors += “Indigo”
+    # $Colors += “Ivory”
+    # $Colors += “Khaki”
+    # $Colors += “Lavender”
+    # $Colors += “LavenderBlush”
+    # $Colors += “LawnGreen”
+    # $Colors += “LemonChiffon”
+    # $Colors += “LightBlue”
+    # $Colors += “LightCoral”
+    # $Colors += “LightCyan”
+    # $Colors += “LightGoldenrodYellow”
+    # $Colors += “LightGray”
+    # $Colors += “LightGreen”
+    # $Colors += “LightPink”
+    # $Colors += “LightSalmon”
+    # $Colors += “LightSeaGreen”
+    # $Colors += “LightSkyBlue”
+    # $Colors += “LightSlateGray”
+    # $Colors += “LightSteelBlue”
+    # $Colors += “LightYellow”
+    # $Colors += “Lime”
+    # $Colors += “LimeGreen”
+    # $Colors += “Linen”
+    # $Colors += “Magenta”
+    # $Colors += “Maroon”
+    # $Colors += “MediumAquamarine”
+    # $Colors += “MediumBlue”
+    # $Colors += “MediumOrchid”
+    # $Colors += “MediumPurple”
+    # $Colors += “MediumSeaGreen”
+    # $Colors += “MediumSlateBlue”
+    # $Colors += “MediumSpringGreen”
+    # $Colors += “MediumTurquoise”
+    # $Colors += “MediumVioletRed”
+    # $Colors += “MidnightBlue”
+    # $Colors += “MintCream”
+    # $Colors += “MistyRose”
+    # $Colors += “Moccasin”
+    # $Colors += “NavajoWhite”
+    # $Colors += “Navy”
+    # $Colors += “OldLace”
+    # $Colors += “Olive”
+    # $Colors += “OliveDrab”
+    # $Colors += “Orange”
+    # $Colors += “OrangeRed”
+    # $Colors += “Orchid”
+    # $Colors += “PaleGoldenrod”
+    # $Colors += “PaleGreen”
+    # $Colors += “PaleTurquoise”
+    # $Colors += “PaleVioletRed”
+    # $Colors += “PapayaWhip”
+    # $Colors += “PeachPuff”
+    # $Colors += “Peru”
+    # $Colors += “Pink”
+    # $Colors += “Plum”
+    # $Colors += “PowderBlue”
+    # $Colors += “Purple”
+    # $Colors += “Red”
+    # $Colors += “RosyBrown”
+    # $Colors += “RoyalBlue”
+    # $Colors += “SaddleBrown”
+    # $Colors += “Salmon”
+    # $Colors += “SandyBrown”
+    # $Colors += “SeaGreen”
+    # $Colors += “SeaShell”
+    # $Colors += “Sienna”
+    # $Colors += “Silver”
+    # $Colors += “SkyBlue”
+    # $Colors += “SlateBlue”
+    # $Colors += “SlateGray”
+    # $Colors += “Snow”
+    # $Colors += “SpringGreen”
+    # $Colors += “SteelBlue”
+    # $Colors += “Tan”
+    # $Colors += “Teal”
+    # $Colors += “Thistle”
+    # $Colors += “Tomato”
+    # $Colors += “Turquoise”
+    # $Colors += “Violet”
+    # $Colors += “Wheat”
+    # $Colors += “White”
+    # $Colors += “WhiteSmoke”
+    # $Colors += “Yellow”
+    # $Colors += “YellowGreen”
+}
 
 function Enable-DirFriendlySizes {
     # After running this, dir/ls/gci will show friendly sizes (but also sortable etc)
@@ -1535,6 +1777,124 @@ function Help-PowershellConsole {
     # Disable UAC (don't do this, bad idea)
     # New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\system -Name EnableLUA -PropertyType DWord -Value 0 -Force
     # Restart-Computer
+}
+
+
+
+function Help-AsciiArt {
+
+@'
+
+https://stackoverflow.com/questions/35022078/how-do-i-output-ascii-art-to-console
+
+# Only works on PS 5.1, not 7.2.4
+$Host.UI.RawUI.WindowTitle = "Windows Powershell " + $Host.Version;
+
+# Emoji's only display in a Terminal that supports them like Windows Terminal
+Invoke-RestMethod -Uri http://wttr.in/Amsterdam?format=2 -UseBasicParsing -DisableKeepAlive
+
+# Very good, implement this! The Lonely Administrator
+https://jdhitsolutions.com/blog/powershell/8163/friday-fun-powershell-weather-widget/
+https://jdhitsolutions.com/blog/powershell-tips-tricks-and-advice/
+https://gist.github.com/jdhitsolutions/f2fb0184c2dbab107f2416fb775d462b
+
+# Also very good, use this!
+http://vcloud-lab.com/entries/powershell/powershell-trick-convert-text-to-ascii-art
+https://github.com/kunaludapi/Powershell-trick-Convert-text-to-ASCII-Art
+http://vcloud-lab.com/files/documents/Convertto-TextASCIIArt.ps1
+
+# Write-ASCII function
+https://www.powershelladmin.com/wiki/Ascii_art_characters_powershell_script.php
+
+Write-Host -ForegroundColor DarkYellow "                       _oo0oo_"
+Write-Host -ForegroundColor DarkYellow "                      o8888888o"
+Write-Host -ForegroundColor DarkYellow "                      88`" . `"88"
+Write-Host -ForegroundColor DarkYellow "                      (| -_- |)"
+Write-Host -ForegroundColor DarkYellow "                      0\  =  /0"
+Write-Host -ForegroundColor DarkYellow "                    ___/`----'\___"
+Write-Host -ForegroundColor DarkYellow "                  .' \\|     |// '."
+Write-Host -ForegroundColor DarkYellow "                 / \\|||  :  |||// \"
+Write-Host -ForegroundColor DarkYellow "                / _||||| -:- |||||- \"
+Write-Host -ForegroundColor DarkYellow "               |   | \\\  -  /// |   |"
+Write-Host -ForegroundColor DarkYellow "               | \_|  ''\---/''  |_/ |"
+Write-Host -ForegroundColor DarkYellow "               \  .-\__  '-'  ___/-. /"
+Write-Host -ForegroundColor DarkYellow "             ___'. .'  /--.--\  `. .'___"
+Write-Host -ForegroundColor DarkYellow "          .`"`" '<  `.___\_<|>_/___.' >' `"`"."
+Write-Host -ForegroundColor DarkYellow "         | | :  `- \`.;`\ _ /`;.`/ - ` : | |"
+Write-Host -ForegroundColor DarkYellow "         \  \ `_.   \_ __\ /__ _/   .-` /  /"
+Write-Host -ForegroundColor DarkYellow "     =====`-.____`.___ \_____/___.-`___.-'====="
+Write-Host -ForegroundColor DarkYellow "                       `=---='"
+
+function Get-Funky{
+    param([string]$Text)
+
+    # Use a random colour for each character
+    $Text.ToCharArray() | ForEach-Object{
+        switch -Regex ($_){
+            # Ignore new line characters
+            "`r"{
+                break
+            }
+            # Start a new line
+            "`n"{
+                Write-Host " ";break
+            }
+            # Use random colours for displaying this non-space character
+            "[^ ]"{
+                # Splat the colours to write-host
+                $writeHostOptions = @{
+                    ForegroundColor = ([system.enum]::GetValues([system.consolecolor])) | get-random
+                    # BackgroundColor = ([system.enum]::GetValues([system.consolecolor])) | get-random
+                    NoNewLine = $true
+                }
+                Write-Host $_ @writeHostOptions
+                break
+            }
+            " "{Write-Host " " -NoNewline}
+
+        } 
+    }
+}
+
+$art = " .:::.   .:::.`n:::::::.:::::::`n:::::::::::::::
+':::::::::::::'`n  ':::::::::'`n    ':::::'`n      ':'"
+Get-Funky $art 
+
+# https://jdhitsolutions.com/blog/powershell/7278/friday-fun-powershell-ascii-art/
+$t = @"
+  _____                       _____ _          _ _ 
+ |  __ \                     / ____| |        | | |
+ | |__) |____      _____ _ __ (___ | |__   ___| | |
+ |  ___/ _ \ \ /\ / / _ \ '__\___ \| '_ \ / _ \ | |
+ | |  | (_) \ V  V /  __/ |  ____) | | | |  __/ | |
+ |_|   \___/ \_/\_/ \___|_| |_____/|_| |_|\___|_|_|
+                                                   
+"@
+
+for ($i=0;$i -lt $t.length;$i++) {
+    if ($i%2) {
+        $c = "red"
+    }
+    elseif ($i%5) {
+        $c = "yellow"
+    }
+    elseif ($i%7) {
+        $c = "green"
+    }
+    else {
+        $c = "white"
+    }
+    write-host $t[$i] -NoNewline -ForegroundColor $c
+}
+
+# Also note the Figlet (and dependency Pansies) modules
+Uses standard figlet fonts http://www.figlet.org/examples.html
+Write-Figlet [-Message] <String> [[-Font] <String>] [[-LayoutRule] {FullSize | Fitting | Smushing | Custom}] [[-ColorChars] <String>] [[-Foreground] <RgbColor[]>]
+    [[-Background] <RgbColor[]>] [[-Colorspace] <String>] [<CommonParameters>]
+def Pansies
+Get-ColorWheel, Get-Complement, Get-Gradient, New-Hyperlink, New-Text, Write-Host
+
+'@ | more
 }
 
 function Help-WindowsTools {

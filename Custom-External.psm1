@@ -1,19 +1,22 @@
+####################
+#
 # Custom-External.psm1
-# Module containing various dynamically loaded tools and techniques
-# from the internet.
+#
+####################
+
+# This function collection are onlyine only, so keeping them separate from the main Custom-Tools.
+# i.e. The below dynamically load on demand and will mimic the switches in those functions.
+# However, man <function-name> will not work, so use  <function-name> -? to see the switches
+
 # Only use older/stable/reliable repositories in here as there is a small danger associated
 # with loading a script that has been compromised. However, the repositories below are all 
 # very stable.
 
+# Ideally, should also have a way to download the script (into the default 'Scripts' folder)
 
-# https://github.com/janikvonrotz/awesome-powershell
-# Awesome PowerShell Awesome Quality Assurance
+# https://github.com/janikvonrotz/awesome-powershell   # Awesome PowerShell Awesome Quality Assurance
 # A curated list of delightful PowerShell packages and resources.
-# PowerShell is a cross-platform (Windows, Linux, and macOS) automation and configuration tool
-# that is optimized for dealing with structured data (e.g. JSON, CSV, XML, etc.), REST APIs,
-# and object models. It includes a command-line shell and an associated scripting language.
-
-# Very useful repositories to look at:
+# Some useful repositories to get functions from:
 # https://github.com/proxb?tab=repositories
 #    https://github.com/proxb/PowerShellModulesCentral
 #    https://github.com/proxb/PowerShell
@@ -28,6 +31,82 @@
 # DeCrapifier: https://community.spiceworks.com/scripts/show/4378-windows-10-decrapifier-18xx-19xx-2xxx
 # DeBloater:   https://freetimetech.com/windows-10-clean-up-debloat-tool-by-ftt/
 # https://github.com/eccko/TrashEraser-Debloat-Windows-10  
+
+function Test-ConnectionAsync {
+    # https://github.com/proxb/AsyncFunctions
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Show-WeatherSummary {
+    # https://github.com/proxb/AsyncFunctions
+    $toImport = (irm "https://gist.githubusercontent.com/jdhitsolutions/f2fb0184c2dbab107f2416fb775d462b/raw/fd459382becdf1a631b0272f7aba83ae3fce6b1f/Show-WeatherSummary.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Ping-Subnet {
+    # https://github.com/proxb/AsyncFunctions
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Get-DNSHostEntryAsync {
+    # https://github.com/proxb/AsyncFunctions
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Get-DNSHostEntryAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Test-Port {
+    # https://github.com/proxb/PowerShell_Scripts
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Test-Port.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Get-TCPResponse {
+    # https://github.com/proxb/PowerShell_Scripts
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Get-TCPResponse.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Invoke-RegExHelper {
+    # https://github.com/proxb/PowerShell_Scripts
+    $toImport = (irm "https://raw.githubusercontent.com/proxb/RegExHelper/master/Invoke-RegExHelper.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function Enable-PinnedItemsModule {
+    # https://github.com/proxb/PinnedItem
+    # Can only run as Admin
+    Install-Module -Name PinnedItem
+    # Install-Module -Name PinnedItem   # Dealing with Start Menu and Taskbar Pinned Items
+    # Get-PinnedItem
+    # New-PinnedItem -TargetPath "C:\Program Files (x86)\Internet Explorer\iexplore.exe" -Type TaskBar
+    # $TargetPath = 'PowerShell.exe'
+    # $ShortCutPath = 'WinDbg.lnk'
+    # $Argument = "-ExecutionPolicy Bypass -NoProfile -NoLogo -Command `"& 'C:\users\proxb\desktop\Windbg.exe'`""
+    # $Icon = 'C:\users\proxb\desktop\Windbg.exe'
+    # New-PinnedItem -TargetPath $TargetPath -ShortCutPath $ShortcutPath -Argument $Argument -Type TaskBar -IconLocation $Icon
+    # Get-PinnedItem -Type StartMenu | Where {$_.Name -eq 'Snipping Tool'} | Remove-PinnedItem 
+}
+
+function Install-ChrisTitusTools {
+    # https://christitus.com/debloat-windows-10-2020/
+    . iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JJ8R4'))
+}
+
+function RickASCII {
+    # Rick Astley
+    iex (New-Object Net.WebClient).DownloadString("http://bit.ly/e0Mw9w")
+}
+
+
 
 # function Enable-OnlineFunction {
 # 
@@ -93,70 +172,3 @@
 
 # https://stackoverflow.com/questions/72069554/powershell-auto-load-functions-from-internet-on-demand/72132818#72132818
 
-
-function Test-ConnectionAsync {
-    # https://github.com/proxb/AsyncFunctions
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Ping-Subnet {
-    # https://github.com/proxb/AsyncFunctions
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Get-DNSHostEntryAsync {
-    # https://github.com/proxb/AsyncFunctions
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Get-DNSHostEntryAsync.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Test-Port {
-    # https://github.com/proxb/PowerShell_Scripts
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Test-Port.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Get-TCPResponse {
-    # https://github.com/proxb/PowerShell_Scripts
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Get-TCPResponse.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Invoke-RegExHelper {
-    # https://github.com/proxb/PowerShell_Scripts
-    $toImport = (irm "https://raw.githubusercontent.com/proxb/RegExHelper/master/Invoke-RegExHelper.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
-    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
-    $MyInvocation.Line | iex
-}
-
-function Enable-PinnedItemsModule {
-    # https://github.com/proxb/PinnedItem
-    # Can only run as Admin
-    Install-Module -Name PinnedItem
-    # Install-Module -Name PinnedItem   # Dealing with Start Menu and Taskbar Pinned Items
-    # Get-PinnedItem
-    # New-PinnedItem -TargetPath "C:\Program Files (x86)\Internet Explorer\iexplore.exe" -Type TaskBar
-    # $TargetPath = 'PowerShell.exe'
-    # $ShortCutPath = 'WinDbg.lnk'
-    # $Argument = "-ExecutionPolicy Bypass -NoProfile -NoLogo -Command `"& 'C:\users\proxb\desktop\Windbg.exe'`""
-    # $Icon = 'C:\users\proxb\desktop\Windbg.exe'
-    # New-PinnedItem -TargetPath $TargetPath -ShortCutPath $ShortcutPath -Argument $Argument -Type TaskBar -IconLocation $Icon
-    # Get-PinnedItem -Type StartMenu | Where {$_.Name -eq 'Snipping Tool'} | Remove-PinnedItem 
-}
-
-function Install-ChrisTitusTools {
-    # https://christitus.com/debloat-windows-10-2020/
-    . iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JJ8R4'))
-}
-
-function RickASCII {
-    # Rick Astley
-    iex (New-Object Net.WebClient).DownloadString("http://bit.ly/e0Mw9w")
-}
