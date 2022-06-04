@@ -2396,10 +2396,15 @@ Techniques for timing scripts and operations (suppress output, show only the tim
 (Measure-Command { **command1; command2; etc** }).TotalSeconds
 
 Pipe the commands to Out-Default to also show the output
-(Measure-Command { **command1; command2; etc** | Out-Default }).TotalSeconds
+(Measure-Command { ls | Out-Default }).TotalSeconds
+
+$StartMs = (Get-Date).MilliSeconds
+0..1000 | ForEach-Object { $i++ }
+$EndMs = (Get-Date).MilliSeconds
+Write-Host "This Script took $($EndMs - $StartMs) milliseconds to run"
 
 https://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
-Time function:   https://gist.github.com/jpoehls/2206444
+Measure-Command2 / Time function:   https://gist.github.com/jpoehls/2206444
 
 Count nuber of files with a filter and time the execution
 [Decimal]$Timing = ( Measure-Command {
@@ -2440,6 +2445,55 @@ $Collection 1..254
 '@
     echo $out | more
 }
+
+function Measure-Command2 ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch]$Silent, [Switch]$Long) {
+<#
+.SYNOPSIS
+  Runs the given script block and returns the execution duration.
+  Discovered on StackOverflow. http://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
+  
+.EXAMPLE
+  Measure-Command2 { ping -n 1 google.com }
+#>
+  $timings = @()
+  do {
+    $sw = New-Object Diagnostics.Stopwatch
+    if ($Silent) {
+      $sw.Start()
+      $null = & $Expression
+      $sw.Stop()
+      Write-Host "." -NoNewLine
+    }
+    else {
+      $sw.Start()
+      & $Expression
+      $sw.Stop()
+    }
+    $timings += $sw.Elapsed
+    
+    $Samples--
+  }
+  while ($Samples -gt 0)
+  
+  Write-Host
+  
+  $stats = $timings | Measure-Object -Average -Minimum -Maximum -Property Ticks
+  
+  # Print the full timespan if the $Long switch was given.
+  if ($Long) {  
+    Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).ToString())"
+    Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).ToString())"
+    Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).ToString())"
+  }
+  else {
+    # Otherwise just print the milliseconds which is easier to read.
+    Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).TotalMilliseconds)ms"
+    Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).TotalMilliseconds)ms"
+    Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).TotalMilliseconds)ms"
+  }
+}
+
+Set-Alias time Measure-Command2
 
 function Help-PowershellSetup {
     $out = @'
