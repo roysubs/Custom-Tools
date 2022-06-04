@@ -2392,8 +2392,41 @@ echo $out | more
 function Help-Timers {
     $out = @'
 
+Techniques for timing scripts and operations (suppress output, show only the timing)
+(Measure-Command { **command1; command2; etc** }).TotalSeconds
+
+Pipe the commands to Out-Default to also show the output
+(Measure-Command { **command1; command2; etc** | Out-Default }).TotalSeconds
+
+https://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
+Time function:   https://gist.github.com/jpoehls/2206444
+
+Count nuber of files with a filter and time the execution
+[Decimal]$Timing = ( Measure-Command {
+    $Result = Get-ChildItem $env:windir\System32 -Filter *.dll -Recurse -EA SilentlyContinue
+} ).TotalMilliseconds
+$Timing =[math]::round($Timing)
+Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+$Timing = (Measure-Command {
+    $Result = Get-ChildItem $env:windir\System32 -Include *.dll -Recurse -EA SilentlyContinue
+} ).TotalMilliseconds
+$Timing =[math]::round($Timing)
+Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+$StartTime = Get-Date
+Start-Sleep -Seconds 5
+$RunTime = New-TimeSpan -Start $StartTime -End (Get-Date)
+"Execution time was {0} hours, {1} minutes, {2} seconds and {3} milliseconds." -f $RunTime.Hours,  $RunTime.Minutes,  $RunTime.Seconds,  $RunTime.Milliseconds
+
+Using the .Net StopWatch class:
+$sw = [Diagnostics.Stopwatch]::StartNew()
+ls
+$sw.Stop()
+$sw.Elapsed.TotalSeconds
+
+Demonstrating speed benefit of the ForEach -Parallel option
 $Collection = 1..10
-# PowerShell 2+:
 (Measure-Command { $Collection | ForEach-Object { Write-Host $_ }}).TotalMilliseconds                     #     4.8004 milliseconds
 (Measure-Command { $Collection | ForEach-Object { Sleep 1; Write-Host $_ }}).TotalMilliseconds            # 10008.0906 milliseconds
 # PowerShell 6+ only:
@@ -3246,37 +3279,91 @@ function Help-PowerShellMagazineQuick {
     Invoke-Item -Path $destination
 }
 
+function Help-Gci-FilterIncludeExclude {}   # This is just for all shitty issues around Include / Exclude
+# Get-Command | Where { $_.parameters.keys -Contains "Filter" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Include" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Exclude" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Filter"}
+# Get-Command | Where { $_.parameters.keys -Contains "Include"}
+# Get-Command | Where { $_.parameters.keys -Contains "Exclude"}
+# ONE DISADVANTAGE OF -FILTER
+# You can only sift using one value with -Filter, whereas  -Include can accept multiple values, for example ".dll, *.exe"
+# https://www.computerperformance.co.uk/powershell/file-gci-filter/
+
+# Good explanation of the mess by Alex K. Angelopoulos from 2013 here: https://social.technet.microsoft.com/Forums/en-US/62c85fc4-1d44-4c3a-82ea-d49109423471/inconsistency-between-getchilditem-include-and-exclude-parameters?forum=winserverpowershell
+# A more up to date explanation from mklement0 (2016, but updated May 2022): https://stackoverflow.com/questions/38269209/using-get-childitem-exclude-or-include-returns-nothing/38308796#38308796
+# The mklement0 answer explains how some of the issues have been fixed in PS 7.x but will never be fixed in 5.x
+# 
+### -Filter is the most useful parameter to refine output of PowerShell cmdlets (much better than -Include or -Exclude).
+# Get-ChildItem $Env:windir\System32 -Filter *.dll
+# gci $Env:windir\System32\*.dll   # This works just as well
+# # Always choose -Filter rather than -Include.  Filtering is faster, and the results are more predictable.
+# [Decimal]$Timing = ( Measure-Command {
+#     $Result = Get-ChildItem $env:windir\System32 -Filter *.dll -Recurse -EA SilentlyContinue
+# } ).TotalMilliseconds
+# $Timing =[math]::round($Timing)
+# Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+# 
+# $Timing = (Measure-Command {
+#     $Result = Get-ChildItem $env:windir\System32 -Include *.dll -Recurse -EA SilentlyContinue
+# } ).TotalMilliseconds
+# $Timing =[math]::round($Timing)
+# Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+# Get-ChildItem had a complex history with compromises between usability and standards compliance.
+# The original design was as a tool for enumerating items in a namespace; similar to but not equivalent to dir and ls.
+# The syntax and usage was going to conform to standard PowerShell (Monad at the time) guidelines. i.e. the Path
+# parameter would have truly just meant Path; it would not have been usable as a combination path specification and
+# result filter, which is what it is now.
+# dir c:\temp     # return children of the container c:\temp.
+# dir c:\temp\*   # return children of all containers inside c:\temp. With (2), you would never get c:\tmp\a.txt returned, since a.txt is not a container.
+# There are reasons that this was a good idea. The parameter names and filtering behavior was consistent with the evolving PowerShell design standards, and best of all the tool would be straightforward to stub in for use by namespace providers consistently.
+# However, this produced a lot of heated discussion. A rational, orthogonal tool would not allow the convenience we get with the dir command for doing things like this:
+# dir c:\tmp\a*.txt  # Possibly more important was the "crash" factor.  It's so instinctive for admins to do things like (3) that our fingers do the typing when we list directories, and the instant failure or worse, weird, dissonant output we would get with a more pure Path parameter is exactly like slamming into a brick wall.
+
+# From the documentation: -Include <string[]> Retrieves only the specified items. The value of this
+# parameter qualifies the Path parameter. Enter a path element or pattern, such as "*.txt". Wildcards
+# are permitted. The Include parameter is effective only when the command includes the Recurse parameter
+# or the path leads to the contents of a directory, such as C:\Windows\*, where the wildcard character
+# specifies the contents of the C:\Windows directory.
+# Note: only effective with -Recurse, or when C:\Path\* leads to the contexts of a directory (!!)
+
+# Get-File
+
 function Help-Dir {
     $out = @'
 
-A collection of very useful Get-ChildItem / gci / dir / ls tips:
+Note: Try to not use 'ls' alias as it conflicts with PowerShell on Linux, Get-ChildItem / gci / dir  are fine
+Mode (Attributes) column: l (link), d (directory), a (archive), r (read-only), h (hidden), s (system).
+# gci C:\0\*.txt -Directory [-ad] -Hidden [-ah] -ReadOnly [-ar] -System [-as]
+# gci C:\0\*.txt -adhrs -Recurse
 
 ### General:
 Mode (Attributes) column: l (link), d (directory), a (archive), r (read-only), h (hidden), s (system).
-dir C:\ -Name                    # Equivalent DOS:   dir C:\ /b
-dir C:\0\*.txt -Recurse -Force   # -Force will also show hidden files etc
-dir C:\0\*.txt -Recurse -Force -Include A*
-dir C:\0\*.txt -Recurse -Force -Exclude A*
-dir C:\0\ -Depth 1        # Works
-dir C:\0\*.txt -Depth 1   # Broken, not sure why
-dir C:\0\S* -Depth 2 -Dir # Just show directories starting with S to a depth of 2
-dir C:\0\*.txt -Recurse -Force -Filter "" update this ...
+gci C:\ -Name                    # Equivalent DOS:   dir C:\ /b
+gci C:\0\*.txt -Recurse -Force   # -Force will also show hidden files etc
+gci C:\0\*.txt -Recurse -Force -Include A*
+gci C:\0\*.txt -Recurse -Force -Exclude A*
+gci C:\0\ -Depth 1          # Works
+gci C:\0\*.txt -Depth 1     # Broken, not sure why
+gci C:\0\S* -Depth 2 -Dir   # Just show directories starting with S to a depth of 2
+gci C:\0\*.txt -Recurse -Force -Filter "" update this ...
 
 dir C:\0\*.txt -Attribute Archive, Compressed, Device, Directory, Encrypted, Hidden, IntegrityStream, Normal, `
 NoScrubData, NotContentIndexed, Offline, ReadOnly, ReparsePoint, SparseFile, System, Temporary
-# dir C:\0\*.txt -Directory [-ad] -Hidden [-ah] -ReadOnly [-ar] -System [-as]
-# dir C:\0\*.txt -adhrs -Recurse
+gci C:\0\*.txt -Directory -Hidden -ReadOnly -System   # -ad -ah -ar -as
+gci C:\0\*.txt -adhrs -Recurse
 
 https://stackoverflow.com/questions/19091750/how-to-search-for-a-folder-with-powershell
 https://stackoverflow.com/questions/55029472/list-folders-at-or-below-a-given-depth-in-powershell
-ls C:\pr* *wind* -Recurse -Directory   
+gci C:\pr* *wind* -Recurse -Directory   
 
 ### Basic Dir with selection of items
 Get-ChildItem C:\ | Where-Object { $_.Name -Like '*pr*' }
-dir C:\ | ? Name -Like '*pr*'       # Demonstrates PSv3 shorthand not requiring "{ $.Name }"
-dir C:\*pr*
-dir C:\*pr* | ForEach-Object { Remove-Item -LiteralPath $_.Name }   # Use the full literal path to perform the deletion
-dir C:\*pr* | % { rm -Literal $_.Name }                             # Shorthand
+gci C:\ | ? Name -Like '*pr*'    # Demonstrates PSv3 shorthand instead of "{ $_.Name -Like 'xxx' }"
+gci C:\*pr*
+gci C:\*pr* | ForEach-Object { Remove-Item -LiteralPath $_.Name }   # Use the full literal path to perform the deletion
+gci C:\*pr* | % { rm -Literal $_.Name }                             # Shorthand
 
 ### Dir commands with -filter and -include
 A caveat: this command actually gets files like *.txt* (-Filter uses CMD wildcards). If this is not what you want then use -Include *.txt
@@ -3304,7 +3391,19 @@ forfiles /S /M *.jpeg /C "cmd /c rename @file @fname.jpg"
 # Just need to make sure to add the '*' wildcard to the end of the path (it leads to the contents of the directory).
 # But note that you can omit the '*' wildcard if you also specify -Recurse(!)
 Get-Childitem -Path C:\* -include *.log,*.txt,*.nfo
-dir C:\* -i *.log,*.txt,*.ndo
+dir C:\* -i *.log,*.txt,*.nfo
+
+### -Include and -Exclude are unintuitive and contain a bug in PowerShell 5.1 that will never be fixed
+https://stackoverflow.com/posts/38308796/revisions
+https://syntaxfix.com/question/18836/how-can-i-exclude-multiple-folders-using-get-childitem-exclude
+https://stackoverflow.com/questions/51666987/in-powershell-get-childitem-exclude-is-not-working-with-recurce-parameter
+It is better to avoid -Exclude complately and instead use the following to exclude items:
+gci -r -dir | ? fullname -notmatch 'dir1|dir2|dir3'   # Will exlucde folders dir1,dir2,dir3
+But note that this will find all folders first, then exclude the ones not to match, so is not great performance-wise
+(gci -recurse *.aspx,*.ascx).fullname -notmatch '\\obj\\|\\bin\\'   # \obj\ or \bin\   # remember that PowerShell is case-insensitive by default, so -inotmatch is not needed
+gci -path c:\ -filter temp.* -exclude temp.xml   # Returns no results
+gci -path c:\* -filter temp.* -exclude temp.xml  # Returns  all the temp.* files, except temp.xml, note the c:\* which causes this
+gci $source -Directory -recurse | ? {$_.fullname -NotMatch "\\\s*_"} | % { $_.fullname }   # "\\\s*_" is regex for \, any amount of whitespace, _ 
 
 ### DeDup, using 'Group-Object'
 $env:PSModulePath.Split(";") | gci -Directory | group Name | where Count -gt 1 | select Count,Name,@{ n = "ModulePath"; e = { $_.Group.Parent.FullName } }
@@ -5195,7 +5294,7 @@ function def {
         $cmd,
         [switch]$Examples
     )
-    # Previously fixed $cmd as [string]$cmd but this was wrong as cannot then handle arrays or anything else
+    # Previously declared $cmd as [string]$cmd but this was wrong as cannot then handle arrays or anything else
 
     function Write-Wrap {
         [CmdletBinding()]Param( [parameter(Mandatory=1, ValueFromPipeline=1, ValueFromPipelineByPropertyName=1)] [Object[]]$chunk )
@@ -5412,6 +5511,12 @@ function IfExistSkipCommand ($toCheck, $toRun) {
         Invoke-Expression $toRun
 
     }
+}
+
+function Install-PowershellCore {
+    Write-Host "Get latest PowerShell Core"
+    # PowerShell Core, get latest version
+    choco upgrade -y PowerShell-Core
 }
 
 function Install-Firefox {
@@ -6073,9 +6178,6 @@ function Install-ModuleFromPSGallery {
     $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $out.trimstart(", ") ; ""
     # return (Get-Module)
 }
-
-
-
 
 function Pull-Gist {
 
@@ -7205,6 +7307,136 @@ function Update-LastWriteTime ($file)
     else { New-Item -ItemType File $file }
 }
 Set-Alias -Name touch -Value Update-LastWriteTime
+
+function Install-ModuleToDirectory {
+    [CmdletBinding()] [OutputType('System.Management.Automation.PSModuleInfo')]
+    param(
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
+    )
+
+    if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on network share module path but need to be administrator and connected to VPN"
+            "to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    elseif (($Profile -like "\\*") -and (Test-Path (Join-Path $Profile $Name))) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on network share module path but need to be administrator and connected to VPN"
+            "to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    elseif (Test-Path (Join-Path $AdminModulePath $Name)) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on in Admin Modules folder: C:\Program Files\WindowsPowerShell\Modules."
+            "Need to be Admin to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    else {
+        Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+        Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+    }
+    $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $x.trimstart(", ") ; ""
+    # return (Get-Module)
+}
+
+# Install-ModuleToDirectory -Name 'XXX' -Destination 'E:\Modules'
+# try {
+#     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#     # If the module is already installed, use Update, otherwise use Install
+#     if ([bool](Get-Module $Name -ListAvailable)) {
+#          Update-Module $Name -Verbose -ErrorAction Stop 
+#     } else {
+#          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
+#     }
+# } catch {
+#     # But if something went wrong, just -Force it, hard.
+#     Install-Module $Name -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+# }
+
+
+# $ModuleNetShare = "$(Split-Path $ProfileNetShare)\Modules\$MyModule"
+# $ModuleCProfile = "C:\Users\$env:Username\Documents\WindowsPowerShell\Modules\$MyModule"
+# $ModuleNetShare
+# $ModuleCProfile
+
+#     $success = 0
+#     # if ($null -ne $(Test-Path $ModuleNetShare)) {
+#     # Only run this if $Profile is pointing at Net Share
+#     # Note that the uninstalls will fail unless connected to the VPN!
+#     if ((Test-Path $ModuleNetShare) -and ($Profile -like "\\*")) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             # First uninstall, then reinstall to get latest version, then move it to $Profile
+#             Uninstall-Module $MyModule -Force -Verbose
+#             Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!)
+#             Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#             Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#             Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#             $success = 1
+#         }
+#         else {
+#             "Module found on network share module path but need to be administrator and connected to VPN"
+#             "to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     if ((Test-Path "C:\Program Files\WindowsPowerShell\Modules\$MyModule") -and (Test-Administrator -eq $true)) {
+#         # This is if the module has been loaded into the Administrator folder.
+#         # This will move it to the user folder and update
+#         Uninstall-Module $MyModule -Force -Verbose
+#         Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!), so same situation as before
+#         Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#         Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#         Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#         $success = 1
+#     }
+#     else {
+#         "Module $MyModule found in 'C:\Program Files\WindowsPowerShell\Modules' but need to be administrator"
+#         "to correctly move Modules into the users module folder on C:\"
+#         pause
+#     }
+# 
+#     if ($success -eq 0) {
+#         try {
+#             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#             # If the module is already installed, use Update, otherwise use Install
+#             if ([bool](Get-Module $MyModule -ListAvailable)) {
+#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
+#             } else {
+#                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
+#             }
+#         } catch {
+#             # But if something went wrong, just -Force it, hard.
+#             Install-Module $MyModule -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+#         }
+#     }
+# }
 
 function Install-ProfileForceLocalForFasterLoading {
     # To get around the VPN console load time issue when opening PowerShell consoles while
@@ -8684,7 +8916,6 @@ function Invoke-Elevate {
 }
 Set-Alias sudo Invoke-Elevate
 Set-Alias elevate Invoke-Elevate
-
 function sudops { sudo powershell.exe }
 
 # No parameters but will use $args[0], $args[1]
@@ -8967,7 +9198,7 @@ Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
-    # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
+    # if ($x) { <Variable '$x' exists and is neither null nor contains an empty value> }
     # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
     if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
