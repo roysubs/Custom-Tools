@@ -1688,7 +1688,7 @@ function Help-ToolkitConfig {
     Write-Host "Chocolatey:" -ForegroundColor Green
     Write-Host "This is installed by default as a PowerShell tool very important for package management tasks."
     Write-Host "choco list -lo             # View locally installed packages."
-    Write-Host "choco search <string>      # Rind chocolatey packages."
+    Write-Host "choco search <string>      # Find chocolatey packages."
     Write-Host "choco info <packagename>   # To get detailed info on a chocolatey package."
     Write-Host "choco inst <packagename>   # To install a chocolatey package."
     Write-Host ""
