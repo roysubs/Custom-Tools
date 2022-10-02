@@ -1699,7 +1699,7 @@ function Help-ToolkitConfig {
     # Write-Host "point if this script was called from another console." -ForegroundColor White -BackgroundColor Red
     Write-Host ""
     Write-Host ""
-    try { screenfetch } catch { "ScreenFetch hit an error and could not load; possibly a hard disk is full, or exploded, or on fire.`n" }
+    try { & "$Home\Desktop\MySandbox\MyPrograms\winfetch.ps1" } catch { "WinFetch hit an error and could not load.`n" }
     # Write-Host "Final prompt in case this was called in a separate console (which will immediately close"
     # Write-Host "after you continue - in which case, make sure to check the above output if required)."
     # Write-Host "Press Enter to continue...:" ; cmd /c pause | out-null   # PowerShell v2 compatible version of 'Pause'
@@ -9767,6 +9767,7 @@ function Help-ToolkitCoreApps {
     "Selected lists of additional Chocolatey packages:"
     ""
     (cat $HomeFix\Documents\WindowsPowerShell\Modules\Custom-Tools\Custom-Tools.psm1 | sls "function Help-Choco" | sls '"function Help-Choco"' -NotMatch).Line -replace " {", "" -replace "function ", "   "
+    ""
 }
 
 function Help-WindowsTerminal {
@@ -10023,7 +10024,7 @@ function Install-7Zip {
     }
     else
     {
-        "No chocolatey 7-Zip+ package was found, will remove versions if present then reinstall`n"
+        "No chocolatey 7-Zip package was found, will remove versions if present then reinstall`n"
         # Remember, must use /S and not /s for silent uninstall.
         $command = @'
 cmd.exe /C "C:\Program Files (x86)\7-Zip\uninstall.exe" /S
