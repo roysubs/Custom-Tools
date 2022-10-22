@@ -67,6 +67,13 @@ function Test-Port {
     $MyInvocation.Line | iex
 }
 
+function IPv4PortScan {
+    # https://github.com/BornToBeRoot/PowerShell_IPv4PortScanner
+    $toImport = (irm "https://raw.githubusercontent.com/BornToBeRoot/PowerShell_IPv4PortScanner/main/Scripts/IPv4PortScan.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
 function Get-TCPResponse {
     # https://github.com/proxb/PowerShell_Scripts
     $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Get-TCPResponse.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")

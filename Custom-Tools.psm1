@@ -560,146 +560,146 @@ function Test-Colors {
     # I have used all these, many are most likely duplicate colors, but they all work
     # $Colors = @()
     # 
-    # $Colors += “AliceBlue”
-    # $Colors += “AntiqueWhite”
-    # $Colors += “Aqua”
-    # $Colors += “Aquamarine”
-    # $Colors += “Azure”
-    # $Colors += “Beige”
-    # $Colors += “Bisque”
-    # $Colors += “Black”
-    # $Colors += “BlanchedAlmond”
-    # $Colors += “Blue”
-    # $Colors += “BlueViolet”
-    # $Colors += “Brown”
-    # $Colors += “BurlyWood”
-    # $Colors += “CadetBlue”
-    # $Colors += “Chartreuse”
-    # $Colors += “Chocolate”
-    # $Colors += “Coral”
-    # $Colors += “CornflowerBlue”
-    # $Colors += “Cornsilk”
-    # $Colors += “Crimson”
-    # $Colors += “Cyan”
-    # $Colors += “DarkBlue”
-    # $Colors += “DarkCyan”
-    # $Colors += “DarkGoldenrod”
-    # $Colors += “DarkGray”
-    # $Colors += “DarkGreen”
-    # $Colors += “DarkKhaki”
-    # $Colors += “DarkMagenta”
-    # $Colors += “DarkOliveGreen”
-    # $Colors += “DarkOrange”
-    # $Colors += “DarkOrchid”
-    # $Colors += “DarkRed”
-    # $Colors += “DarkSalmon”
-    # $Colors += “DarkSeaGreen”
-    # $Colors += “DarkSlateBlue”
-    # $Colors += “DarkSlateGray”
-    # $Colors += “DarkTurquoise”
-    # $Colors += “DarkViolet”
-    # $Colors += “DeepPink”
-    # $Colors += “DeepSkyBlue”
-    # $Colors += “DimGray”
-    # $Colors += “DodgerBlue”
-    # $Colors += “Firebrick”
-    # $Colors += “FloralWhite”
-    # $Colors += “ForestGreen”
-    # $Colors += “Fuchsia”
-    # $Colors += “Gainsboro”
-    # $Colors += “GhostWhite”
-    # $Colors += “Gold”
-    # $Colors += “Goldenrod”
-    # $Colors += “Gray”
-    # $Colors += “Green”
-    # $Colors += “GreenYellow”
-    # $Colors += “Honeydew”
-    # $Colors += “HotPink”
-    # $Colors += “IndianRed”
-    # $Colors += “Indigo”
-    # $Colors += “Ivory”
-    # $Colors += “Khaki”
-    # $Colors += “Lavender”
-    # $Colors += “LavenderBlush”
-    # $Colors += “LawnGreen”
-    # $Colors += “LemonChiffon”
-    # $Colors += “LightBlue”
-    # $Colors += “LightCoral”
-    # $Colors += “LightCyan”
-    # $Colors += “LightGoldenrodYellow”
-    # $Colors += “LightGray”
-    # $Colors += “LightGreen”
-    # $Colors += “LightPink”
-    # $Colors += “LightSalmon”
-    # $Colors += “LightSeaGreen”
-    # $Colors += “LightSkyBlue”
-    # $Colors += “LightSlateGray”
-    # $Colors += “LightSteelBlue”
-    # $Colors += “LightYellow”
-    # $Colors += “Lime”
-    # $Colors += “LimeGreen”
-    # $Colors += “Linen”
-    # $Colors += “Magenta”
-    # $Colors += “Maroon”
-    # $Colors += “MediumAquamarine”
-    # $Colors += “MediumBlue”
-    # $Colors += “MediumOrchid”
-    # $Colors += “MediumPurple”
-    # $Colors += “MediumSeaGreen”
-    # $Colors += “MediumSlateBlue”
-    # $Colors += “MediumSpringGreen”
-    # $Colors += “MediumTurquoise”
-    # $Colors += “MediumVioletRed”
-    # $Colors += “MidnightBlue”
-    # $Colors += “MintCream”
-    # $Colors += “MistyRose”
-    # $Colors += “Moccasin”
-    # $Colors += “NavajoWhite”
-    # $Colors += “Navy”
-    # $Colors += “OldLace”
-    # $Colors += “Olive”
-    # $Colors += “OliveDrab”
-    # $Colors += “Orange”
-    # $Colors += “OrangeRed”
-    # $Colors += “Orchid”
-    # $Colors += “PaleGoldenrod”
-    # $Colors += “PaleGreen”
-    # $Colors += “PaleTurquoise”
-    # $Colors += “PaleVioletRed”
-    # $Colors += “PapayaWhip”
-    # $Colors += “PeachPuff”
-    # $Colors += “Peru”
-    # $Colors += “Pink”
-    # $Colors += “Plum”
-    # $Colors += “PowderBlue”
-    # $Colors += “Purple”
-    # $Colors += “Red”
-    # $Colors += “RosyBrown”
-    # $Colors += “RoyalBlue”
-    # $Colors += “SaddleBrown”
-    # $Colors += “Salmon”
-    # $Colors += “SandyBrown”
-    # $Colors += “SeaGreen”
-    # $Colors += “SeaShell”
-    # $Colors += “Sienna”
-    # $Colors += “Silver”
-    # $Colors += “SkyBlue”
-    # $Colors += “SlateBlue”
-    # $Colors += “SlateGray”
-    # $Colors += “Snow”
-    # $Colors += “SpringGreen”
-    # $Colors += “SteelBlue”
-    # $Colors += “Tan”
-    # $Colors += “Teal”
-    # $Colors += “Thistle”
-    # $Colors += “Tomato”
-    # $Colors += “Turquoise”
-    # $Colors += “Violet”
-    # $Colors += “Wheat”
-    # $Colors += “White”
-    # $Colors += “WhiteSmoke”
-    # $Colors += “Yellow”
-    # $Colors += “YellowGreen”
+    # $Colors += "AliceBlue"
+    # $Colors += "AntiqueWhite"
+    # $Colors += "Aqua"
+    # $Colors += "Aquamarine"
+    # $Colors += "Azure"
+    # $Colors += "Beige"
+    # $Colors += "Bisque"
+    # $Colors += "Black"
+    # $Colors += "BlanchedAlmond"
+    # $Colors += "Blue"
+    # $Colors += "BlueViolet"
+    # $Colors += "Brown"
+    # $Colors += "BurlyWood"
+    # $Colors += "CadetBlue"
+    # $Colors += "Chartreuse"
+    # $Colors += "Chocolate"
+    # $Colors += "Coral"
+    # $Colors += "CornflowerBlue"
+    # $Colors += "Cornsilk"
+    # $Colors += "Crimson"
+    # $Colors += "Cyan"
+    # $Colors += "DarkBlue"
+    # $Colors += "DarkCyan"
+    # $Colors += "DarkGoldenrod"
+    # $Colors += "DarkGray"
+    # $Colors += "DarkGreen"
+    # $Colors += "DarkKhaki"
+    # $Colors += "DarkMagenta"
+    # $Colors += "DarkOliveGreen"
+    # $Colors += "DarkOrange"
+    # $Colors += "DarkOrchid"
+    # $Colors += "DarkRed"
+    # $Colors += "DarkSalmon"
+    # $Colors += "DarkSeaGreen"
+    # $Colors += "DarkSlateBlue"
+    # $Colors += "DarkSlateGray"
+    # $Colors += "DarkTurquoise"
+    # $Colors += "DarkViolet"
+    # $Colors += "DeepPink"
+    # $Colors += "DeepSkyBlue"
+    # $Colors += "DimGray"
+    # $Colors += "DodgerBlue"
+    # $Colors += "Firebrick"
+    # $Colors += "FloralWhite"
+    # $Colors += "ForestGreen"
+    # $Colors += "Fuchsia"
+    # $Colors += "Gainsboro"
+    # $Colors += "GhostWhite"
+    # $Colors += "Gold"
+    # $Colors += "Goldenrod"
+    # $Colors += "Gray"
+    # $Colors += "Green"
+    # $Colors += "GreenYellow"
+    # $Colors += "Honeydew"
+    # $Colors += "HotPink"
+    # $Colors += "IndianRed"
+    # $Colors += "Indigo"
+    # $Colors += "Ivory"
+    # $Colors += "Khaki"
+    # $Colors += "Lavender"
+    # $Colors += "LavenderBlush"
+    # $Colors += "LawnGreen"
+    # $Colors += "LemonChiffon"
+    # $Colors += "LightBlue"
+    # $Colors += "LightCoral"
+    # $Colors += "LightCyan"
+    # $Colors += "LightGoldenrodYellow"
+    # $Colors += "LightGray"
+    # $Colors += "LightGreen"
+    # $Colors += "LightPink"
+    # $Colors += "LightSalmon"
+    # $Colors += "LightSeaGreen"
+    # $Colors += "LightSkyBlue"
+    # $Colors += "LightSlateGray"
+    # $Colors += "LightSteelBlue"
+    # $Colors += "LightYellow"
+    # $Colors += "Lime"
+    # $Colors += "LimeGreen"
+    # $Colors += "Linen"
+    # $Colors += "Magenta"
+    # $Colors += "Maroon"
+    # $Colors += "MediumAquamarine"
+    # $Colors += "MediumBlue"
+    # $Colors += "MediumOrchid"
+    # $Colors += "MediumPurple"
+    # $Colors += "MediumSeaGreen"
+    # $Colors += "MediumSlateBlue"
+    # $Colors += "MediumSpringGreen"
+    # $Colors += "MediumTurquoise"
+    # $Colors += "MediumVioletRed"
+    # $Colors += "MidnightBlue"
+    # $Colors += "MintCream"
+    # $Colors += "MistyRose"
+    # $Colors += "Moccasin"
+    # $Colors += "NavajoWhite"
+    # $Colors += "Navy"
+    # $Colors += "OldLace"
+    # $Colors += "Olive"
+    # $Colors += "OliveDrab"
+    # $Colors += "Orange"
+    # $Colors += "OrangeRed"
+    # $Colors += "Orchid"
+    # $Colors += "PaleGoldenrod"
+    # $Colors += "PaleGreen"
+    # $Colors += "PaleTurquoise"
+    # $Colors += "PaleVioletRed"
+    # $Colors += "PapayaWhip"
+    # $Colors += "PeachPuff"
+    # $Colors += "Peru"
+    # $Colors += "Pink"
+    # $Colors += "Plum"
+    # $Colors += "PowderBlue"
+    # $Colors += "Purple"
+    # $Colors += "Red"
+    # $Colors += "RosyBrown"
+    # $Colors += "RoyalBlue"
+    # $Colors += "SaddleBrown"
+    # $Colors += "Salmon"
+    # $Colors += "SandyBrown"
+    # $Colors += "SeaGreen"
+    # $Colors += "SeaShell"
+    # $Colors += "Sienna"
+    # $Colors += "Silver"
+    # $Colors += "SkyBlue"
+    # $Colors += "SlateBlue"
+    # $Colors += "SlateGray"
+    # $Colors += "Snow"
+    # $Colors += "SpringGreen"
+    # $Colors += "SteelBlue"
+    # $Colors += "Tan"
+    # $Colors += "Teal"
+    # $Colors += "Thistle"
+    # $Colors += "Tomato"
+    # $Colors += "Turquoise"
+    # $Colors += "Violet"
+    # $Colors += "Wheat"
+    # $Colors += "White"
+    # $Colors += "WhiteSmoke"
+    # $Colors += "Yellow"
+    # $Colors += "YellowGreen"
 }
 
 function Enable-DirFriendlySizes {
@@ -2024,10 +2024,10 @@ https://docs.microsoft.com/en-us/virtualization/windowscontainers/about/
 Dynamically generated Image
 At its core Windows Sandbox is a lightweight VM, but Sandbox key enhancement is ability to use the Windows 10 installed on your computer,
 instead of downloading a new VHD image as you would have to do with an ordinary virtual machine.
-The challenge is that some OS files can change. The solution is to construct what we refer to as “dynamic base image”: an OS image that
+The challenge is that some OS files can change. The solution is to construct what we refer to as "dynamic base image": an OS image that
 has clean copies of files that can change, but links to files that cannot change that are in the Windows image that already exists on the
 host. The majority of the files are links (immutable files) and that's why the small size (~100MB) for a full operating system. We call
-this instance the “base image” for Windows Sandbox, using Windows Container parlance.
+this instance the "base image" for Windows Sandbox, using Windows Container parlance.
 When Sandbox is not in use, the dynamic base image is compressed (~25MB). When installed the dynamic base package is only 100MB disk space.
 
 *** Main uses:
@@ -2307,7 +2307,7 @@ Finish with sudo apt upgrade
 Checking for a new Ubuntu release ... New release '19.10' available. ... Run 'do-release-upgrade' to upgrade to it.
     sudo do-release-upgrade      # Perform the upgrade to 19.10
 Sometimes, on Windows WSL, the upgrade couldn’t update the latest repo available for the upgraded system. Upon checking, the
-system will say there is no upgrade then manually add Ubuntu 19.10 “Eoan Ermine” official repo to our existing Disco Dingo.
+system will say there is no upgrade then manually add Ubuntu 19.10 "Eoan Ermine" official repo to our existing Disco Dingo.
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
 
@@ -4124,14 +4124,14 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     echo '[Environment]::GetEnvironmentVariable("Path")          # Show currently loaded path (i.e. combination of "Machine" + "User")'
     echo '[Environment]::GetEnvironmentVariable("Path", "User")  # Show "User" part only, change to "Machine" for System Path)'
     echo '[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\bin", "Machine")   # Add a path to "Machine" (can also use "User"), updates only current session'
+    echo 'rundll32 sysdm.cpl,EditEnvironmentVariables   # Open Environment Variables dialogue'
     ""
-    echo '[System] "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"' 
-    echo '[User]   "Registry::HKEY_CURRENT_USER\Environment"  /  "HKCU:\Environment'
+    echo '$RegistrySystemPath = "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"   # System PATH' 
+    echo '$RegistrySystemPath = "Registry::HKEY_CURRENT_USER\Environment"   # User PATH, also at "HKCU:\Environment"'
     echo '(Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path'
     echo '$PathArray = (Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path -Split ";" -Replace "\\+$", ""'
-    echo '$FoundPath = 0 ; foreach ($Path in $PathArray) { if ($Path -contains $PathToAdd ) { $FoundPath = 1 } }'
-    echo 'if ($FoundPath -eq 0) { $PathNew = $PathOld + ";" + $PathToAdd ; Set-ItemProperty -Path $RegistrySystemPath -Name Path -Value $PathNew }'
-    echo 'rundll32 sysdm.cpl,EditEnvironmentVariables   # Open Environment Variables dialogue'
+    echo '$PathAlreadyExists = 0; foreach ($Path in $PathArray) { if ($Path -contains $PathToAdd ) { $PathAlreadyExists = 1 } }   # Use "-contains" for arrays'
+    echo 'if ($PathAlreadyExists -eq 0) { $PathNew = $PathOld + ";" + $PathToAdd ; Set-ItemProperty -Path $RegistrySystemPath -Name Path -Value $PathNew }'
     ""
     $Paths = $env:Path.Split(';') | select -Unique | sort   # Array of current Paths
     # $CleanedInputList = @()
@@ -10090,7 +10090,7 @@ function Install-7ZipDownloadOnly {
 function Install-BitCometPortable {
     $start_time = Get-Date   # Used with the timer on last line of function
     $url = "https://www.bitcomet.com/en/archive"
-    # Solving the First-Launch Configuration Error with PowerShell’s Invoke-WebRequest Cmdlet
+    # Solving the First-Launch Configuration Error with PowerShell'$s Invoke-WebRequest Cmdlet
     # https://stackoverflow.com/questions/38005341/the-response-content-cannot-be-parsed-because-the-internet-explorer-engine-is-no
     # https://wahlnetwork.com/2015/11/17/solving-the-first-launch-configuration-error-with-powershells-invoke-webrequest-cmdlet/
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -Value 2
@@ -10106,7 +10106,7 @@ function Install-BitCometPortable {
     $dl_file
     iwr -Uri $dl_link -OutFile .\$dl_file
     # Maybe test here: f not exist 7z.exe run Install-7zip to make sure it is available
-    $7z = 'C:\Program Files\7-Zip\7z.exe' 
+    $7z = 'C:\Program Files\7-Zip\7z.exe'
     & $7z "x" $dl_file "-o./$dl_out" "-y" "-r"
     & "$dl_out\BitComet.exe"
     Write-Output "Time to configure: $((Get-Date).Subtract($start_time).Seconds) second(s)"
