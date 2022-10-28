@@ -9417,9 +9417,9 @@ function mmm {
 
 function ccc {
     # Adjust console window position, centre top
-    Set-ConsolePosition -7 0 600 600
+    Set-ConsolePosition -7 20 600 600
     if ($Host.Name -match "console") {
-        Set-ConsolePosition 75 0 600 600
+        Set-ConsolePosition 75 20 600 600
         Set-WindowNormal
         Set-MaxWindowSize
     }
