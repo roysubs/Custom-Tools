@@ -2,6 +2,8 @@
 # 
 # Custom-Tools.psm1
 # 2019-11-25 Initial setup
+# 2022-11-06 Current Version
+
 #
 # Module is installed to the Module folder visible to all users (but can only be modified by Administrators):
 #    C:\Program Files\WindowsPowerShell\Modules\Custome-Tools
@@ -111,6 +113,39 @@
 #
 ####################
 
+function Update-PowerShellStartup {
+    # Console startup times can slow over time. Use the following to generate native
+    # images for an assembly and its dependencies and install them in the Native Images Cache.
+    # https://stackoverflow.com/questions/59341482/powershell-steps-to-fix-slow-startup
+    # https://superuser.com/questions/1212442/powershell-slow-starting-on-windows-10
+    # powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell "Write-Host 1" } ).TotalSeconds
+
+    $env:PATH = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+    [AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object {
+        $path = $_.Location
+        if ($path) { 
+            $name = Split-Path $path -Leaf
+            Write-Host -ForegroundColor Yellow "`r`nRunning ngen.exe on '$name'"
+            ngen.exe install $path /nologo
+        }
+    }
+
+    echo ""
+    echo "Option: Adding powershell.exe to the list of Windows Defender exclusions can speed it up considerably (but might be a risk)."
+    echo "Option: Create a shortcut to powershell.exe, right-click on it > properties, go to options tab, click on 'use legacy console'. With legacy on things can be faster."
+    echo ""
+    echo "Location of PowerShell exe can be found with: (Get-Process -Id `$pid).Path   or   (Get-Command PowerShell.exe).Path"
+    echo "For PowerShell 5.1, this is:   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    echo "For PowerShell 7.1, this is:   C:\Program Files\PowerShell\7\pwsh.exe"
+    echo ""
+    echo "To test PowerShell startup times:"
+    echo "From DOS:        powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell 'Write-Host 1' } ).TotalSeconds"
+    echo "From PowerShell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -ExecutionPolicy Bypass ( Measure-Command { C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe 'Write-Host 1' } ).TotalSeconds"
+    echo ""
+}
+
+
+
 # dirsize using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
 # vs dirsizeps (native PowerShell method of sizing a folder)
 function dirsize ($dir) {
@@ -140,6 +175,11 @@ function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir
 function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
 function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
+
+# https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
+# https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
+function d ($name) { cmd.exe /c dir }          # DOS dir/w, wide format
+function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
 function dirw ($name) {
     $out = ""
     function Format-FileSize([int64]$size) {
@@ -163,6 +203,8 @@ function dirpaths ($folder, $filter) {   # Remove header information and just sh
     try { gci -r $folder -Filter $filter | select -expand FullName -EA silent }
     catch { "crapped out!" }
 }
+
+function xxxx () { kill -n explorer; explorer }
 
 # Help Functions ...
 # ms (MAN SYNTAX), mm (MAN), mp <cmd> <param> (MAN PARAMETER HELP), me (MAN EXAMPLES), mf (MAN FULL)
@@ -1269,11 +1311,10 @@ function Update-RegItem ($RegPath, $Item, $Value) {
 function Restart-Explorer
 {
     Param([switch] $SuppressReOpen)
+    # Cleanly restart Explorer.exe, recording all currently open Explorer Windows and then reopen them 
+    # Restart-Explorer -SuppressReOpen to skip reopening the existing windows.
 
-    # Apparently will record the currently reopen Explorer Windows and then reopen them 
-    # Not sure if working, need to test more ...
-
-    #Gather up the currently open windows, so we can re-spawn them.
+    # Gather up the currently open windows, so we can re-spawn them.
     $x = New-Object -ComObject "Shell.Application"
     $count = $x.Windows().Count
     $windows = @();
@@ -1678,6 +1719,7 @@ function Help-ToolkitConfig {
     Write-Host "BackupProfile (use robocopy to backup current Profile folder to D:\Backup\`$env:USERNAME_`$DateTimeNowStringMinutes"
     Write-Host "sys function (get summary of most used system details)"
     Write-Host "Various 'prompt' functions are included in Custom-Tools. Type 'prompt' then his Ctrl-Space to view." -ForegroundColor Green
+    # Write-Host "Use 'more `"`$(`$Profile)_extensions.ps1'`" to review all contents." -ForegroundColor Green
     Write-Host ""
     Write-Host "Custom-Tools.psm1 Module installed to user Module folder." -ForegroundColor Green
     Write-Host "Keep this mainly for usually longer functions that will only be fully loaded when the Module is called." -ForegroundColor Green
@@ -1698,6 +1740,20 @@ function Help-ToolkitConfig {
     # Write-Host "Review script actions above if required as this window will close after this" -ForegroundColor White -BackgroundColor Red
     # Write-Host "point if this script was called from another console." -ForegroundColor White -BackgroundColor Red
     Write-Host ""
+    Write-Host "Some quick commands to try:" -ForegroundColor Green
+    Write-Host "   mods        # All currently installed modules and installed locations."
+    Write-Host "   mods W*     # Show modules starting with 'w' and their installed locations."
+    Write-Host "   mod <name>  # See details on a specific module"
+    Write-Host "   mod <name> <function_in_mod>   # Show the 'def' (definitions) for function_in_mod that is in the module."
+    Write-Host " e.g.  mod Custom-Tools"
+    Write-Host "       mod Custom-Tools Help-sls"
+    Write-Host ""
+    Write-Host "Help Tools" -ForegroundColor Green
+    Write-Host "   def <command>   # show the definitions for any command: Alias, Cmdlet, Function, ExternalScript, Application"
+    Write-Host "e.g.  def Install-NotepadPlusPlus"
+    Write-Host "   m <Alias|Cmdlet|Function|ExternalScript|Application>"
+    Write-Host "e.g.  m Para      # Try exactly this to show all variants of 'Para' in help files, note no need for wildcards."
+    Write-Host "  'm' is a help wrapper tool that has much more functionality. Type 'm' on its own for more information."
     Write-Host ""
     try { & "$Home\Desktop\MySandbox\MyPrograms\winfetch.ps1" } catch { "WinFetch hit an error and could not load.`n" }
     # Write-Host "Final prompt in case this was called in a separate console (which will immediately close"
@@ -1712,9 +1768,8 @@ function Help-ToolkitConfig {
     ### choco install ethanbrown.conemuconfig
 
     # Some Windows Tricks (from Edwin):
-    # nice windows tricks
-    #    Ipconfig|clip   # Puts output in your clipboard
-    # When you have an explorer and browse to a patu and type in the bar cmd then...it opens cmd with that path.
+    # ipconfig | clip   # Puts output in your clipboard
+    # In Explorer, type cmd or powershell into the address bar to open a console at the current location
     # Regedit -m   # Multiple regedit open
     # A funny message: helpmsg 4006
     # When cmd.exe is disabled by a policy open task manager and then ctrl cmd opens a cmd.exe
@@ -2263,7 +2318,7 @@ But it is full Linux and so you can update it just like any full Linux.
 https://www.how2shout.com/how-to/how-to-upgrade-ubuntu-18-04-to-19-10-on-windows-10-linux-subsystem.html
 
 However, a few changes must be made before the upgrade.
-First, we must override LTS as by default it doesnâ€™t allow upgrading an LTS releases to non-LTS.
+First, we must override LTS as by default it doesn’t allow upgrading an LTS releases to non-LTS.
 Thus, we need to change this default rule to a standard one. For that type:
     cat /etc/os-release   # => 18.04 LTS
     sudo nano /etc/update-manager/release-upgrades
@@ -2291,23 +2346,23 @@ Finish with sudo apt upgrade
     You have to download a total of 147 M. This download will take about 2 minutes with your connection.
     Installing the upgrade can take several hours. Once the download has finished, the process cannot be canceled.
 
-    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   â”‚
-    â”‚ settings as needed so that you can reach the snap store.                                                                            â”‚
-    â”‚                                                                                                                                     â”‚
-    â”‚ You can manually check for connectivity by running "snap info lxd"                                                                  â”‚
-    â”‚                                                                                                                                     â”‚
-    â”‚ Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              â”‚
-    â”‚                                                                                                                                     â”‚
-    â”‚ Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         â”‚
-    â”‚ Skipping is allowed only when LXD is not activated on the system.                                                                   â”‚
-    â”‚                                                                                                                                     â”‚
-    â”‚ Unable to reach the snap store
+    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   ¦
+    ¦ settings as needed so that you can reach the snap store.                                                                            ¦
+    ¦                                                                                                                                     ¦
+    ¦ You can manually check for connectivity by running "snap info lxd"                                                                  ¦
+    ¦                                                                                                                                     ¦
+    ¦ Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              ¦
+    ¦                                                                                                                                     ¦
+    ¦ Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         ¦
+    ¦ Skipping is allowed only when LXD is not activated on the system.                                                                   ¦
+    ¦                                                                                                                                     ¦
+    ¦ Unable to reach the snap store
 
     sudo do-release-upgrade -c   # Check if a release upgrade is available.
 Checking for a new Ubuntu release ... New release '19.10' available. ... Run 'do-release-upgrade' to upgrade to it.
     sudo do-release-upgrade      # Perform the upgrade to 19.10
-Sometimes, on Windows WSL, the upgrade couldnâ€™t update the latest repo available for the upgraded system. Upon checking, the
-system will say there is no upgrade then manually add Ubuntu 19.10 "Eoan Ermine" official repo to our existing Disco Dingo.
+Sometimes, on Windows WSL, the upgrade couldn’t update the latest repo available for the upgraded system. Upon checking, the
+system will say there is no upgrade then manually add Ubuntu 19.10 “Eoan Ermine” official repo to our existing Disco Dingo.
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
 
@@ -3295,6 +3350,9 @@ Get-Service | Out-String -Stream | Select-String "^STOPPED" -CaseSensitive
 
 # Case-sensitive non-regex match (-SimpleMatch forces a simple string match)
 Get-Service | Out-String -Stream | Select-String "Stop" -CaseSensitive -SimpleMatch
+
+# Get-Childitem "C:\Windows\" -Recurse -Include *.log -ErrorAction SilentlyContinue | Select-String "Error" -ErrorAction SilentlyContinue | Group-Object filename | Sort-Object Count -Descending
+# ls "C:\Windows\" -i *.log -r -EA Silent | sls "Error" -EA Silent | group filename | sort Count -Descending
     
 '@
     
@@ -3614,7 +3672,7 @@ gci env:*     *or*      gci env:                  # Also show all Environment Va
 
 Random tips:
 
-(123.456).ToString("C")       -> Â£123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
+(123.456).ToString("C")       -> £123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
 (5/21).ToString("P")          -> 23.81%      # Percentage
 (-1052.032911).ToString("e8") -> -1.052e+003 # Exponential (Scientific)
 1234 ("D") -> 1234 , -1234 ("D6") -> -001234 # Decimal, will retain negative sign if required
@@ -4455,7 +4513,7 @@ function sys {
     "CPU:             $job_cpu_out"
     "CPU Cores:       $job_cpu_cores_out,      CPU Logical Cores:   $job_cpu_logical_out"
 
-    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=â€™LastBootTimeâ€™; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
+    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=’LastBootTime’; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
     # https://devblogs.microsoft.com/scripting/should-i-use-cim-or-wmi-with-windows-powershell/
     # $(wmic OS get LastBootupTime)
 
@@ -6103,11 +6161,10 @@ function rdphalf ($hostname, $username) {
 # with saved credentials passing through RDP. From what I have found I will need to edit the group policy underer:
 #   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation 
 
-function Fix-WorkLaptop {
-    # Kill bloat put on there by company and reset things required
-    # Some things might require admin to kill (Tight VNC Server)
-    # Note a generic function, has things customised for my laptop
-    kill -name workpace -force -EA Silent    # WorkPace ridiculous tool to make you stretch your back etc
+function Fix-ING {
+    # Can restart these things later any time required
+    # Some require admin to kill (Tight VNC Server)
+    kill -name workpace -force -EA Silent    # WorkPace
     kill -name Docker* -force -EA Silent     # Docker Desktop & Docker.Watchguard
     kill -name Steam* -force -EA Silent      # Steam
     kill -name AutoHotkey -force -EA Silent  # Restart this with Main and Main-ING to fix any issues
@@ -9104,6 +9161,8 @@ function logview ($app, $num) {
     # https://docs.microsoft.com/en-us/windows/deployment/update/windows-update-logs
 }
 
+Set-Alias logs logview
+
 function wh ($search, $path, $index, [switch]$size, [switch]$bare) { 
     # Could add a switch to tries --version, -version, --ver, -ver, --v, -v, /?  to see if get output from the program
     # Could add a switch to get internal version of executable:
@@ -9115,12 +9174,12 @@ function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
         ""
         "'wh' is a mix of 'which' from linux with 'where.exe' from Windows (and avoiding the 'where' PowerShell keyword)"
         ""
-        "USAGE: wh `$search [`$path] [`$index] [`$bare]"
-        "    `$search : String to search for (accepts wildcards)."
-        "    `$path   : Optional path to search recursively instead of `$Env:PATH (default will search only on the PATH statement)."
-        "    `$index  : Optionally jump to (i.e. CD to) the path of a found item by the index in a 'wh' search."
-        "    `$size   : Optionally also show the file sizes (formatted as B/KB/MB/GB/TB)."
-        "    `$bare   : Optionally just return only the full paths (for further processing)."
+        "USAGE: wh <search> [<path>] [-index] [-size] [-bare]"
+        "    <search> : String to search for (accepts wildcards)."
+        "    <path>   : Optional path to search recursively instead of `$Env:PATH (default will search only on the PATH statement)."
+        "    -index   : Optionally jump to (i.e. CD to) the path of a found item by the index in a 'wh' search."
+        "    -size    : Optionally also show the file sizes (formatted as B/KB/MB/GB/TB)."
+        "    -bare    : Optionally just return only the full paths (for further processing)."
         ""
         "    wh notepad.exe"
         "    wh notepad.exe 2"
@@ -9252,8 +9311,8 @@ Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
-    # if ($x) { <Variable '$x' exists and is neither null nor contains an empty value> }
-    # If you just want to know if a variable was never assigned a non-empty value, itâ€™s this simple:   if (-not $x)
+    # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
+    # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
     if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
         "   By default, will try to find and use 7z.exe to create a .zip."
@@ -9417,12 +9476,40 @@ function mmm {
 
 function ccc {
     # Adjust console window position, centre top
-    Set-ConsolePosition -7 20 600 600
+    Set-ConsolePosition -7 25 600 600
     if ($Host.Name -match "console") {
-        Set-ConsolePosition 75 20 600 600
+        Set-ConsolePosition 75 25 600 600
         Set-WindowNormal
         Set-MaxWindowSize
     }
+}
+
+# Template for future use ... can be handy 
+function Move-Mouse {
+    # Load Required Assemblies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    [System.Windows.Forms.Cursor]::Position   # Get current location
+    $Position = [System.Drawing.Point]::new(120,220)   # Move to 120,220
+    [System.Windows.Forms.Cursor]::Position = $Position
+}
+
+# Remove comments and indentation from code.
+# i.e. make a flat file that is still functional, but without comments
+# Template, this is just for WOTR Toolkit Autohotkey, but useful techniques for elsewhere
+function Remove-Comments {
+    $x = Get-Content ".\WOTR Toolkit.ahk"   # $x is an array, not a string
+    $out = ".\WOTR Toolkit 1.ahk"
+    if (Test-Path $out) { Clear-Content $out }   # wipe the output file
+
+    $x = $x -split "[\r\n]+"               # Remove all consecutive line-breaks, in any format '-split "\r?\n|\r"' would just do line by line
+    $x = $x | ? { $_ -notmatch "^\s*$" }   # Remove empty lines
+    $x = $x | ? { $_ -notmatch "^\s*;" }   # Remove all lines starting with ; including with whitespace before
+    $x = $x | % { ($_ -split " ;")[0] }    # Remove end of line comments
+    $x = ($x -replace $regex).Trim().Trim()
+    Set-Content $out $x
+    # $x | Out-File $out
+    $x | more
 }
 
 ####################
@@ -10090,7 +10177,7 @@ function Install-7ZipDownloadOnly {
 function Install-BitCometPortable {
     $start_time = Get-Date   # Used with the timer on last line of function
     $url = "https://www.bitcomet.com/en/archive"
-    # Solving the First-Launch Configuration Error with PowerShell'$s Invoke-WebRequest Cmdlet
+    # Solving the First-Launch Configuration Error with PowerShell’s Invoke-WebRequest Cmdlet
     # https://stackoverflow.com/questions/38005341/the-response-content-cannot-be-parsed-because-the-internet-explorer-engine-is-no
     # https://wahlnetwork.com/2015/11/17/solving-the-first-launch-configuration-error-with-powershells-invoke-webrequest-cmdlet/
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -Value 2
@@ -10106,8 +10193,8 @@ function Install-BitCometPortable {
     $dl_file
     iwr -Uri $dl_link -OutFile .\$dl_file
     # Maybe test here: f not exist 7z.exe run Install-7zip to make sure it is available
-    $7z = 'C:\Program Files\7-Zip\7z.exe'
-    & $7z "x" $dl_file "-o./$dl_out" "-y" "-r"
+    $sevenzip = 'C:\Program Files\7-Zip\7z.exe'
+    & $sevenzip "x" $dl_file "-o./$dl_out" "-y" "-r"
     & "$dl_out\BitComet.exe"
     Write-Output "Time to configure: $((Get-Date).Subtract($start_time).Seconds) second(s)"
 }
@@ -10314,7 +10401,7 @@ function Help-ChocoGames {
 @"
 
 https://chocolatey.org/packages?q=games
-https://steamcommunity.com/sharedfiles/filedetails/?id=1167945â€¦
+https://steamcommunity.com/sharedfiles/filedetails/?id=1167945…
 https://developer.valvesoftware.com/wiki/Command_Line_Options
 
 ### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put 
@@ -12090,7 +12177,7 @@ function Install-ModuleExamples {
     Write-Host "Install-Module Posh-Git (Git Management Cmdlets)" -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "When you run Import-Module posh-git, posh-git checks to see if the PowerShell default prompt is the"
     Write-Host "current prompt. If it is, then posh-git will install a posh-git default prompt that looks like this in v0.x:"
-    Write-Host "C:\Users\Keith\GitHub\posh-git [master â‰¡]>"
+    Write-Host "C:\Users\Keith\GitHub\posh-git [master ...> (the burger icon)"
     Write-Host "View details on `$GitPromptSettings here:"
     Write-Host "https://github.com/dahlbyk/posh-git/wiki/Customizing-Your-PowerShell-Prompt"
     Write-Host "Write-GitStatus, Write-Prompt, Write-VcsStatus"
