@@ -2318,7 +2318,7 @@ But it is full Linux and so you can update it just like any full Linux.
 https://www.how2shout.com/how-to/how-to-upgrade-ubuntu-18-04-to-19-10-on-windows-10-linux-subsystem.html
 
 However, a few changes must be made before the upgrade.
-First, we must override LTS as by default it doesn’t allow upgrading an LTS releases to non-LTS.
+First, we must override LTS as by default it doesnï¿½t allow upgrading an LTS releases to non-LTS.
 Thus, we need to change this default rule to a standard one. For that type:
     cat /etc/os-release   # => 18.04 LTS
     sudo nano /etc/update-manager/release-upgrades
@@ -2346,23 +2346,23 @@ Finish with sudo apt upgrade
     You have to download a total of 147 M. This download will take about 2 minutes with your connection.
     Installing the upgrade can take several hours. Once the download has finished, the process cannot be canceled.
 
-    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   ¦
-    ¦ settings as needed so that you can reach the snap store.                                                                            ¦
-    ¦                                                                                                                                     ¦
-    ¦ You can manually check for connectivity by running "snap info lxd"                                                                  ¦
-    ¦                                                                                                                                     ¦
-    ¦ Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              ¦
-    ¦                                                                                                                                     ¦
-    ¦ Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         ¦
-    ¦ Skipping is allowed only when LXD is not activated on the system.                                                                   ¦
-    ¦                                                                                                                                     ¦
-    ¦ Unable to reach the snap store
+    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   ï¿½
+    ï¿½ settings as needed so that you can reach the snap store.                                                                            ï¿½
+    ï¿½                                                                                                                                     ï¿½
+    ï¿½ You can manually check for connectivity by running "snap info lxd"                                                                  ï¿½
+    ï¿½                                                                                                                                     ï¿½
+    ï¿½ Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              ï¿½
+    ï¿½                                                                                                                                     ï¿½
+    ï¿½ Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         ï¿½
+    ï¿½ Skipping is allowed only when LXD is not activated on the system.                                                                   ï¿½
+    ï¿½                                                                                                                                     ï¿½
+    ï¿½ Unable to reach the snap store
 
     sudo do-release-upgrade -c   # Check if a release upgrade is available.
 Checking for a new Ubuntu release ... New release '19.10' available. ... Run 'do-release-upgrade' to upgrade to it.
     sudo do-release-upgrade      # Perform the upgrade to 19.10
-Sometimes, on Windows WSL, the upgrade couldn’t update the latest repo available for the upgraded system. Upon checking, the
-system will say there is no upgrade then manually add Ubuntu 19.10 “Eoan Ermine” official repo to our existing Disco Dingo.
+Sometimes, on Windows WSL, the upgrade couldnï¿½t update the latest repo available for the upgraded system. Upon checking, the
+system will say there is no upgrade then manually add Ubuntu 19.10 ï¿½Eoan Ermineï¿½ official repo to our existing Disco Dingo.
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
 
@@ -3672,7 +3672,7 @@ gci env:*     *or*      gci env:                  # Also show all Environment Va
 
 Random tips:
 
-(123.456).ToString("C")       -> £123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
+(123.456).ToString("C")       -> ï¿½123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
 (5/21).ToString("P")          -> 23.81%      # Percentage
 (-1052.032911).ToString("e8") -> -1.052e+003 # Exponential (Scientific)
 1234 ("D") -> 1234 , -1234 ("D6") -> -001234 # Decimal, will retain negative sign if required
@@ -4513,7 +4513,7 @@ function sys {
     "CPU:             $job_cpu_out"
     "CPU Cores:       $job_cpu_cores_out,      CPU Logical Cores:   $job_cpu_logical_out"
 
-    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=’LastBootTime’; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
+    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=ï¿½LastBootTimeï¿½; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
     # https://devblogs.microsoft.com/scripting/should-i-use-cim-or-wmi-with-windows-powershell/
     # $(wmic OS get LastBootupTime)
 
@@ -5398,7 +5398,7 @@ function Search-ManPagesWIP ($search, $help) {
 
 
 # Find definitions for any Cmdlet, Function, Alias, External Script, Application
-function def {   
+function what {   
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -5516,7 +5516,12 @@ function def {
         }
         elseif ($type -eq 'Function') {
             Write-Host "`n'$cmd' is a Function.  " -F Green -NoNewline
-            Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan ; cat function:\$cmd ; Write-Host ""
+            Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan
+            if ($bat = Get-Command -ErrorAction Ignore) {
+                ${function:mkdir}.ToString() | bat -pp -l powershell
+            } else {
+                cat function:\$cmd ; Write-Host ""
+            }
             Write-Host "cat function:\$cmd`n" -F Cyan
             Write-Host ""
             Write-Host "SYNOPSIS, SYNTAX for '$cmd'.   " -F Green
@@ -5554,7 +5559,7 @@ function def {
         }
         elseif ($type -eq 'Application') {      # For .exe etc on path
             Write-Host "`n'$cmd' was found. It is an Application (i.e. a .exe or similar located on the path)." -F Green
-            Write-Host "`n$(where.exe $cmd)" -F Green
+            where.exe $cmd
             Write-Host ""
             Read-Host "Press any key to open cmd.exe and try '$cmd /?'" ; cmd.exe /c $cmd /? | more
             Write-Host ""
@@ -5575,6 +5580,8 @@ function def {
         else { "`nInput is not a command, so no command definition search.`n" }
     }
 }
+
+Set-Alias def what   # Generally better to use "what" (def is used in various other languages), but I'll keep this aliased in PowerShell for convenience
 
 # Old method, test if an error happens. Above is much better, but this could be useful elsewhere
 # $defx = 0
@@ -5608,7 +5615,7 @@ function CookieKiller ($search) {
 function Enable-Choco {
     # Removed from $Profile as 1.5 s load time, can load this whenever required with this function 
     $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-    if(Test-Path ("$ChocolateyProfile")) {
+    if(Test-Path $ChocolateyProfile) {
         Import-Module "$ChocolateyProfile"
     }
 }
@@ -5640,19 +5647,17 @@ function Install-Firefox {
     Write-Wrap "- will taskkill.exe /f /im firefox.exe (but only if already running)"
     pause
 
-    if (Test-Path ($env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe") ) {
+    if (Test-Path "$env:USERPROFILE\AppData\Local\Mozilla Firefox\uninstall\helper.exe") {
         taskkill.exe /f /im firefox.exe
-        $setup = $env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe"
-        $args = " /s"
-        $uninst = Start-Process $setup -PassThru -ArgumentList $args -wait
+        $setup = "$env:USERPROFILE\AppData\Local\Mozilla Firefox\uninstall\helper.exe"
+        $uninst = Start-Process $setup -PassThru -ArgumentList "/s" -wait
         $uninst.WaitForExit()
     }
 
-    if (Test-Path (${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe") ) {
+    if (Test-Path "${env:ProgramFiles(x86)}\Mozilla Firefox\uninstall\helper.exe") {
         taskkill.exe /f /im firefox.exe
-        $setup = ${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe"
-        $args = " /s"
-        $uninst = Start-Process $setup -PassThru -ArgumentList $args -wait
+        $setup = "${env:ProgramFiles(x86)}\Mozilla Firefox\uninstall\helper.exe"
+        $uninst = Start-Process $setup -PassThru -ArgumentList "/s" -wait
         $uninst.WaitForExit()
     }
 
@@ -5670,7 +5675,7 @@ function Install-Firefox {
     #     -not (Test-Path ($env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe") ) -and
     #     -not (Test-Path (${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe") ) )
 
-    if (-not (Test-Path ($env:ProgramFiles + "\Mozilla Firefox\uninstall\helper.exe") ) ) {
+    if (-not (Test-Path "$env:ProgramFiles\Mozilla Firefox\uninstall\helper.exe")) {
         Write-Host "Downloading Firefox 64-bit and run installation (not yet implemented)..."
         pause
     }
@@ -6344,7 +6349,7 @@ function Push-Gist {
     # It looks like you can cache-bust by attaching a query string to the url @ nietaki Apr 18 '18 at 21:49  (I never got this working)
     # e.g. https://gist.githubusercontent.com/mwek/9962f97f3bde157fd5dbd2b5dd0ec3ca/raw/user.js?cachebust=dkjflskjfldkf
 
-    if (!(Test-Path ('.\Push-Gist-Secure-Password.txt'))) {
+    if (!(Test-Path '.\Push-Gist-Secure-Password.txt')) {
         Read-Host "Enter the github password for roysubs" -AsSecureString | ConvertFrom-SecureString | Out-File .\Push-Gist-Secure-Password.txt
         Write-Host "Password now saved securely to .\Push-Gist-Secure-Password.txt.`nIf you want to regenerate a new password, delete that file."
     }
@@ -7084,8 +7089,8 @@ function Search-Registry {
 # Area of a Circle = 3.1416 X radius2
 # Volume of a cylinder = 3.1416 X radius2X height
 
-function F-toC([double] $fahrenheit) { "$(($fahrenheit - 32) / 1.8) C   [ C = (F-32) * 5 / 9 ]" }
-function C-toF([double] $celcius) { "$(($celcius * 1.8) + 32) F   [ F = (9/5 * C) + 32 ]" }
+function F-toC([double] $fahrenheit) { "$([Math]::Round( (($fahrenheit - 32) / 1.8), 2)) C   [ C = (F-32) * 5 / 9 ]" }
+function C-toF([double] $celcius) { "$([Math]::Round( (($celcius * 1.8) + 32), 2)) F   [ F = (9/5 * C) + 32 ]" }
 function LB-toKG([double] $lb) { "$($lb * 0.453592) kg   [ 1 kg = 2.205 lbs = 35.2 oz ]" }
 function KG-toLB([double] $kg) { "$($kg / 0.453592) lb   [ 1 lb = 0.454 kg = 16 oz ]" }   # update this to split off the ounces and calculate those
 
@@ -9311,8 +9316,8 @@ Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
-    # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
-    # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
+    # if ($x) { <Variable ï¿½$xï¿½ exists and is neither null nor contains an empty value> }
+    # If you just want to know if a variable was never assigned a non-empty value, itï¿½s this simple:   if (-not $x)
     if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
         "   By default, will try to find and use 7z.exe to create a .zip."
@@ -10177,7 +10182,7 @@ function Install-7ZipDownloadOnly {
 function Install-BitCometPortable {
     $start_time = Get-Date   # Used with the timer on last line of function
     $url = "https://www.bitcomet.com/en/archive"
-    # Solving the First-Launch Configuration Error with PowerShell’s Invoke-WebRequest Cmdlet
+    # Solving the First-Launch Configuration Error with PowerShellï¿½s Invoke-WebRequest Cmdlet
     # https://stackoverflow.com/questions/38005341/the-response-content-cannot-be-parsed-because-the-internet-explorer-engine-is-no
     # https://wahlnetwork.com/2015/11/17/solving-the-first-launch-configuration-error-with-powershells-invoke-webrequest-cmdlet/
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -Value 2
@@ -10401,7 +10406,7 @@ function Help-ChocoGames {
 @"
 
 https://chocolatey.org/packages?q=games
-https://steamcommunity.com/sharedfiles/filedetails/?id=1167945…
+https://steamcommunity.com/sharedfiles/filedetails/?id=1167945ï¿½
 https://developer.valvesoftware.com/wiki/Command_Line_Options
 
 ### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put 
@@ -11327,7 +11332,8 @@ function Choco-Index {
                 $published = (( $pkginfo | ? { $_ -match "Published:" } ) -split " Published: ")[1]
                 $pub_day   = ($published -split "/")[0]
                 $pub_month = ($published -split "/")[1]
-                $pub_year  = ($published -split "/")[2]   # Note that month/day are different way around from $approved so correct to yyyy-mm-dd
+                $pub_year  = ($published -split "/")[2]
+                # month/day are different way around from $approved so correct to yyyy-mm-dd, though this might be locale related
                 $published = $pub_year + '-' + $pub_month + '-' + $pub_day
             }
             catch { $published = "--" }
@@ -11343,7 +11349,7 @@ function Choco-Index {
             catch { $approved = "--" }
             if ($approved -eq "--") { $approvedtext = ""} else { $approvedtext = " $approved (A)"}
 
-            $outpkg = "cinst -y $pkg   # $publishedtext$approvedtext$summary$description`r`n"
+            $outpkg = "choco install -y $pkg   # $publishedtext$approvedtext$summary$description`r`n"
             echo $outpkg
             $out = $out + $outpkg + "`r`n"
         }
