@@ -5517,8 +5517,8 @@ function what {
         elseif ($type -eq 'Function') {
             Write-Host "`n'$cmd' is a Function.  " -F Green -NoNewline
             Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan
-            if ($bat = Get-Command -ErrorAction Ignore) {
-                ${function:mkdir}.ToString() | bat -pp -l powershell
+            if ($bat = Get-Command bat -ErrorAction Ignore) {
+                (Get-Content function:$cmd) | & $bat -pp -l powershell
             } else {
                 cat function:\$cmd ; Write-Host ""
             }
