@@ -485,11 +485,14 @@ Set-Alias ip Get-IPAddress
 # function ipv6 { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv6" } } ; Set-Alias ip6 ipv6
 # function ip { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv4|IPv6" } }
 
-function Enable-PSColor {   # Enable colour directory listings
+function Enable-PSColor {    
+    # Enable colour directory listings
     ""
-    "Importing PSColor Module ..."
-    if (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
-    if (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
+    if ( (!(Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor")) -and (!(Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor")) ) { 
+        Install-Module PSColor
+        "Importing PSColor Module ..."
+        Import-Module PSColor
+    }
 }
 
 Set-Alias pscolor Enable-PSColor
