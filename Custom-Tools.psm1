@@ -2651,7 +2651,7 @@ function git-push {
         "Crrent folder is not a git repository (no .git folder is present)" 
     }
     else { 
-        "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status  [pause to check]`n=>  git commit -m `"Update`"    =>  git status    =>  git push -u origin main`n`n"
+        "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status`n=>  git commit -m `"Update`"  =>  [pause to check]  =>  git status  =>  git push -u origin main`n`n"
         pause
         git status
         git add .
@@ -2660,6 +2660,8 @@ function git-push {
         git commit -m "Update"
         pause
         git push -u origin main
+        $token = Read-Host -Prompt "Input GitHub token ('ghp_xxx')"
+        git push "https://$($token)@github.com/roysubs/$(split-path pwd -leaf)"
     }
 }
 
