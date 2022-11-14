@@ -2659,9 +2659,8 @@ function git-push {
         git status
         git commit -m "Update"
         pause
+        "Note, the Github PAT (Personal Access Token) can be used in place of a password."
         git push -u origin main
-        $token = Read-Host -Prompt "Input GitHub token ('ghp_xxx')"
-        git push "https://$($token)@github.com/roysubs/$(split-path pwd -leaf)"
     }
 }
 
