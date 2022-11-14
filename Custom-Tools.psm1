@@ -149,62 +149,71 @@ function Update-PowerShellStartup {
 # dirsize using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
 # vs dirsizeps (native PowerShell method of sizing a folder)
 function dirsize ($dir) {
-    if ($dir -eq $null) {
-        "No folder selected."
-    } else {
-        $rOutput = &robocopy /l /njh /nfl /ndl /njh $dir dummypath /e /bytes
-        $bSize = ($rOutput -cmatch 'Bytes :' -split '\s+')[3]
-        "{0:N2} MB" -f ($bSize / 1MB)   # Write-Host "$($dir.FullName)`t$bSize"
-    }
+    if ($null -eq $dir) { "No path provided, using current location."; $dir = "." }
+    $rOutput = &robocopy /l /njh /nfl /ndl /njh $dir dummypath /e /bytes
+    $bSize = ($rOutput -cmatch 'Bytes :' -split '\s+')[3]
+    "{0:N2} MB" -f ($bSize / 1MB)   # Write-Host "$($dir.FullName)`t$bSize"
 }
 function dirsizeps ($dir) { 
-    if ($dir -eq $null) { "No folder selected." }
-    else { "{0:N2} MB" -f ((Get-ChildItem "$dir" -Recurse -Force -EA silent | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB) }
+    if ($null -eq $dir) { "No path provided, using current location."; $dir = "." }
+    "{0:N2} MB" -f ((Get-ChildItem "$dir" -Recurse -Force -EA silent | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB)
 }
 
-# Following are some quick-and-dirty "dir" and "cd" functions to mimic and extend DOS equivalents (for muscle-memory of typing those commands).
-# Note the abbreviation sytnax built into PowerShell for Get-ChildItem (dir/ls/gci):
-#    -ad (Dirs) , -af (Files), -ah (Hidden), -ar (ReadOnly)
-# Also, can shorten the -Attributes flag. e.g.   -at h  (instead of -Attributes Hidden), or -at dir  (instead of -Attributes Directory)
-# Also, can use "!" to logical-NOT a flag, e.g.  -at !h   (show all files and folders that are NOT hidden)
+# PowerShell allows '/' in a function name, so following can mimic DOS equivalents (for muscle-memory of typing those commands).
+# Note also the handy abbreviation/alias sytnax built into PowerShell for Get-ChildItem (dir/ls/gci)
+#    e.g.   dir -ad (-Directory) , dir -af (-Files), dir -ah (-Hidden), -ar (-ReadOnly)
+# Also, can shorten any parameter as long as no duplicates to that, so can shorten -Attributes to -at
+#    e.g.   -at h  (instead of '-Attributes Hidden'),  -at dir  (instead of '-Attributes Directory')
+# Also, can use "!" to logical -NOT a flag, e.g.  -at !h   ('attributes not-hidden', show all files and folders that are NOT hidden)
 function da ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
-function dir/ah ($name) { dir -Hidden $name }                    # Mimic DOS dir/ad. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
-function dir/ad ($name) { dir -Directory $name }                 # Mimic DOS dir/ad. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
-function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NOT directories'"". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
+function dir/h ($name) { dir -Hidden $name }                     # Mimic DOS dir/h. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
 function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir/b (bare names only). Also sort by Name.
-function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
 function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
+function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
+function dir/d ($name) { dir -Directory $name }                  # Mimic DOS dir/d. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
+function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NON-directories (-d)'". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
 
 # https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
-function d ($name) { cmd.exe /c dir }          # DOS dir/w, wide format
 function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
-function dirw ($name) {
+
+function d ($name) {   # quick and dirty Size + Name
     $out = ""
     function Format-FileSize([int64]$size) {
-        if ($size -gt 1TB) {[string]::Format("{0:0.00}TB", $size / 1TB)}
-        elseif ($size -gt 1GB) {[string]::Format("{0:0.0}GB", $size / 1GB)}
-        elseif ($size -gt 1MB) {[string]::Format("{0:0.0}MB", $size / 1MB)}
-        elseif ($size -gt 1KB) {[string]::Format("{0:0.0}kB", $size / 1KB)}
-        elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
+        if ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
+        elseif ($size -gt 1GB) {[string]::Format("{0:0.0} GB", $size / 1GB)}
+        elseif ($size -gt 1MB) {[string]::Format("{0:0.0} MB", $size / 1MB)}
+        elseif ($size -gt 1KB) {[string]::Format("{0:0.0} KB", $size / 1KB)}
+        elseif ($size -gt 0) {[string]::Format("{0:0.0} B", $size)}
         else {""}
     }
-
     foreach ($i in (dir $folder | sort Length).FullName) {
-        if (Test-Path -Path $i -PathType Container) { $size = "[D]" ; $size_out = "[D]" }
-        else { $size = (gci $i | select length).Length ; $size_out = Format-FileSize($size) }
-        $out += "$i $size_out  :  "
-        # $outlength +=
+        if (Test-Path -Path $i -PathType Container) {
+            $size = "[D]"
+            $size_out = "[D]" 
+        }
+        else {
+            $size = (gci $i | select length).Length
+            $size_out = Format-FileSize($size)
+            $size_total += $size
+        }
+        $out += "$size_out`t$(split-path $i -leaf)`n"
     }
-    $out.TrimEnd("  :  ")
+    $out += "$(Format-FileSize($size_total)) : Total Size"
+    $out
 }
+# $out.TrimEnd("  :  ")   # trime ous whitespace from either size of ":"
+
 function dirpaths ($folder, $filter) {   # Remove header information and just show the full paths
     try { gci -r $folder -Filter $filter | select -expand FullName -EA silent }
     catch { "crapped out!" }
 }
 
-function xxxx () { kill -n explorer; explorer }
+# Extending Get-ChildItem
+# https://jdhitsolutions.com/blog/powershell/9057/using-powershell-your-way/
+
+function killx () { kill -n explorer; explorer }   # Kill explorer and restart it (for times when it doesn't restart immediately)
 
 # Help Functions ...
 # ms (MAN SYNTAX), mm (MAN), mp <cmd> <param> (MAN PARAMETER HELP), me (MAN EXAMPLES), mf (MAN FULL)
@@ -5518,7 +5527,7 @@ function what {
             Write-Host "`n'$cmd' is a Function.  " -F Green -NoNewline
             Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan
             if ($bat = Get-Command bat -ErrorAction Ignore) {
-                (Get-Content function:$cmd) | & $bat -pp -l powershell
+                (Get-Content function:$cmd) | & $bat -p -l powershell
             } else {
                 cat function:\$cmd ; Write-Host ""
             }
@@ -5546,20 +5555,26 @@ function what {
             if ($Examples -eq $true) { $null = Read-Host "Press any key to view command examples" ; get-help $cmd -examples }
             Write-Host ""
         }
-        elseif ($type -eq 'ExternalScript') {   # For .ps1 scripts on path
+        elseif ($type -eq 'ExternalScript') {   # For .ps1 scripts in current location or on the path
             $x = gcm $cmd
-            Write-Host "`n'$cmd' is an ExternalScript (i.e. a .ps1 file on the path)." -F Green
+            Write-Host "`n'$cmd' is an ExternalScript (i.e. a .ps1 file in current location or on the path)." -F Green
             Write-Host "`n$($x.Path)`n" -F Green
             Write-Host "`n$($x.ScriptContents)"
             Write-Host ""
             if ($Examples -eq $true) { $null = Read-Host "Press any key to view command examples" ; get-help $cmd -Examples }
-            elseif ($Synopsis -eq $true) { $null = Read-Host "Press any key to view command examples" ; (get-help $cmd).Synopsis }
-            elseif ($Syntax -eq $true) { $null = Read-Host "Press any key to view command examples" ; Get-Command $cmd -Syntax }
+            elseif ($Synopsis -eq $true) { $null = Read-Host "Press any key to view command synopsis" ; (get-help $cmd).Synopsis }
+            elseif ($Syntax -eq $true) { $null = Read-Host "Press any key to view command syntax" ; Get-Command $cmd -Syntax }
             Write-Host ""
         }
-        elseif ($type -eq 'Application') {      # For .exe etc on path
+        elseif ($type -eq 'Application') {      # For .exe etc on path, or could also be a .cmd / .bat etc
             Write-Host "`n'$cmd' was found. It is an Application (i.e. a .exe or similar located on the path)." -F Green
             where.exe $cmd
+            # if .cmd / .bat, then show it with correct -l setting
+            # if ($bat = Get-Command bat -ErrorAction Ignore) {
+            #     (Get-Content function:$cmd) | & $bat -pp -l powershell
+            # } else {
+            #     offer the /? option otherwise
+            # }
             Write-Host ""
             Read-Host "Press any key to open cmd.exe and try '$cmd /?'" ; cmd.exe /c $cmd /? | more
             Write-Host ""
