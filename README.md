@@ -8,7 +8,7 @@ All functions install and run under normal user space, there is no requirement f
 `BeginSystemConfig.ps1` adds the `Custom-Tools.psm1` Module and adds two lines to the profile so that `ProfileExtensions.ps1` tools that are dot-sourced in all sessions. `ProfileExtensions` hold fundamental functions and definitions (such as the 'cd' alias which has been replaced by a superset of `Set-Location` to add more functionality). Every function in `Custom-Tools.psm1` is deliberately stand-alone; there are no dependencies on each other so that each function can be completely portable for other projects as required.  
 `Custom-Tools.psm1` is installed under the users profile Module folder (use `$Env:PSModulePath` to see that location).  
 To uninstall the toolkit, simply remove the last two lines from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools` and all traces of the Toolkit are now completely removed upon opening a new PowerShell console.  
-
+  
 
 # How to install Custom-Tools  
 
@@ -22,7 +22,7 @@ If there are any problems with installation, this is probably due to the recentl
 To view all installed Modules, use `mods`  
 To drill in on a single module (such as Custom-Tools), use `mod custom-tools`  
 To show just those functions that contain a given string, e.g. `mod custom-tools date`  
-
+  
 **Shorthand tools to explore functions in the Module:**  
 To see the entire definition for a given function, use `def`, e.g. `def touch`  
 The function `m` is used to provide access to all help functions *and* to the `about_` Topics.
@@ -36,7 +36,7 @@ Help works, but extensive help is not built into many Custom-Tools functions. e.
 `mparam Get-ChildItem Filter`  
 • `me` (man examples), just show the examples for a given Cmdlet / Function, e.g. `me Get-ChildItem`  
 • `mf` (man full), shows everything, full help page info, this is like Detailed, but expands every parameter property, e.g. `mf Get-ChildItem`  
-
+  
 Quick stuff: PowerShell variables, Environment Variables, useful system info:  
 • `vars` / `getvars` : show currently defined PowerShell variables. https://stackoverflow.com/qu  
 • `env` : Show Environment Variables (bit of a daft function, but I sometimes forget how to list environment variables)  

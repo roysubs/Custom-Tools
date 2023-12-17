@@ -2,8 +2,7 @@
 # 
 # Custom-Tools.psm1
 # 2019-11-25 Initial setup
-# 2022-11-06 Current Version
-
+# 2023-12-17 Current Version
 #
 # Module is installed to the Module folder visible to all users (but can only be modified by Administrators):
 #    C:\Program Files\WindowsPowerShell\Modules\Custome-Tools
@@ -144,18 +143,17 @@ function Update-PowerShellStartup {
     echo ""
 }
 
-
-
-# dirsize using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
-# vs dirsizeps (native PowerShell method of sizing a folder)
-function dirsize ($dir) {
-    if ($null -eq $dir) { "No path provided, using current location."; $dir = "." }
+function Get-Size ($dir) {   # Get-Size using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
+    if ($null -eq $dir) { $dir = "." }   # No path provided, use current location
     $rOutput = &robocopy /l /njh /nfl /ndl /njh $dir dummypath /e /bytes
     $bSize = ($rOutput -cmatch 'Bytes :' -split '\s+')[3]
     "{0:N2} MB" -f ($bSize / 1MB)   # Write-Host "$($dir.FullName)`t$bSize"
 }
-function dirsizeps ($dir) { 
-    if ($null -eq $dir) { "No path provided, using current location."; $dir = "." }
+Set-Alias size Get-Size
+Set-Alias sz Get-Size
+
+function Get-SizePS ($dir) {   # Native PowerShell find size (much slower than robocopy version)
+    if ($null -eq $dir) { $dir = "." }   # No path provided, use current location
     "{0:N2} MB" -f ((Get-ChildItem "$dir" -Recurse -Force -EA silent | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB)
 }
 
@@ -165,20 +163,20 @@ function dirsizeps ($dir) {
 # Also, can shorten any parameter as long as no duplicates to that, so can shorten -Attributes to -at
 #    e.g.   -at h  (instead of '-Attributes Hidden'),  -at dir  (instead of '-Attributes Directory')
 # Also, can use "!" to logical -NOT a flag, e.g.  -at !h   ('attributes not-hidden', show all files and folders that are NOT hidden)
-function da ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
-function dir/h ($name) { dir -Hidden $name }                     # Mimic DOS dir/h. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
+function dir-all ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
+function dir/ah ($name) { dir -Hidden $name }                    # Mimic DOS dir/ad. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
+function dir/ad ($name) { dir -Directory $name }                 # Mimic DOS dir/ad. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
+function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NOT directories'"". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
 function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir/b (bare names only). Also sort by Name.
-function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
-function dir/d ($name) { dir -Directory $name }                  # Mimic DOS dir/d. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
-function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NON-directories (-d)'". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
+function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
 
 # https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
 function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
 
-function d ($name) {   # quick and dirty Size + Name
+function dirq ($name) {   # quick and dirty Size + Name, work in progress
     $out = ""
     function Format-FileSize([int64]$size) {
         if ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
@@ -204,6 +202,26 @@ function d ($name) {   # quick and dirty Size + Name
     $out
 }
 # $out.TrimEnd("  :  ")   # trime ous whitespace from either size of ":"
+
+function dirwide ($name) {   # quick and dirty wide listing, work in progress
+    $out = ""
+    function Format-FileSize([int64]$size) {
+        if ($size -gt 1TB) {[string]::Format("{0:0.00}TB", $size / 1TB)}
+        elseif ($size -gt 1GB) {[string]::Format("{0:0.0}GB", $size / 1GB)}
+        elseif ($size -gt 1MB) {[string]::Format("{0:0.0}MB", $size / 1MB)}
+        elseif ($size -gt 1KB) {[string]::Format("{0:0.0}kB", $size / 1KB)}
+        elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
+        else {""}
+    }
+
+    foreach ($i in (dir $folder | sort Length).FullName) {
+        if (Test-Path -Path $i -PathType Container) { $size = "[D]" ; $size_out = "[D]" }
+        else { $size = (gci $i | select length).Length ; $size_out = Format-FileSize($size) }
+        $out += "$i $size_out  :  "
+        # $outlength +=
+    }
+    $out.TrimEnd("  :  ")
+}
 
 function dirpaths ($folder, $filter) {   # Remove header information and just show the full paths
     try { gci -r $folder -Filter $filter | select -expand FullName -EA silent }
@@ -489,9 +507,17 @@ function Enable-PSColor {
     # Enable colour directory listings
     ""
     if ( (!(Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor")) -and (!(Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor")) ) { 
+        "Installing PSColor Module ..."
         Install-Module PSColor
+    }
+    if ( (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") -or (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") ) { 
         "Importing PSColor Module ..."
         Import-Module PSColor
+    }
+    if (Get-Module -All PSColor) { 
+        dir
+    } else {
+        "PSColor failed to install or import"
     }
 }
 
@@ -1323,7 +1349,7 @@ function Update-RegItem ($RegPath, $Item, $Value) {
 function Restart-Explorer
 {
     Param([switch] $SuppressReOpen)
-    # Cleanly restart Explorer.exe, recording all currently open Explorer Windows and then reopen them 
+    # Cleanly restart Explorer.exe, but remember and reopening all currently open Explorer Windows
     # Restart-Explorer -SuppressReOpen to skip reopening the existing windows.
 
     # Gather up the currently open windows, so we can re-spawn them.
@@ -2330,7 +2356,7 @@ But it is full Linux and so you can update it just like any full Linux.
 https://www.how2shout.com/how-to/how-to-upgrade-ubuntu-18-04-to-19-10-on-windows-10-linux-subsystem.html
 
 However, a few changes must be made before the upgrade.
-First, we must override LTS as by default it doesn�t allow upgrading an LTS releases to non-LTS.
+First, we must override LTS as by default it does not allow upgrading an LTS releases to non-LTS.
 Thus, we need to change this default rule to a standard one. For that type:
     cat /etc/os-release   # => 18.04 LTS
     sudo nano /etc/update-manager/release-upgrades
@@ -2358,26 +2384,26 @@ Finish with sudo apt upgrade
     You have to download a total of 147 M. This download will take about 2 minutes with your connection.
     Installing the upgrade can take several hours. Once the download has finished, the process cannot be canceled.
 
-    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   �
-    � settings as needed so that you can reach the snap store.                                                                            �
-    �                                                                                                                                     �
-    � You can manually check for connectivity by running "snap info lxd"                                                                  �
-    �                                                                                                                                     �
-    � Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              �
-    �                                                                                                                                     �
-    � Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         �
-    � Skipping is allowed only when LXD is not activated on the system.                                                                   �
-    �                                                                                                                                     �
-    � Unable to reach the snap store
+    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy
+    settings as needed so that you can reach the snap store.
+
+    You can manually check for connectivity by running "snap info lxd"
+
+    Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.
+
+    Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.
+    Skipping is allowed only when LXD is not activated on the system.
+
+    Unable to reach the snap store
 
     sudo do-release-upgrade -c   # Check if a release upgrade is available.
 Checking for a new Ubuntu release ... New release '19.10' available. ... Run 'do-release-upgrade' to upgrade to it.
     sudo do-release-upgrade      # Perform the upgrade to 19.10
-Sometimes, on Windows WSL, the upgrade couldn�t update the latest repo available for the upgraded system. Upon checking, the
-system will say there is no upgrade then manually add Ubuntu 19.10 �Eoan Ermine� official repo to our existing Disco Dingo.
+Sometimes, on Windows WSL, the upgrade cannot update the latest repo available for the upgraded system. Upon checking, the
+system will say there is no upgrade then manually add Ubuntu 19.10 "Eoan Ermine" official repo to our existing "Disco Dingo".
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
-
+    
 The wsl (wsl.exe) command is usable from DOS or PowerShell for all interaction with installed distros.
     wsl                 # type on its own to instantly launches the default shell. (use -d <distro name> to enter a different distro).
     wsl -e <commands>   # --exec execute commands without entering linux shell
@@ -3685,7 +3711,7 @@ gci env:*     *or*      gci env:                  # Also show all Environment Va
 
 Random tips:
 
-(123.456).ToString("C")       -> �123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
+(123.456).ToString("C")       -> £123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
 (5/21).ToString("P")          -> 23.81%      # Percentage
 (-1052.032911).ToString("e8") -> -1.052e+003 # Exponential (Scientific)
 1234 ("D") -> 1234 , -1234 ("D6") -> -001234 # Decimal, will retain negative sign if required
@@ -4526,7 +4552,7 @@ function sys {
     "CPU:             $job_cpu_out"
     "CPU Cores:       $job_cpu_cores_out,      CPU Logical Cores:   $job_cpu_logical_out"
 
-    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=�LastBootTime�; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
+    # Get-WmiObject -Class Win32_OperatingSystem | select @{N="LastBootTime"; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
     # https://devblogs.microsoft.com/scripting/should-i-use-cim-or-wmi-with-windows-powershell/
     # $(wmic OS get LastBootupTime)
 
@@ -6185,10 +6211,11 @@ function rdphalf ($hostname, $username) {
 # with saved credentials passing through RDP. From what I have found I will need to edit the group policy underer:
 #   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation 
 
-function Fix-ING {
-    # Can restart these things later any time required
-    # Some require admin to kill (Tight VNC Server)
-    kill -name workpace -force -EA Silent    # WorkPace
+function Fix-WorkLaptop {
+    # Remove some bloat put on by company, kill some processes, reset some things
+    # Some things might require admin to kill (e.g. Tight VNC Server)
+    # Note: Not a generic function, has things customised for my own laptop
+    kill -name workpace -force -EA Silent    # WorkPace. Aannoying tool to make you stretch your back etc
     kill -name Docker* -force -EA Silent     # Docker Desktop & Docker.Watchguard
     kill -name Steam* -force -EA Silent      # Steam
     kill -name AutoHotkey -force -EA Silent  # Restart this with Main and Main-ING to fix any issues
@@ -7112,6 +7139,8 @@ function F-toC([double] $fahrenheit) { "$([Math]::Round( (($fahrenheit - 32) / 1
 function C-toF([double] $celcius) { "$([Math]::Round( (($celcius * 1.8) + 32), 2)) F   [ F = (9/5 * C) + 32 ]" }
 function LB-toKG([double] $lb) { "$($lb * 0.453592) kg   [ 1 kg = 2.205 lbs = 35.2 oz ]" }
 function KG-toLB([double] $kg) { "$($kg / 0.453592) lb   [ 1 lb = 0.454 kg = 16 oz ]" }   # update this to split off the ounces and calculate those
+Set-Alias F2C F-toC
+Set-Alias C2F C-toF
 
 function ConvertTo-Metric
 {
@@ -9335,8 +9364,8 @@ Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
-    # if ($x) { <Variable �$x� exists and is neither null nor contains an empty value> }
-    # If you just want to know if a variable was never assigned a non-empty value, it�s this simple:   if (-not $x)
+    # if ($x) { <Variable "x" exists and is neither null nor contains an empty value> }
+    # If you just want to know if a variable was never assigned a non-empty value, it is this simple:   if (-not $x)
     if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
         "   By default, will try to find and use 7z.exe to create a .zip."
@@ -10201,7 +10230,7 @@ function Install-7ZipDownloadOnly {
 function Install-BitCometPortable {
     $start_time = Get-Date   # Used with the timer on last line of function
     $url = "https://www.bitcomet.com/en/archive"
-    # Solving the First-Launch Configuration Error with PowerShell�s Invoke-WebRequest Cmdlet
+    # Solving the First-Launch Configuration Error with PowerShell Invoke-WebRequest Cmdlet
     # https://stackoverflow.com/questions/38005341/the-response-content-cannot-be-parsed-because-the-internet-explorer-engine-is-no
     # https://wahlnetwork.com/2015/11/17/solving-the-first-launch-configuration-error-with-powershells-invoke-webrequest-cmdlet/
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -Value 2
@@ -10425,7 +10454,7 @@ function Help-ChocoGames {
 @"
 
 https://chocolatey.org/packages?q=games
-https://steamcommunity.com/sharedfiles/filedetails/?id=1167945�
+https://steamcommunity.com/sharedfiles/filedetails/?id=1167945
 https://developer.valvesoftware.com/wiki/Command_Line_Options
 
 ### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put 
@@ -12367,3 +12396,7 @@ function Template-CheckScheduledTasks {
     # Method 4
     if (Get-ScheduledTask FirefoxMaint -ErrorAction Ignore) { "found" } else { "not found" }
 }
+
+# This relates to my StackOverflow question about all module components not being applied 
+# when the module is loaded; this forces all to be exported into the current session.
+Export-ModuleMember -Alias * -Function *
