@@ -233,7 +233,6 @@ function dirpaths ($folder, $filter) {   # Remove header information and just sh
 
 function killx () { kill -n explorer; explorer }   # Kill explorer and restart it (for times when it doesn't restart immediately)
 
-
 # Help Functions ...
 # ms (MAN SYNTAX), mm (MAN), mp <cmd> <param> (MAN PARAMETER HELP), me (MAN EXAMPLES), mf (MAN FULL)
 function Test-Input ($test) { if ($null -eq $args) { "Must specify input." } }   # Need to use exit for this to exit the calling function
