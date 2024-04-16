@@ -29,9 +29,9 @@ The function `m` is used to provide access to all help functions *and* to the `a
 • `m Para` - Show all `about_` Topics containing "Para".
 • `m Foreach` - Show all `about_` Topics containing "Para".
 • `m Foreach` - Show all `about_` Topics containing "Para".
-Help works, but extensive help is not built into many Custom-Tools functions. e.g. `help def` and help can sometimes be awkward to navigate, so Custom-Tools containes some helpers to quickly get to Cmdlet and Function information:  
+Help works, but extensive help is not built into many Custom-Tools functions. e.g. `help def` and help can sometimes be awkward to navigate, so Custom-Tools contains some helpers to quickly get to Cmdlet and Function information:  
 • `mm` (man module), quick way to get info on a module, so `mm pester`, but `mod pester` is more compact/efficient.
-• `ms` (man syntax), can also use `syn`, so `syn def`, and `mparam` (man parameter) (can't use `mp` as that is a built-in alias), quick way to get info on a function parameter. These are very useful together to just get specific info on a command, e.g. To first see the syntax of a command, use `ms` and then to drill down and see detauled info on the `Filter` parameter:
+• `ms` (man syntax), can also use `syn`, so `syn def`, and `mparam` (man parameter) (can't use `mp` as that is a built-in alias), quick way to get info on a function parameter. These are very useful together to just get specific info on a command, e.g. To first see the syntax of a command, use `ms` and then to drill down and see detailed info on the `Filter` parameter:
 `ms Get-ChildItem`  
 `mparam Get-ChildItem Filter`  
 • `me` (man examples), just show the examples for a given Cmdlet / Function, e.g. `me Get-ChildItem`  

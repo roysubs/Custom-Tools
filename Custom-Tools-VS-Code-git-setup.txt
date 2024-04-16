@@ -1,0 +1,29 @@
+To commit a local repo to GitHub, you need to install git.
+==========
+The first thing you need to do is to set your user name and email address. This is important because every Git commit uses this information, and it is immutably baked into the commits you start creating:
+   git config --global user.name "Roy Subs"
+   git config --global user.email roysubs@hotmail.com
+You can Then can see that these are set in
+   git config --list --show-origin
+   
+Open VS Code and commit Changes to the local project:
+==========
+File menu > select "Open Folder...", navigate to the git project, and open it.
+Once your repository is open in VS Code, you'll see the "Source Control" icon in the Activity Bar on the side (looks like a branch).
+Click on it to open the Source Control view, and this prompts to install Git if you don't already have it. I installed Git with all defaults, then I pressed the "reload" link in the Source Control section (or could manually just restart VS Code).
+I now see all files marked M (modified) and U (untracked). Hover over each to see details.
+Remember that the Explorer view operates differently from the Source Control view. Even though the Explorer view shows M/U git status etc, you cannot see diff changes or Commit etc. Go to the Source Control view to see everything properly.
+With a file open that has status M(odified), you get two panes:
+Left Pane: This is the original version of the file from the last commit or the version that is currently checked into source control. It represents the state of the file before any changes were made.
+Right Pane: This is the modified version of the file that includes your changes. The green blocks you see indicate added lines or code that were not present in the original version on the left.
+If you just press Commit button at the top, it will automatically stage all modified files.
+However, it will not stage untracked files, so it is sometimes better to manually press the "+" button when hovering over a file to stage each file required (including untracked files if required).
+When you press Commit, it will fail if user.name and user.email are not set.
+
+Push Changes to GitHub:
+==========
+After committing your changes locally, you'll need to push them to GitHub.
+In the Source Control view, click on the ellipsis (...) at the top and select "Push".
+If you haven't configured your GitHub credentials yet, VS Code will prompt you to sign in.
+Once signed in, VS Code will push your changes to your GitHub repository.
+That's it! You've now opened your local Git repository in VS Code and committed your changes to GitHub. No additional extensions are required for these basic Git operations in VS Code.

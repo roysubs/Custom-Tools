@@ -4,18 +4,20 @@
 #
 ####################
 
-# This function collection are onlyine only, so keeping them separate from the main Custom-Tools.
-# i.e. The below dynamically load on demand and will mimic the switches in those functions.
-# However, man <function-name> will not work, so use  <function-name> -? to see the switches
-
-# Only use older/stable/reliable repositories in here as there is a small danger associated
-# with loading a script that has been compromised. However, the repositories below are all 
-# very stable.
-
-# Ideally, should also have a way to download the script (into the default 'Scripts' folder)
+# This function collection gives the full functionality of an online script, loading them
+# dynamically, including all parameters that they accept. However, note that:
+#    man <function-name>
+# does not work, so use the following to view the parameters available to the function
+#    <function-name> -?
+#
+# Only use older/stable/reliable repositories here as there is a small danger associated
+# with loading a script using iex (Invoke-Expression) if it has been compromised.
+#
+# Ideally, should also have some way to download the script (into the default 'Scripts' folder)
+# as an alternative to running dynamically.
 
 # https://github.com/janikvonrotz/awesome-powershell   # Awesome PowerShell Awesome Quality Assurance
-# A curated list of delightful PowerShell packages and resources.
+# A curated list of PowerShell packages and resources.
 # Some useful repositories to get functions from:
 # https://github.com/proxb?tab=repositories
 #    https://github.com/proxb/PowerShellModulesCentral
@@ -25,12 +27,12 @@
 #    https://github.com/janikvonrotz/dotfiles
 #    https://github.com/janikvonrotz/emoji-cheat-sheet
 
-#== Windows 10 DeCrapifier and DeBloater ==
+# Windows 10 DeCrapifier and DeBloater:
 # https://www.makeuseof.com/windows-10-decrapifier-debloater/
 # https://www.lifewire.com/pc-decrapifier-review-2626193
 # DeCrapifier: https://community.spiceworks.com/scripts/show/4378-windows-10-decrapifier-18xx-19xx-2xxx
 # DeBloater:   https://freetimetech.com/windows-10-clean-up-debloat-tool-by-ftt/
-# https://github.com/eccko/TrashEraser-Debloat-Windows-10  
+# https://github.com/eccko/TrashEraser-Debloat-Windows-10
 
 function Test-ConnectionAsync {
     # https://github.com/proxb/AsyncFunctions
@@ -63,6 +65,13 @@ function Get-DNSHostEntryAsync {
 function Test-Port {
     # https://github.com/proxb/PowerShell_Scripts
     $toImport = (irm "https://raw.githubusercontent.com/proxb/PowerShell_Scripts/master/Test-Port.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
+    New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
+    $MyInvocation.Line | iex
+}
+
+function IPv4PortScan {
+    # https://github.com/BornToBeRoot/PowerShell_IPv4PortScanner
+    $toImport = (irm "https://raw.githubusercontent.com/BornToBeRoot/PowerShell_IPv4PortScanner/main/Scripts/IPv4PortScan.ps1").Replace([Text.Encoding]::UTF8.GetString((239,187,191)),"")
     New-Module ([ScriptBlock]::Create($toImport)) | Out-Null
     $MyInvocation.Line | iex
 }
@@ -109,7 +118,7 @@ function RickASCII {
 
 
 # function Enable-OnlineFunction {
-# 
+#
 #     # using statements must be at the top of a script, i.e. cannot be inside a function
 #     # using namespace System.Management.Automation.Language
 #     # If this is not possible, need to inject "System.Management.Automation.Language" before Parser and FunctionDefinitionAst
@@ -117,13 +126,13 @@ function RickASCII {
 #     # Load-Function https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
 #     # Ping-Subnet            # => now is available in your current session.
 #     # Test-ConnectionAsync   # => now is available in your current session.
-#     
+#
 #     [cmdletbinding()]
 #     param(
 #         [parameter(Mandatory, ValueFromPipeline)]
 #         [uri] $URI
 #     )
-# 
+#
 #     process {
 #         try {
 #             $funcs = Invoke-RestMethod $URI
@@ -141,7 +150,7 @@ function RickASCII {
 #         }
 #     }
 # }
-# 
+#
 # functions Enable-PingDNSTools {
 #     Enable-OnlineFunction https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1
 #     echo "'Ping-Subnet' is now available in your current session."
@@ -154,15 +163,15 @@ function RickASCII {
 # function Invoke-RegExHelper {
 # <#
 # Invoke-RegExHelper
-####...SYNOPSIS 
+####...SYNOPSIS
 # A UI to help with writing Regular Expressions.
 # https://github.com/proxb/RegExHelper
 # This is a UI built using PowerShell and WPF that allows for simple Regular Expression checking by displaying the results in real time.
-# 
+#
 # Currently this only supports a string match but future versions will allow for locating patterns in a log file or similiar groups of text.
-# 
+#
 # Feedback and improvements are always welcome! Be sure to check out the Dev branch to help out with the log file regular expression helper.
-# 
+#
 # You need to dot source the script to load the Invoke-RegExHelper function.
 # #>
 #     $toImport = irm "https://raw.githubusercontent.com/proxb/AsyncFunctions/master/Test-ConnectionAsync.ps1"

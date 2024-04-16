@@ -2,6 +2,7 @@
 # 
 # Custom-Tools.psm1
 # 2019-11-25 Initial setup
+# 2023-12-17 Current Version
 #
 # Module is installed to the Module folder visible to all users (but can only be modified by Administrators):
 #    C:\Program Files\WindowsPowerShell\Modules\Custome-Tools
@@ -111,28 +112,58 @@
 #
 ####################
 
-# dirsize using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
-# vs dirsizeps (native PowerShell method of sizing a folder)
-function dirsize ($dir) {
-    if ($dir -eq $null) {
-        "No folder selected."
-    } else {
-        $rOutput = &robocopy /l /njh /nfl /ndl /njh $dir dummypath /e /bytes
-        $bSize = ($rOutput -cmatch 'Bytes :' -split '\s+')[3]
-        "{0:N2} MB" -f ($bSize / 1MB)   # Write-Host "$($dir.FullName)`t$bSize"
+function Update-PowerShellStartup {
+    # Console startup times can slow over time. Use the following to generate native
+    # images for an assembly and its dependencies and install them in the Native Images Cache.
+    # https://stackoverflow.com/questions/59341482/powershell-steps-to-fix-slow-startup
+    # https://superuser.com/questions/1212442/powershell-slow-starting-on-windows-10
+    # powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell "Write-Host 1" } ).TotalSeconds
+
+    $env:PATH = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+    [AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object {
+        $path = $_.Location
+        if ($path) { 
+            $name = Split-Path $path -Leaf
+            Write-Host -ForegroundColor Yellow "`r`nRunning ngen.exe on '$name'"
+            ngen.exe install $path /nologo
+        }
     }
-}
-function dirsizeps ($dir) { 
-    if ($dir -eq $null) { "No folder selected." }
-    else { "{0:N2} MB" -f ((Get-ChildItem "$dir" -Recurse -Force -EA silent | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB) }
+
+    Write-Host ""
+    Write-Host "Option: Adding powershell.exe to the list of Windows Defender exclusions can speed it up considerably (but might be a risk)."
+    Write-Host "Option: Create a shortcut to powershell.exe, right-click on it > properties, go to options tab, click on 'use legacy console'. With legacy on things can be faster."
+    Write-Host ""
+    Write-Host "Location of PowerShell exe can be found with: (Get-Process -Id `$pid).Path   or   (Get-Command PowerShell.exe).Path"
+    Write-Host "For PowerShell 5.1, this is:   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    Write-Host "For PowerShell 7.1, this is:   C:\Program Files\PowerShell\7\pwsh.exe"
+    Write-Host ""
+    Write-Host "To test PowerShell startup times:"
+    Write-Host "From DOS:        powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell 'Write-Host 1' } ).TotalSeconds"
+    Write-Host "From PowerShell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -ExecutionPolicy Bypass ( Measure-Command { C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe 'Write-Host 1' } ).TotalSeconds"
+    Write-Host ""
 }
 
-# Following are some quick-and-dirty "dir" and "cd" functions to mimic and extend DOS equivalents (for muscle-memory of typing those commands).
-# Note the abbreviation sytnax built into PowerShell for Get-ChildItem (dir/ls/gci):
-#    -ad (Dirs) , -af (Files), -ah (Hidden), -ar (ReadOnly)
-# Also, can shorten the -Attributes flag. e.g.   -at h  (instead of -Attributes Hidden), or -at dir  (instead of -Attributes Directory)
-# Also, can use "!" to logical-NOT a flag, e.g.  -at !h   (show all files and folders that are NOT hidden)
-function da ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
+function Get-Size ($dir) {   # Get-Size using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
+    if ($null -eq $dir) { $dir = "." }   # No path provided, use current location
+    $rOutput = &robocopy /l /njh /nfl /ndl /njh $dir dummypath /e /bytes
+    $bSize = ($rOutput -cmatch 'Bytes :' -split '\s+')[3]
+    "{0:N2} MB" -f ($bSize / 1MB)   # Write-Host "$($dir.FullName)`t$bSize"
+}
+Set-Alias size Get-Size
+Set-Alias sz Get-Size
+
+function Get-SizePS ($dir) {   # Native PowerShell find size (much slower than robocopy version)
+    if ($null -eq $dir) { $dir = "." }   # No path provided, use current location
+    "{0:N2} MB" -f ((Get-ChildItem "$dir" -Recurse -Force -EA silent | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum / 1MB)
+}
+
+# PowerShell allows '/' in a function name, so following can mimic DOS equivalents (for muscle-memory of typing those commands).
+# Note also the handy abbreviation/alias sytnax built into PowerShell for Get-ChildItem (dir/ls/gci)
+#    e.g.   dir -ad (-Directory) , dir -af (-Files), dir -ah (-Hidden), -ar (-ReadOnly)
+# Also, can shorten any parameter as long as no duplicates to that, so can shorten -Attributes to -at
+#    e.g.   -at h  (instead of '-Attributes Hidden'),  -at dir  (instead of '-Attributes Directory')
+# Also, can use "!" to logical -NOT a flag, e.g.  -at !h   ('attributes not-hidden', show all files and folders that are NOT hidden)
+function dir-all ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
 function dir/ah ($name) { dir -Hidden $name }                    # Mimic DOS dir/ad. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
 function dir/ad ($name) { dir -Directory $name }                 # Mimic DOS dir/ad. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
 function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NOT directories'"". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
@@ -140,7 +171,39 @@ function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir
 function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
 function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
-function dirw ($name) {
+
+# https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
+# https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
+function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
+
+function dirq ($name) {   # quick and dirty Size + Name, work in progress
+    $out = ""
+    function Format-FileSize([int64]$size) {
+        if ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
+        elseif ($size -gt 1GB) {[string]::Format("{0:0.0} GB", $size / 1GB)}
+        elseif ($size -gt 1MB) {[string]::Format("{0:0.0} MB", $size / 1MB)}
+        elseif ($size -gt 1KB) {[string]::Format("{0:0.0} KB", $size / 1KB)}
+        elseif ($size -gt 0) {[string]::Format("{0:0.0} B", $size)}
+        else {""}
+    }
+    foreach ($i in (dir $folder | sort Length).FullName) {
+        if (Test-Path -Path $i -PathType Container) {
+            $size = "[D]"
+            $size_out = "[D]" 
+        }
+        else {
+            $size = (gci $i | select length).Length
+            $size_out = Format-FileSize($size)
+            $size_total += $size
+        }
+        $out += "$size_out`t$(split-path $i -leaf)`n"
+    }
+    $out += "$(Format-FileSize($size_total)) : Total Size"
+    $out
+}
+# $out.TrimEnd("  :  ")   # trime ous whitespace from either size of ":"
+
+function dirwide ($name) {   # quick and dirty wide listing, work in progress
     $out = ""
     function Format-FileSize([int64]$size) {
         if ($size -gt 1TB) {[string]::Format("{0:0.00}TB", $size / 1TB)}
@@ -159,10 +222,17 @@ function dirw ($name) {
     }
     $out.TrimEnd("  :  ")
 }
+
 function dirpaths ($folder, $filter) {   # Remove header information and just show the full paths
     try { gci -r $folder -Filter $filter | select -expand FullName -EA silent }
     catch { "crapped out!" }
 }
+
+# Extending Get-ChildItem
+# https://jdhitsolutions.com/blog/powershell/9057/using-powershell-your-way/
+
+function killx () { kill -n explorer; explorer }   # Kill explorer and restart it (for times when it doesn't restart immediately)
+
 
 # Help Functions ...
 # ms (MAN SYNTAX), mm (MAN), mp <cmd> <param> (MAN PARAMETER HELP), me (MAN EXAMPLES), mf (MAN FULL)
@@ -434,11 +504,22 @@ Set-Alias ip Get-IPAddress
 # function ipv6 { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv6" } } ; Set-Alias ip6 ipv6
 # function ip { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv4|IPv6" } }
 
-function Enable-PSColor {   # Enable colour directory listings
+function Enable-PSColor {    
+    # Enable colour directory listings
     ""
-    "Importing PSColor Module ..."
-    if (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
-    if (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") { Import-Module PSColor }
+    if ( (!(Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor")) -and (!(Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor")) ) { 
+        "Installing PSColor Module ..."
+        Install-Module PSColor
+    }
+    if ( (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") -or (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") ) { 
+        "Importing PSColor Module ..."
+        Import-Module PSColor
+    }
+    if (Get-Module -All PSColor) { 
+        dir
+    } else {
+        "PSColor failed to install or import"
+    }
 }
 
 Set-Alias pscolor Enable-PSColor
@@ -560,146 +641,146 @@ function Test-Colors {
     # I have used all these, many are most likely duplicate colors, but they all work
     # $Colors = @()
     # 
-    # $Colors += “AliceBlue”
-    # $Colors += “AntiqueWhite”
-    # $Colors += “Aqua”
-    # $Colors += “Aquamarine”
-    # $Colors += “Azure”
-    # $Colors += “Beige”
-    # $Colors += “Bisque”
-    # $Colors += “Black”
-    # $Colors += “BlanchedAlmond”
-    # $Colors += “Blue”
-    # $Colors += “BlueViolet”
-    # $Colors += “Brown”
-    # $Colors += “BurlyWood”
-    # $Colors += “CadetBlue”
-    # $Colors += “Chartreuse”
-    # $Colors += “Chocolate”
-    # $Colors += “Coral”
-    # $Colors += “CornflowerBlue”
-    # $Colors += “Cornsilk”
-    # $Colors += “Crimson”
-    # $Colors += “Cyan”
-    # $Colors += “DarkBlue”
-    # $Colors += “DarkCyan”
-    # $Colors += “DarkGoldenrod”
-    # $Colors += “DarkGray”
-    # $Colors += “DarkGreen”
-    # $Colors += “DarkKhaki”
-    # $Colors += “DarkMagenta”
-    # $Colors += “DarkOliveGreen”
-    # $Colors += “DarkOrange”
-    # $Colors += “DarkOrchid”
-    # $Colors += “DarkRed”
-    # $Colors += “DarkSalmon”
-    # $Colors += “DarkSeaGreen”
-    # $Colors += “DarkSlateBlue”
-    # $Colors += “DarkSlateGray”
-    # $Colors += “DarkTurquoise”
-    # $Colors += “DarkViolet”
-    # $Colors += “DeepPink”
-    # $Colors += “DeepSkyBlue”
-    # $Colors += “DimGray”
-    # $Colors += “DodgerBlue”
-    # $Colors += “Firebrick”
-    # $Colors += “FloralWhite”
-    # $Colors += “ForestGreen”
-    # $Colors += “Fuchsia”
-    # $Colors += “Gainsboro”
-    # $Colors += “GhostWhite”
-    # $Colors += “Gold”
-    # $Colors += “Goldenrod”
-    # $Colors += “Gray”
-    # $Colors += “Green”
-    # $Colors += “GreenYellow”
-    # $Colors += “Honeydew”
-    # $Colors += “HotPink”
-    # $Colors += “IndianRed”
-    # $Colors += “Indigo”
-    # $Colors += “Ivory”
-    # $Colors += “Khaki”
-    # $Colors += “Lavender”
-    # $Colors += “LavenderBlush”
-    # $Colors += “LawnGreen”
-    # $Colors += “LemonChiffon”
-    # $Colors += “LightBlue”
-    # $Colors += “LightCoral”
-    # $Colors += “LightCyan”
-    # $Colors += “LightGoldenrodYellow”
-    # $Colors += “LightGray”
-    # $Colors += “LightGreen”
-    # $Colors += “LightPink”
-    # $Colors += “LightSalmon”
-    # $Colors += “LightSeaGreen”
-    # $Colors += “LightSkyBlue”
-    # $Colors += “LightSlateGray”
-    # $Colors += “LightSteelBlue”
-    # $Colors += “LightYellow”
-    # $Colors += “Lime”
-    # $Colors += “LimeGreen”
-    # $Colors += “Linen”
-    # $Colors += “Magenta”
-    # $Colors += “Maroon”
-    # $Colors += “MediumAquamarine”
-    # $Colors += “MediumBlue”
-    # $Colors += “MediumOrchid”
-    # $Colors += “MediumPurple”
-    # $Colors += “MediumSeaGreen”
-    # $Colors += “MediumSlateBlue”
-    # $Colors += “MediumSpringGreen”
-    # $Colors += “MediumTurquoise”
-    # $Colors += “MediumVioletRed”
-    # $Colors += “MidnightBlue”
-    # $Colors += “MintCream”
-    # $Colors += “MistyRose”
-    # $Colors += “Moccasin”
-    # $Colors += “NavajoWhite”
-    # $Colors += “Navy”
-    # $Colors += “OldLace”
-    # $Colors += “Olive”
-    # $Colors += “OliveDrab”
-    # $Colors += “Orange”
-    # $Colors += “OrangeRed”
-    # $Colors += “Orchid”
-    # $Colors += “PaleGoldenrod”
-    # $Colors += “PaleGreen”
-    # $Colors += “PaleTurquoise”
-    # $Colors += “PaleVioletRed”
-    # $Colors += “PapayaWhip”
-    # $Colors += “PeachPuff”
-    # $Colors += “Peru”
-    # $Colors += “Pink”
-    # $Colors += “Plum”
-    # $Colors += “PowderBlue”
-    # $Colors += “Purple”
-    # $Colors += “Red”
-    # $Colors += “RosyBrown”
-    # $Colors += “RoyalBlue”
-    # $Colors += “SaddleBrown”
-    # $Colors += “Salmon”
-    # $Colors += “SandyBrown”
-    # $Colors += “SeaGreen”
-    # $Colors += “SeaShell”
-    # $Colors += “Sienna”
-    # $Colors += “Silver”
-    # $Colors += “SkyBlue”
-    # $Colors += “SlateBlue”
-    # $Colors += “SlateGray”
-    # $Colors += “Snow”
-    # $Colors += “SpringGreen”
-    # $Colors += “SteelBlue”
-    # $Colors += “Tan”
-    # $Colors += “Teal”
-    # $Colors += “Thistle”
-    # $Colors += “Tomato”
-    # $Colors += “Turquoise”
-    # $Colors += “Violet”
-    # $Colors += “Wheat”
-    # $Colors += “White”
-    # $Colors += “WhiteSmoke”
-    # $Colors += “Yellow”
-    # $Colors += “YellowGreen”
+    # $Colors += "AliceBlue"
+    # $Colors += "AntiqueWhite"
+    # $Colors += "Aqua"
+    # $Colors += "Aquamarine"
+    # $Colors += "Azure"
+    # $Colors += "Beige"
+    # $Colors += "Bisque"
+    # $Colors += "Black"
+    # $Colors += "BlanchedAlmond"
+    # $Colors += "Blue"
+    # $Colors += "BlueViolet"
+    # $Colors += "Brown"
+    # $Colors += "BurlyWood"
+    # $Colors += "CadetBlue"
+    # $Colors += "Chartreuse"
+    # $Colors += "Chocolate"
+    # $Colors += "Coral"
+    # $Colors += "CornflowerBlue"
+    # $Colors += "Cornsilk"
+    # $Colors += "Crimson"
+    # $Colors += "Cyan"
+    # $Colors += "DarkBlue"
+    # $Colors += "DarkCyan"
+    # $Colors += "DarkGoldenrod"
+    # $Colors += "DarkGray"
+    # $Colors += "DarkGreen"
+    # $Colors += "DarkKhaki"
+    # $Colors += "DarkMagenta"
+    # $Colors += "DarkOliveGreen"
+    # $Colors += "DarkOrange"
+    # $Colors += "DarkOrchid"
+    # $Colors += "DarkRed"
+    # $Colors += "DarkSalmon"
+    # $Colors += "DarkSeaGreen"
+    # $Colors += "DarkSlateBlue"
+    # $Colors += "DarkSlateGray"
+    # $Colors += "DarkTurquoise"
+    # $Colors += "DarkViolet"
+    # $Colors += "DeepPink"
+    # $Colors += "DeepSkyBlue"
+    # $Colors += "DimGray"
+    # $Colors += "DodgerBlue"
+    # $Colors += "Firebrick"
+    # $Colors += "FloralWhite"
+    # $Colors += "ForestGreen"
+    # $Colors += "Fuchsia"
+    # $Colors += "Gainsboro"
+    # $Colors += "GhostWhite"
+    # $Colors += "Gold"
+    # $Colors += "Goldenrod"
+    # $Colors += "Gray"
+    # $Colors += "Green"
+    # $Colors += "GreenYellow"
+    # $Colors += "Honeydew"
+    # $Colors += "HotPink"
+    # $Colors += "IndianRed"
+    # $Colors += "Indigo"
+    # $Colors += "Ivory"
+    # $Colors += "Khaki"
+    # $Colors += "Lavender"
+    # $Colors += "LavenderBlush"
+    # $Colors += "LawnGreen"
+    # $Colors += "LemonChiffon"
+    # $Colors += "LightBlue"
+    # $Colors += "LightCoral"
+    # $Colors += "LightCyan"
+    # $Colors += "LightGoldenrodYellow"
+    # $Colors += "LightGray"
+    # $Colors += "LightGreen"
+    # $Colors += "LightPink"
+    # $Colors += "LightSalmon"
+    # $Colors += "LightSeaGreen"
+    # $Colors += "LightSkyBlue"
+    # $Colors += "LightSlateGray"
+    # $Colors += "LightSteelBlue"
+    # $Colors += "LightYellow"
+    # $Colors += "Lime"
+    # $Colors += "LimeGreen"
+    # $Colors += "Linen"
+    # $Colors += "Magenta"
+    # $Colors += "Maroon"
+    # $Colors += "MediumAquamarine"
+    # $Colors += "MediumBlue"
+    # $Colors += "MediumOrchid"
+    # $Colors += "MediumPurple"
+    # $Colors += "MediumSeaGreen"
+    # $Colors += "MediumSlateBlue"
+    # $Colors += "MediumSpringGreen"
+    # $Colors += "MediumTurquoise"
+    # $Colors += "MediumVioletRed"
+    # $Colors += "MidnightBlue"
+    # $Colors += "MintCream"
+    # $Colors += "MistyRose"
+    # $Colors += "Moccasin"
+    # $Colors += "NavajoWhite"
+    # $Colors += "Navy"
+    # $Colors += "OldLace"
+    # $Colors += "Olive"
+    # $Colors += "OliveDrab"
+    # $Colors += "Orange"
+    # $Colors += "OrangeRed"
+    # $Colors += "Orchid"
+    # $Colors += "PaleGoldenrod"
+    # $Colors += "PaleGreen"
+    # $Colors += "PaleTurquoise"
+    # $Colors += "PaleVioletRed"
+    # $Colors += "PapayaWhip"
+    # $Colors += "PeachPuff"
+    # $Colors += "Peru"
+    # $Colors += "Pink"
+    # $Colors += "Plum"
+    # $Colors += "PowderBlue"
+    # $Colors += "Purple"
+    # $Colors += "Red"
+    # $Colors += "RosyBrown"
+    # $Colors += "RoyalBlue"
+    # $Colors += "SaddleBrown"
+    # $Colors += "Salmon"
+    # $Colors += "SandyBrown"
+    # $Colors += "SeaGreen"
+    # $Colors += "SeaShell"
+    # $Colors += "Sienna"
+    # $Colors += "Silver"
+    # $Colors += "SkyBlue"
+    # $Colors += "SlateBlue"
+    # $Colors += "SlateGray"
+    # $Colors += "Snow"
+    # $Colors += "SpringGreen"
+    # $Colors += "SteelBlue"
+    # $Colors += "Tan"
+    # $Colors += "Teal"
+    # $Colors += "Thistle"
+    # $Colors += "Tomato"
+    # $Colors += "Turquoise"
+    # $Colors += "Violet"
+    # $Colors += "Wheat"
+    # $Colors += "White"
+    # $Colors += "WhiteSmoke"
+    # $Colors += "Yellow"
+    # $Colors += "YellowGreen"
 }
 
 function Enable-DirFriendlySizes {
@@ -1269,11 +1350,10 @@ function Update-RegItem ($RegPath, $Item, $Value) {
 function Restart-Explorer
 {
     Param([switch] $SuppressReOpen)
+    # Cleanly restart Explorer.exe, but remember and reopening all currently open Explorer Windows
+    # Restart-Explorer -SuppressReOpen to skip reopening the existing windows.
 
-    # Apparently will record the currently reopen Explorer Windows and then reopen them 
-    # Not sure if working, need to test more ...
-
-    #Gather up the currently open windows, so we can re-spawn them.
+    # Gather up the currently open windows, so we can re-spawn them.
     $x = New-Object -ComObject "Shell.Application"
     $count = $x.Windows().Count
     $windows = @();
@@ -1678,6 +1758,7 @@ function Help-ToolkitConfig {
     Write-Host "BackupProfile (use robocopy to backup current Profile folder to D:\Backup\`$env:USERNAME_`$DateTimeNowStringMinutes"
     Write-Host "sys function (get summary of most used system details)"
     Write-Host "Various 'prompt' functions are included in Custom-Tools. Type 'prompt' then his Ctrl-Space to view." -ForegroundColor Green
+    # Write-Host "Use 'more `"`$(`$Profile)_extensions.ps1'`" to review all contents." -ForegroundColor Green
     Write-Host ""
     Write-Host "Custom-Tools.psm1 Module installed to user Module folder." -ForegroundColor Green
     Write-Host "Keep this mainly for usually longer functions that will only be fully loaded when the Module is called." -ForegroundColor Green
@@ -1688,7 +1769,7 @@ function Help-ToolkitConfig {
     Write-Host "Chocolatey:" -ForegroundColor Green
     Write-Host "This is installed by default as a PowerShell tool very important for package management tasks."
     Write-Host "choco list -lo             # View locally installed packages."
-    Write-Host "choco search <string>      # Rind chocolatey packages."
+    Write-Host "choco search <string>      # Find chocolatey packages."
     Write-Host "choco info <packagename>   # To get detailed info on a chocolatey package."
     Write-Host "choco inst <packagename>   # To install a chocolatey package."
     Write-Host ""
@@ -1698,8 +1779,22 @@ function Help-ToolkitConfig {
     # Write-Host "Review script actions above if required as this window will close after this" -ForegroundColor White -BackgroundColor Red
     # Write-Host "point if this script was called from another console." -ForegroundColor White -BackgroundColor Red
     Write-Host ""
+    Write-Host "Some quick commands to try:" -ForegroundColor Green
+    Write-Host "   mods        # All currently installed modules and installed locations."
+    Write-Host "   mods W*     # Show modules starting with 'w' and their installed locations."
+    Write-Host "   mod <name>  # See details on a specific module"
+    Write-Host "   mod <name> <function_in_mod>   # Show the 'def' (definitions) for function_in_mod that is in the module."
+    Write-Host " e.g.  mod Custom-Tools"
+    Write-Host "       mod Custom-Tools Help-sls"
     Write-Host ""
-    try { screenfetch } catch { "ScreenFetch hit an error and could not load; possibly a hard disk is full, or exploded, or on fire.`n" }
+    Write-Host "Help Tools" -ForegroundColor Green
+    Write-Host "   def <command>   # show the definitions for any command: Alias, Cmdlet, Function, ExternalScript, Application"
+    Write-Host "e.g.  def Install-NotepadPlusPlus"
+    Write-Host "   m <Alias|Cmdlet|Function|ExternalScript|Application>"
+    Write-Host "e.g.  m Para      # Try exactly this to show all variants of 'Para' in help files, note no need for wildcards."
+    Write-Host "  'm' is a help wrapper tool that has much more functionality. Type 'm' on its own for more information."
+    Write-Host ""
+    try { & "$Home\Desktop\MySandbox\MyPrograms\winfetch.ps1" } catch { "WinFetch hit an error and could not load.`n" }
     # Write-Host "Final prompt in case this was called in a separate console (which will immediately close"
     # Write-Host "after you continue - in which case, make sure to check the above output if required)."
     # Write-Host "Press Enter to continue...:" ; cmd /c pause | out-null   # PowerShell v2 compatible version of 'Pause'
@@ -1712,9 +1807,8 @@ function Help-ToolkitConfig {
     ### choco install ethanbrown.conemuconfig
 
     # Some Windows Tricks (from Edwin):
-    # nice windows tricks
-    #    Ipconfig|clip   # Puts output in your clipboard
-    # When you have an explorer and browse to a patu and type in the bar cmd then...it opens cmd with that path.
+    # ipconfig | clip   # Puts output in your clipboard
+    # In Explorer, type cmd or powershell into the address bar to open a console at the current location
     # Regedit -m   # Multiple regedit open
     # A funny message: helpmsg 4006
     # When cmd.exe is disabled by a policy open task manager and then ctrl cmd opens a cmd.exe
@@ -2024,10 +2118,10 @@ https://docs.microsoft.com/en-us/virtualization/windowscontainers/about/
 Dynamically generated Image
 At its core Windows Sandbox is a lightweight VM, but Sandbox key enhancement is ability to use the Windows 10 installed on your computer,
 instead of downloading a new VHD image as you would have to do with an ordinary virtual machine.
-The challenge is that some OS files can change. The solution is to construct what we refer to as “dynamic base image”: an OS image that
+The challenge is that some OS files can change. The solution is to construct what we refer to as "dynamic base image": an OS image that
 has clean copies of files that can change, but links to files that cannot change that are in the Windows image that already exists on the
 host. The majority of the files are links (immutable files) and that's why the small size (~100MB) for a full operating system. We call
-this instance the “base image” for Windows Sandbox, using Windows Container parlance.
+this instance the "base image" for Windows Sandbox, using Windows Container parlance.
 When Sandbox is not in use, the dynamic base image is compressed (~25MB). When installed the dynamic base package is only 100MB disk space.
 
 *** Main uses:
@@ -2263,7 +2357,7 @@ But it is full Linux and so you can update it just like any full Linux.
 https://www.how2shout.com/how-to/how-to-upgrade-ubuntu-18-04-to-19-10-on-windows-10-linux-subsystem.html
 
 However, a few changes must be made before the upgrade.
-First, we must override LTS as by default it doesn’t allow upgrading an LTS releases to non-LTS.
+First, we must override LTS as by default it does not allow upgrading an LTS releases to non-LTS.
 Thus, we need to change this default rule to a standard one. For that type:
     cat /etc/os-release   # => 18.04 LTS
     sudo nano /etc/update-manager/release-upgrades
@@ -2291,26 +2385,26 @@ Finish with sudo apt upgrade
     You have to download a total of 147 M. This download will take about 2 minutes with your connection.
     Installing the upgrade can take several hours. Once the download has finished, the process cannot be canceled.
 
-    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy   │
-    │ settings as needed so that you can reach the snap store.                                                                            │
-    │                                                                                                                                     │
-    │ You can manually check for connectivity by running "snap info lxd"                                                                  │
-    │                                                                                                                                     │
-    │ Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.              │
-    │                                                                                                                                     │
-    │ Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.         │
-    │ Skipping is allowed only when LXD is not activated on the system.                                                                   │
-    │                                                                                                                                     │
-    │ Unable to reach the snap store
+    | Your system is unable to reach the snap store, please make sure you're connected to the Internet and update any firewall or proxy
+    settings as needed so that you can reach the snap store.
+
+    You can manually check for connectivity by running "snap info lxd"
+
+    Aborting will cause the upgrade to fail and will require it to be re-attempted once snapd is functional on the system.
+
+    Skipping will let the package upgrade continue but the LXD commands will not be functional until the LXD snap is installed.
+    Skipping is allowed only when LXD is not activated on the system.
+
+    Unable to reach the snap store
 
     sudo do-release-upgrade -c   # Check if a release upgrade is available.
 Checking for a new Ubuntu release ... New release '19.10' available. ... Run 'do-release-upgrade' to upgrade to it.
     sudo do-release-upgrade      # Perform the upgrade to 19.10
-Sometimes, on Windows WSL, the upgrade couldn’t update the latest repo available for the upgraded system. Upon checking, the
-system will say there is no upgrade then manually add Ubuntu 19.10 “Eoan Ermine” official repo to our existing Disco Dingo.
+Sometimes, on Windows WSL, the upgrade cannot update the latest repo available for the upgraded system. Upon checking, the
+system will say there is no upgrade then manually add Ubuntu 19.10 "Eoan Ermine" official repo to our existing "Disco Dingo".
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
-
+    
 The wsl (wsl.exe) command is usable from DOS or PowerShell for all interaction with installed distros.
     wsl                 # type on its own to instantly launches the default shell. (use -d <distro name> to enter a different distro).
     wsl -e <commands>   # --exec execute commands without entering linux shell
@@ -2392,8 +2486,46 @@ echo $out | more
 function Help-Timers {
     $out = @'
 
+Techniques for timing scripts and operations (suppress output, show only the timing)
+(Measure-Command { **command1; command2; etc** }).TotalSeconds
+
+Pipe the commands to Out-Default to also show the output
+(Measure-Command { ls | Out-Default }).TotalSeconds
+
+$StartMs = (Get-Date).MilliSeconds
+0..1000 | ForEach-Object { $i++ }
+$EndMs = (Get-Date).MilliSeconds
+Write-Host "This Script took $($EndMs - $StartMs) milliseconds to run"
+
+https://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
+Measure-Command2 / Time function:   https://gist.github.com/jpoehls/2206444
+
+Count nuber of files with a filter and time the execution
+[Decimal]$Timing = ( Measure-Command {
+    $Result = Get-ChildItem $env:windir\System32 -Filter *.dll -Recurse -EA SilentlyContinue
+} ).TotalMilliseconds
+$Timing =[math]::round($Timing)
+Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+$Timing = (Measure-Command {
+    $Result = Get-ChildItem $env:windir\System32 -Include *.dll -Recurse -EA SilentlyContinue
+} ).TotalMilliseconds
+$Timing =[math]::round($Timing)
+Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+$StartTime = Get-Date
+Start-Sleep -Seconds 5
+$RunTime = New-TimeSpan -Start $StartTime -End (Get-Date)
+"Execution time was {0} hours, {1} minutes, {2} seconds and {3} milliseconds." -f $RunTime.Hours,  $RunTime.Minutes,  $RunTime.Seconds,  $RunTime.Milliseconds
+
+Using the .Net StopWatch class:
+$sw = [Diagnostics.Stopwatch]::StartNew()
+ls
+$sw.Stop()
+$sw.Elapsed.TotalSeconds
+
+Demonstrating speed benefit of the ForEach -Parallel option
 $Collection = 1..10
-# PowerShell 2+:
 (Measure-Command { $Collection | ForEach-Object { Write-Host $_ }}).TotalMilliseconds                     #     4.8004 milliseconds
 (Measure-Command { $Collection | ForEach-Object { Sleep 1; Write-Host $_ }}).TotalMilliseconds            # 10008.0906 milliseconds
 # PowerShell 6+ only:
@@ -2407,6 +2539,55 @@ $Collection 1..254
 '@
     echo $out | more
 }
+
+function Measure-Command2 ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch]$Silent, [Switch]$Long) {
+<#
+.SYNOPSIS
+  Runs the given script block and returns the execution duration.
+  Discovered on StackOverflow. http://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
+  
+.EXAMPLE
+  Measure-Command2 { ping -n 1 google.com }
+#>
+  $timings = @()
+  do {
+    $sw = New-Object Diagnostics.Stopwatch
+    if ($Silent) {
+      $sw.Start()
+      $null = & $Expression
+      $sw.Stop()
+      Write-Host "." -NoNewLine
+    }
+    else {
+      $sw.Start()
+      & $Expression
+      $sw.Stop()
+    }
+    $timings += $sw.Elapsed
+    
+    $Samples--
+  }
+  while ($Samples -gt 0)
+  
+  Write-Host
+  
+  $stats = $timings | Measure-Object -Average -Minimum -Maximum -Property Ticks
+  
+  # Print the full timespan if the $Long switch was given.
+  if ($Long) {  
+    Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).ToString())"
+    Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).ToString())"
+    Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).ToString())"
+  }
+  else {
+    # Otherwise just print the milliseconds which is easier to read.
+    Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).TotalMilliseconds)ms"
+    Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).TotalMilliseconds)ms"
+    Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).TotalMilliseconds)ms"
+  }
+}
+
+Set-Alias time Measure-Command2
 
 function Help-PowershellSetup {
     $out = @'
@@ -2500,7 +2681,7 @@ function git-push {
         "Crrent folder is not a git repository (no .git folder is present)" 
     }
     else { 
-        "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status  [pause to check]`n=>  git commit -m `"Update`"    =>  git status    =>  git push -u origin main`n`n"
+        "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status`n=>  git commit -m `"Update`"  =>  [pause to check]  =>  git status  =>  git push -u origin main`n`n"
         pause
         git status
         git add .
@@ -2508,6 +2689,7 @@ function git-push {
         git status
         git commit -m "Update"
         pause
+        "Note, the Github PAT (Personal Access Token) can be used in place of a password."
         git push -u origin main
     }
 }
@@ -3208,6 +3390,9 @@ Get-Service | Out-String -Stream | Select-String "^STOPPED" -CaseSensitive
 
 # Case-sensitive non-regex match (-SimpleMatch forces a simple string match)
 Get-Service | Out-String -Stream | Select-String "Stop" -CaseSensitive -SimpleMatch
+
+# Get-Childitem "C:\Windows\" -Recurse -Include *.log -ErrorAction SilentlyContinue | Select-String "Error" -ErrorAction SilentlyContinue | Group-Object filename | Sort-Object Count -Descending
+# ls "C:\Windows\" -i *.log -r -EA Silent | sls "Error" -EA Silent | group filename | sort Count -Descending
     
 '@
     
@@ -3246,37 +3431,91 @@ function Help-PowerShellMagazineQuick {
     Invoke-Item -Path $destination
 }
 
+function Help-Gci-FilterIncludeExclude {}   # This is just for all shitty issues around Include / Exclude
+# Get-Command | Where { $_.parameters.keys -Contains "Filter" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Include" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Exclude" -And $_.Verb -Match "Get"}
+# Get-Command | Where { $_.parameters.keys -Contains "Filter"}
+# Get-Command | Where { $_.parameters.keys -Contains "Include"}
+# Get-Command | Where { $_.parameters.keys -Contains "Exclude"}
+# ONE DISADVANTAGE OF -FILTER
+# You can only sift using one value with -Filter, whereas  -Include can accept multiple values, for example ".dll, *.exe"
+# https://www.computerperformance.co.uk/powershell/file-gci-filter/
+
+# Good explanation of the mess by Alex K. Angelopoulos from 2013 here: https://social.technet.microsoft.com/Forums/en-US/62c85fc4-1d44-4c3a-82ea-d49109423471/inconsistency-between-getchilditem-include-and-exclude-parameters?forum=winserverpowershell
+# A more up to date explanation from mklement0 (2016, but updated May 2022): https://stackoverflow.com/questions/38269209/using-get-childitem-exclude-or-include-returns-nothing/38308796#38308796
+# The mklement0 answer explains how some of the issues have been fixed in PS 7.x but will never be fixed in 5.x
+# 
+### -Filter is the most useful parameter to refine output of PowerShell cmdlets (much better than -Include or -Exclude).
+# Get-ChildItem $Env:windir\System32 -Filter *.dll
+# gci $Env:windir\System32\*.dll   # This works just as well
+# # Always choose -Filter rather than -Include.  Filtering is faster, and the results are more predictable.
+# [Decimal]$Timing = ( Measure-Command {
+#     $Result = Get-ChildItem $env:windir\System32 -Filter *.dll -Recurse -EA SilentlyContinue
+# } ).TotalMilliseconds
+# $Timing =[math]::round($Timing)
+# Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+# 
+# $Timing = (Measure-Command {
+#     $Result = Get-ChildItem $env:windir\System32 -Include *.dll -Recurse -EA SilentlyContinue
+# } ).TotalMilliseconds
+# $Timing =[math]::round($Timing)
+# Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
+
+# Get-ChildItem had a complex history with compromises between usability and standards compliance.
+# The original design was as a tool for enumerating items in a namespace; similar to but not equivalent to dir and ls.
+# The syntax and usage was going to conform to standard PowerShell (Monad at the time) guidelines. i.e. the Path
+# parameter would have truly just meant Path; it would not have been usable as a combination path specification and
+# result filter, which is what it is now.
+# dir c:\temp     # return children of the container c:\temp.
+# dir c:\temp\*   # return children of all containers inside c:\temp. With (2), you would never get c:\tmp\a.txt returned, since a.txt is not a container.
+# There are reasons that this was a good idea. The parameter names and filtering behavior was consistent with the evolving PowerShell design standards, and best of all the tool would be straightforward to stub in for use by namespace providers consistently.
+# However, this produced a lot of heated discussion. A rational, orthogonal tool would not allow the convenience we get with the dir command for doing things like this:
+# dir c:\tmp\a*.txt  # Possibly more important was the "crash" factor.  It's so instinctive for admins to do things like (3) that our fingers do the typing when we list directories, and the instant failure or worse, weird, dissonant output we would get with a more pure Path parameter is exactly like slamming into a brick wall.
+
+# From the documentation: -Include <string[]> Retrieves only the specified items. The value of this
+# parameter qualifies the Path parameter. Enter a path element or pattern, such as "*.txt". Wildcards
+# are permitted. The Include parameter is effective only when the command includes the Recurse parameter
+# or the path leads to the contents of a directory, such as C:\Windows\*, where the wildcard character
+# specifies the contents of the C:\Windows directory.
+# Note: only effective with -Recurse, or when C:\Path\* leads to the contexts of a directory (!!)
+
+# Get-File
+
 function Help-Dir {
     $out = @'
 
-A collection of very useful Get-ChildItem / gci / dir / ls tips:
+Note: Try to not use 'ls' alias as it conflicts with PowerShell on Linux, Get-ChildItem / gci / dir  are fine
+Mode (Attributes) column: l (link), d (directory), a (archive), r (read-only), h (hidden), s (system).
+# gci C:\0\*.txt -Directory [-ad] -Hidden [-ah] -ReadOnly [-ar] -System [-as]
+# gci C:\0\*.txt -adhrs -Recurse
 
 ### General:
 Mode (Attributes) column: l (link), d (directory), a (archive), r (read-only), h (hidden), s (system).
-dir C:\ -Name                    # Equivalent DOS:   dir C:\ /b
-dir C:\0\*.txt -Recurse -Force   # -Force will also show hidden files etc
-dir C:\0\*.txt -Recurse -Force -Include A*
-dir C:\0\*.txt -Recurse -Force -Exclude A*
-dir C:\0\ -Depth 1        # Works
-dir C:\0\*.txt -Depth 1   # Broken, not sure why
-dir C:\0\S* -Depth 2 -Dir # Just show directories starting with S to a depth of 2
-dir C:\0\*.txt -Recurse -Force -Filter "" update this ...
+gci C:\ -Name                    # Equivalent DOS:   dir C:\ /b
+gci C:\0\*.txt -Recurse -Force   # -Force will also show hidden files etc
+gci C:\0\*.txt -Recurse -Force -Include A*
+gci C:\0\*.txt -Recurse -Force -Exclude A*
+gci C:\0\ -Depth 1          # Works
+gci C:\0\*.txt -Depth 1     # Broken, not sure why
+gci C:\0\S* -Depth 2 -Dir   # Just show directories starting with S to a depth of 2
+gci C:\0\*.txt -Recurse -Force -Filter "" update this ...
 
 dir C:\0\*.txt -Attribute Archive, Compressed, Device, Directory, Encrypted, Hidden, IntegrityStream, Normal, `
 NoScrubData, NotContentIndexed, Offline, ReadOnly, ReparsePoint, SparseFile, System, Temporary
-# dir C:\0\*.txt -Directory [-ad] -Hidden [-ah] -ReadOnly [-ar] -System [-as]
-# dir C:\0\*.txt -adhrs -Recurse
+gci C:\0\*.txt -Directory -Hidden -ReadOnly -System   # -ad -ah -ar -as
+gci C:\0\*.txt -adhrs -Recurse
 
 https://stackoverflow.com/questions/19091750/how-to-search-for-a-folder-with-powershell
 https://stackoverflow.com/questions/55029472/list-folders-at-or-below-a-given-depth-in-powershell
-ls C:\pr* *wind* -Recurse -Directory   
+gci C:\pr* *wind* -Recurse -Directory   
 
 ### Basic Dir with selection of items
 Get-ChildItem C:\ | Where-Object { $_.Name -Like '*pr*' }
-dir C:\ | ? Name -Like '*pr*'       # Demonstrates PSv3 shorthand not requiring "{ $.Name }"
-dir C:\*pr*
-dir C:\*pr* | ForEach-Object { Remove-Item -LiteralPath $_.Name }   # Use the full literal path to perform the deletion
-dir C:\*pr* | % { rm -Literal $_.Name }                             # Shorthand
+gci C:\ | ? Name -Like '*pr*'    # Demonstrates PSv3 shorthand instead of "{ $_.Name -Like 'xxx' }"
+gci C:\*pr*
+gci C:\*pr* | ForEach-Object { Remove-Item -LiteralPath $_.Name }   # Use the full literal path to perform the deletion
+gci C:\*pr* | % { rm -Literal $_.Name }                             # Shorthand
 
 ### Dir commands with -filter and -include
 A caveat: this command actually gets files like *.txt* (-Filter uses CMD wildcards). If this is not what you want then use -Include *.txt
@@ -3304,7 +3543,19 @@ forfiles /S /M *.jpeg /C "cmd /c rename @file @fname.jpg"
 # Just need to make sure to add the '*' wildcard to the end of the path (it leads to the contents of the directory).
 # But note that you can omit the '*' wildcard if you also specify -Recurse(!)
 Get-Childitem -Path C:\* -include *.log,*.txt,*.nfo
-dir C:\* -i *.log,*.txt,*.ndo
+dir C:\* -i *.log,*.txt,*.nfo
+
+### -Include and -Exclude are unintuitive and contain a bug in PowerShell 5.1 that will never be fixed
+https://stackoverflow.com/posts/38308796/revisions
+https://syntaxfix.com/question/18836/how-can-i-exclude-multiple-folders-using-get-childitem-exclude
+https://stackoverflow.com/questions/51666987/in-powershell-get-childitem-exclude-is-not-working-with-recurce-parameter
+It is better to avoid -Exclude complately and instead use the following to exclude items:
+gci -r -dir | ? fullname -notmatch 'dir1|dir2|dir3'   # Will exlucde folders dir1,dir2,dir3
+But note that this will find all folders first, then exclude the ones not to match, so is not great performance-wise
+(gci -recurse *.aspx,*.ascx).fullname -notmatch '\\obj\\|\\bin\\'   # \obj\ or \bin\   # remember that PowerShell is case-insensitive by default, so -inotmatch is not needed
+gci -path c:\ -filter temp.* -exclude temp.xml   # Returns no results
+gci -path c:\* -filter temp.* -exclude temp.xml  # Returns  all the temp.* files, except temp.xml, note the c:\* which causes this
+gci $source -Directory -recurse | ? {$_.fullname -NotMatch "\\\s*_"} | % { $_.fullname }   # "\\\s*_" is regex for \, any amount of whitespace, _ 
 
 ### DeDup, using 'Group-Object'
 $env:PSModulePath.Split(";") | gci -Directory | group Name | where Count -gt 1 | select Count,Name,@{ n = "ModulePath"; e = { $_.Group.Parent.FullName } }
@@ -3971,14 +4222,14 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     echo '[Environment]::GetEnvironmentVariable("Path")          # Show currently loaded path (i.e. combination of "Machine" + "User")'
     echo '[Environment]::GetEnvironmentVariable("Path", "User")  # Show "User" part only, change to "Machine" for System Path)'
     echo '[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\bin", "Machine")   # Add a path to "Machine" (can also use "User"), updates only current session'
+    echo 'rundll32 sysdm.cpl,EditEnvironmentVariables   # Open Environment Variables dialogue'
     ""
-    echo '[System] "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"' 
-    echo '[User]   "Registry::HKEY_CURRENT_USER\Environment"  /  "HKCU:\Environment'
+    echo '$RegistrySystemPath = "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"   # System PATH' 
+    echo '$RegistrySystemPath = "Registry::HKEY_CURRENT_USER\Environment"   # User PATH, also at "HKCU:\Environment"'
     echo '(Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path'
     echo '$PathArray = (Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path -Split ";" -Replace "\\+$", ""'
-    echo '$FoundPath = 0 ; foreach ($Path in $PathArray) { if ($Path -contains $PathToAdd ) { $FoundPath = 1 } }'
-    echo 'if ($FoundPath -eq 0) { $PathNew = $PathOld + ";" + $PathToAdd ; Set-ItemProperty -Path $RegistrySystemPath -Name Path -Value $PathNew }'
-    echo 'rundll32 sysdm.cpl,EditEnvironmentVariables   # Open Environment Variables dialogue'
+    echo '$PathAlreadyExists = 0; foreach ($Path in $PathArray) { if ($Path -contains $PathToAdd ) { $PathAlreadyExists = 1 } }   # Use "-contains" for arrays'
+    echo 'if ($PathAlreadyExists -eq 0) { $PathNew = $PathOld + ";" + $PathToAdd ; Set-ItemProperty -Path $RegistrySystemPath -Name Path -Value $PathNew }'
     ""
     $Paths = $env:Path.Split(';') | select -Unique | sort   # Array of current Paths
     # $CleanedInputList = @()
@@ -4302,7 +4553,7 @@ function sys {
     "CPU:             $job_cpu_out"
     "CPU Cores:       $job_cpu_cores_out,      CPU Logical Cores:   $job_cpu_logical_out"
 
-    # Get-WmiObject -Class Win32_OperatingSystem | select @{N=’LastBootTime’; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
+    # Get-WmiObject -Class Win32_OperatingSystem | select @{N="LastBootTime"; E={$_.ConvertToDateTime($_.LastBootUpTime)}}
     # https://devblogs.microsoft.com/scripting/should-i-use-cim-or-wmi-with-windows-powershell/
     # $(wmic OS get LastBootupTime)
 
@@ -5187,7 +5438,7 @@ function Search-ManPagesWIP ($search, $help) {
 
 
 # Find definitions for any Cmdlet, Function, Alias, External Script, Application
-function def {   
+function what {   
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -5195,7 +5446,7 @@ function def {
         $cmd,
         [switch]$Examples
     )
-    # Previously fixed $cmd as [string]$cmd but this was wrong as cannot then handle arrays or anything else
+    # Previously declared $cmd as [string]$cmd but this was wrong as cannot then handle arrays or anything else
 
     function Write-Wrap {
         [CmdletBinding()]Param( [parameter(Mandatory=1, ValueFromPipeline=1, ValueFromPipelineByPropertyName=1)] [Object[]]$chunk )
@@ -5305,7 +5556,12 @@ function def {
         }
         elseif ($type -eq 'Function') {
             Write-Host "`n'$cmd' is a Function.  " -F Green -NoNewline
-            Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan ; cat function:\$cmd ; Write-Host ""
+            Write-Host "`ncat function:\$cmd   (show contents of function)`n" -F Cyan
+            if ($bat = Get-Command bat -ErrorAction Ignore) {
+                (Get-Content function:$cmd) | & $bat -p -l powershell
+            } else {
+                cat function:\$cmd ; Write-Host ""
+            }
             Write-Host "cat function:\$cmd`n" -F Cyan
             Write-Host ""
             Write-Host "SYNOPSIS, SYNTAX for '$cmd'.   " -F Green
@@ -5330,20 +5586,26 @@ function def {
             if ($Examples -eq $true) { $null = Read-Host "Press any key to view command examples" ; get-help $cmd -examples }
             Write-Host ""
         }
-        elseif ($type -eq 'ExternalScript') {   # For .ps1 scripts on path
+        elseif ($type -eq 'ExternalScript') {   # For .ps1 scripts in current location or on the path
             $x = gcm $cmd
-            Write-Host "`n'$cmd' is an ExternalScript (i.e. a .ps1 file on the path)." -F Green
+            Write-Host "`n'$cmd' is an ExternalScript (i.e. a .ps1 file in current location or on the path)." -F Green
             Write-Host "`n$($x.Path)`n" -F Green
             Write-Host "`n$($x.ScriptContents)"
             Write-Host ""
             if ($Examples -eq $true) { $null = Read-Host "Press any key to view command examples" ; get-help $cmd -Examples }
-            elseif ($Synopsis -eq $true) { $null = Read-Host "Press any key to view command examples" ; (get-help $cmd).Synopsis }
-            elseif ($Syntax -eq $true) { $null = Read-Host "Press any key to view command examples" ; Get-Command $cmd -Syntax }
+            elseif ($Synopsis -eq $true) { $null = Read-Host "Press any key to view command synopsis" ; (get-help $cmd).Synopsis }
+            elseif ($Syntax -eq $true) { $null = Read-Host "Press any key to view command syntax" ; Get-Command $cmd -Syntax }
             Write-Host ""
         }
-        elseif ($type -eq 'Application') {      # For .exe etc on path
+        elseif ($type -eq 'Application') {      # For .exe etc on path, or could also be a .cmd / .bat etc
             Write-Host "`n'$cmd' was found. It is an Application (i.e. a .exe or similar located on the path)." -F Green
-            Write-Host "`n$(where.exe $cmd)" -F Green
+            where.exe $cmd
+            # if .cmd / .bat, then show it with correct -l setting
+            # if ($bat = Get-Command bat -ErrorAction Ignore) {
+            #     (Get-Content function:$cmd) | & $bat -pp -l powershell
+            # } else {
+            #     offer the /? option otherwise
+            # }
             Write-Host ""
             Read-Host "Press any key to open cmd.exe and try '$cmd /?'" ; cmd.exe /c $cmd /? | more
             Write-Host ""
@@ -5364,6 +5626,8 @@ function def {
         else { "`nInput is not a command, so no command definition search.`n" }
     }
 }
+
+Set-Alias def what   # Generally better to use "what" (def is used in various other languages), but I'll keep this aliased in PowerShell for convenience
 
 # Old method, test if an error happens. Above is much better, but this could be useful elsewhere
 # $defx = 0
@@ -5397,7 +5661,7 @@ function CookieKiller ($search) {
 function Enable-Choco {
     # Removed from $Profile as 1.5 s load time, can load this whenever required with this function 
     $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-    if(Test-Path ("$ChocolateyProfile")) {
+    if(Test-Path $ChocolateyProfile) {
         Import-Module "$ChocolateyProfile"
     }
 }
@@ -5414,6 +5678,12 @@ function IfExistSkipCommand ($toCheck, $toRun) {
     }
 }
 
+function Install-PowershellCore {
+    Write-Host "Get latest PowerShell Core"
+    # PowerShell Core, get latest version
+    choco upgrade -y PowerShell-Core
+}
+
 function Install-Firefox {
 
     Write-Wrap "When you continue, Firefox processes will be killed and redundant copies of Firefox will be uninstalled from the Users AppData folder and from C:\Program Files (x86). The 64-bit Firefox only will be left, or will be installed if not present."
@@ -5423,19 +5693,17 @@ function Install-Firefox {
     Write-Wrap "- will taskkill.exe /f /im firefox.exe (but only if already running)"
     pause
 
-    if (Test-Path ($env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe") ) {
+    if (Test-Path "$env:USERPROFILE\AppData\Local\Mozilla Firefox\uninstall\helper.exe") {
         taskkill.exe /f /im firefox.exe
-        $setup = $env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe"
-        $args = " /s"
-        $uninst = Start-Process $setup -PassThru -ArgumentList $args -wait
+        $setup = "$env:USERPROFILE\AppData\Local\Mozilla Firefox\uninstall\helper.exe"
+        $uninst = Start-Process $setup -PassThru -ArgumentList "/s" -wait
         $uninst.WaitForExit()
     }
 
-    if (Test-Path (${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe") ) {
+    if (Test-Path "${env:ProgramFiles(x86)}\Mozilla Firefox\uninstall\helper.exe") {
         taskkill.exe /f /im firefox.exe
-        $setup = ${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe"
-        $args = " /s"
-        $uninst = Start-Process $setup -PassThru -ArgumentList $args -wait
+        $setup = "${env:ProgramFiles(x86)}\Mozilla Firefox\uninstall\helper.exe"
+        $uninst = Start-Process $setup -PassThru -ArgumentList "/s" -wait
         $uninst.WaitForExit()
     }
 
@@ -5453,7 +5721,7 @@ function Install-Firefox {
     #     -not (Test-Path ($env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe") ) -and
     #     -not (Test-Path (${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe") ) )
 
-    if (-not (Test-Path ($env:ProgramFiles + "\Mozilla Firefox\uninstall\helper.exe") ) ) {
+    if (-not (Test-Path "$env:ProgramFiles\Mozilla Firefox\uninstall\helper.exe")) {
         Write-Host "Downloading Firefox 64-bit and run installation (not yet implemented)..."
         pause
     }
@@ -5945,10 +6213,10 @@ function rdphalf ($hostname, $username) {
 #   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation 
 
 function Fix-WorkLaptop {
-    # Kill bloat put on there by company and reset things required
-    # Some things might require admin to kill (Tight VNC Server)
-    # Note a generic function, has things customised for my laptop
-    kill -name workpace -force -EA Silent    # WorkPace ridiculous tool to make you stretch your back etc
+    # Remove some bloat put on by company, kill some processes, reset some things
+    # Some things might require admin to kill (e.g. Tight VNC Server)
+    # Note: Not a generic function, has things customised for my own laptop
+    kill -name workpace -force -EA Silent    # WorkPace. Aannoying tool to make you stretch your back etc
     kill -name Docker* -force -EA Silent     # Docker Desktop & Docker.Watchguard
     kill -name Steam* -force -EA Silent      # Steam
     kill -name AutoHotkey -force -EA Silent  # Restart this with Main and Main-ING to fix any issues
@@ -6074,9 +6342,6 @@ function Install-ModuleFromPSGallery {
     # return (Get-Module)
 }
 
-
-
-
 function Pull-Gist {
 
     $jumpfrom = Get-Location   # Save the current location
@@ -6131,7 +6396,7 @@ function Push-Gist {
     # It looks like you can cache-bust by attaching a query string to the url @ nietaki Apr 18 '18 at 21:49  (I never got this working)
     # e.g. https://gist.githubusercontent.com/mwek/9962f97f3bde157fd5dbd2b5dd0ec3ca/raw/user.js?cachebust=dkjflskjfldkf
 
-    if (!(Test-Path ('.\Push-Gist-Secure-Password.txt'))) {
+    if (!(Test-Path '.\Push-Gist-Secure-Password.txt')) {
         Read-Host "Enter the github password for roysubs" -AsSecureString | ConvertFrom-SecureString | Out-File .\Push-Gist-Secure-Password.txt
         Write-Host "Password now saved securely to .\Push-Gist-Secure-Password.txt.`nIf you want to regenerate a new password, delete that file."
     }
@@ -6871,10 +7136,12 @@ function Search-Registry {
 # Area of a Circle = 3.1416 X radius2
 # Volume of a cylinder = 3.1416 X radius2X height
 
-function F-toC([double] $fahrenheit) { "$(($fahrenheit - 32) / 1.8) C   [ C = (F-32) * 5 / 9 ]" }
-function C-toF([double] $celcius) { "$(($celcius * 1.8) + 32) F   [ F = (9/5 * C) + 32 ]" }
+function F-toC([double] $fahrenheit) { "$([Math]::Round( (($fahrenheit - 32) / 1.8), 2)) C   [ C = (F-32) * 5 / 9 ]" }
+function C-toF([double] $celcius) { "$([Math]::Round( (($celcius * 1.8) + 32), 2)) F   [ F = (9/5 * C) + 32 ]" }
 function LB-toKG([double] $lb) { "$($lb * 0.453592) kg   [ 1 kg = 2.205 lbs = 35.2 oz ]" }
 function KG-toLB([double] $kg) { "$($kg / 0.453592) lb   [ 1 lb = 0.454 kg = 16 oz ]" }   # update this to split off the ounces and calculate those
+Set-Alias F2C F-toC
+Set-Alias C2F C-toF
 
 function ConvertTo-Metric
 {
@@ -7205,6 +7472,136 @@ function Update-LastWriteTime ($file)
     else { New-Item -ItemType File $file }
 }
 Set-Alias -Name touch -Value Update-LastWriteTime
+
+function Install-ModuleToDirectory {
+    [CmdletBinding()] [OutputType('System.Management.Automation.PSModuleInfo')]
+    param(
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
+        [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
+    )
+
+    if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on network share module path but need to be administrator and connected to VPN"
+            "to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    elseif (($Profile -like "\\*") -and (Test-Path (Join-Path $Profile $Name))) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on network share module path but need to be administrator and connected to VPN"
+            "to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    elseif (Test-Path (Join-Path $AdminModulePath $Name)) {
+        if (Test-Administrator -eq $true) {
+            # Nothing in here will happen unless working on laptop with a network share
+            Uninstall-Module $Name -Force -Verbose
+            # Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!) so use Save-Module
+            Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+            Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+        }
+        else {
+            "Module found on in Admin Modules folder: C:\Program Files\WindowsPowerShell\Modules."
+            "Need to be Admin to correctly move Modules into the users module folder on C:\"
+            pause
+        }
+    }
+    else {
+        Find-Module -Name $Name -Repository 'PSGallery' | Save-Module -Path $Destination   # Install the module to the custom destination.
+        Import-Module -FullyQualifiedName (Join-Path $Destination $Name)
+    }
+    $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $x.trimstart(", ") ; ""
+    # return (Get-Module)
+}
+
+# Install-ModuleToDirectory -Name 'XXX' -Destination 'E:\Modules'
+# try {
+#     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#     # If the module is already installed, use Update, otherwise use Install
+#     if ([bool](Get-Module $Name -ListAvailable)) {
+#          Update-Module $Name -Verbose -ErrorAction Stop 
+#     } else {
+#          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
+#     }
+# } catch {
+#     # But if something went wrong, just -Force it, hard.
+#     Install-Module $Name -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+# }
+
+
+# $ModuleNetShare = "$(Split-Path $ProfileNetShare)\Modules\$MyModule"
+# $ModuleCProfile = "C:\Users\$env:Username\Documents\WindowsPowerShell\Modules\$MyModule"
+# $ModuleNetShare
+# $ModuleCProfile
+
+#     $success = 0
+#     # if ($null -ne $(Test-Path $ModuleNetShare)) {
+#     # Only run this if $Profile is pointing at Net Share
+#     # Note that the uninstalls will fail unless connected to the VPN!
+#     if ((Test-Path $ModuleNetShare) -and ($Profile -like "\\*")) {
+#         if (Test-Administrator -eq $true) {
+#             # Nothing in here will happen unless working on laptop with a network share
+#             # First uninstall, then reinstall to get latest version, then move it to $Profile
+#             Uninstall-Module $MyModule -Force -Verbose
+#             Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!)
+#             Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#             Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#             Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#             $success = 1
+#         }
+#         else {
+#             "Module found on network share module path but need to be administrator and connected to VPN"
+#             "to correctly move Modules into the users module folder on C:\"
+#             pause
+#         }
+#     }
+#     if ((Test-Path "C:\Program Files\WindowsPowerShell\Modules\$MyModule") -and (Test-Administrator -eq $true)) {
+#         # This is if the module has been loaded into the Administrator folder.
+#         # This will move it to the user folder and update
+#         Uninstall-Module $MyModule -Force -Verbose
+#         Install-Module $MyModule -Scope CurrentUser -Force -Verbose   # This will *always* install to network share(!), so same situation as before
+#         Move-Item $ModuleNetShare $ModuleCProfile -Force -Verbose
+#         Uninstall-Module $MyModule -Force -Verbose                    # Need to uninstall again to clear network share reference from registry
+#         Import-Module $MyModule -Scope Local -Force -Verbose          # Finally, import the version in C:\
+#         $success = 1
+#     }
+#     else {
+#         "Module $MyModule found in 'C:\Program Files\WindowsPowerShell\Modules' but need to be administrator"
+#         "to correctly move Modules into the users module folder on C:\"
+#         pause
+#     }
+# 
+#     if ($success -eq 0) {
+#         try {
+#             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
+#             # If the module is already installed, use Update, otherwise use Install
+#             if ([bool](Get-Module $MyModule -ListAvailable)) {
+#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
+#             } else {
+#                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
+#             }
+#         } catch {
+#             # But if something went wrong, just -Force it, hard.
+#             Install-Module $MyModule -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+#         }
+#     }
+# }
 
 function Install-ProfileForceLocalForFasterLoading {
     # To get around the VPN console load time issue when opening PowerShell consoles while
@@ -8684,7 +9081,6 @@ function Invoke-Elevate {
 }
 Set-Alias sudo Invoke-Elevate
 Set-Alias elevate Invoke-Elevate
-
 function sudops { sudo powershell.exe }
 
 # No parameters but will use $args[0], $args[1]
@@ -8819,6 +9215,8 @@ function logview ($app, $num) {
     # https://docs.microsoft.com/en-us/windows/deployment/update/windows-update-logs
 }
 
+Set-Alias logs logview
+
 function wh ($search, $path, $index, [switch]$size, [switch]$bare) { 
     # Could add a switch to tries --version, -version, --ver, -ver, --v, -v, /?  to see if get output from the program
     # Could add a switch to get internal version of executable:
@@ -8830,12 +9228,12 @@ function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
         ""
         "'wh' is a mix of 'which' from linux with 'where.exe' from Windows (and avoiding the 'where' PowerShell keyword)"
         ""
-        "USAGE: wh `$search [`$path] [`$index] [`$bare]"
-        "    `$search : String to search for (accepts wildcards)."
-        "    `$path   : Optional path to search recursively instead of `$Env:PATH (default will search only on the PATH statement)."
-        "    `$index  : Optionally jump to (i.e. CD to) the path of a found item by the index in a 'wh' search."
-        "    `$size   : Optionally also show the file sizes (formatted as B/KB/MB/GB/TB)."
-        "    `$bare   : Optionally just return only the full paths (for further processing)."
+        "USAGE: wh <search> [<path>] [-index] [-size] [-bare]"
+        "    <search> : String to search for (accepts wildcards)."
+        "    <path>   : Optional path to search recursively instead of `$Env:PATH (default will search only on the PATH statement)."
+        "    -index   : Optionally jump to (i.e. CD to) the path of a found item by the index in a 'wh' search."
+        "    -size    : Optionally also show the file sizes (formatted as B/KB/MB/GB/TB)."
+        "    -bare    : Optionally just return only the full paths (for further processing)."
         ""
         "    wh notepad.exe"
         "    wh notepad.exe 2"
@@ -8967,8 +9365,8 @@ Set-Alias which1 wh   # Might as well just alias 'which' to 'wh' in case type it
 function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [switch]$maxcompress, [switch]$mincompress, [switch]$nocompress ) {
     # For most scenarios, it's most concise to simply test a variable (or expression) in an if-statement condition with no comparison
     # operators, as it covers variables that do not exist and $null values, as well as empty strings. For example:
-    # if ($x) { <Variable ‘$x’ exists and is neither null nor contains an empty value> }
-    # If you just want to know if a variable was never assigned a non-empty value, it’s this simple:   if (-not $x)
+    # if ($x) { <Variable "x" exists and is neither null nor contains an empty value> }
+    # If you just want to know if a variable was never assigned a non-empty value, it is this simple:   if (-not $x)
     if (!$FilesAndOrFoldersToZip) {
         "Syntax: zip `FileMaskToZip [NameOfArchive] [-sevenzip] [-maxcompress] [-mincompress] [-nocompress]"
         "   By default, will try to find and use 7z.exe to create a .zip."
@@ -9132,12 +9530,40 @@ function mmm {
 
 function ccc {
     # Adjust console window position, centre top
-    Set-ConsolePosition -7 0 600 600
+    Set-ConsolePosition -7 25 600 600
     if ($Host.Name -match "console") {
-        Set-ConsolePosition 75 0 600 600
+        Set-ConsolePosition 75 25 600 600
         Set-WindowNormal
         Set-MaxWindowSize
     }
+}
+
+# Template for future use ... can be handy 
+function Move-Mouse {
+    # Load Required Assemblies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    [System.Windows.Forms.Cursor]::Position   # Get current location
+    $Position = [System.Drawing.Point]::new(120,220)   # Move to 120,220
+    [System.Windows.Forms.Cursor]::Position = $Position
+}
+
+# Remove comments and indentation from code.
+# i.e. make a flat file that is still functional, but without comments
+# Template, this is just for WOTR Toolkit Autohotkey, but useful techniques for elsewhere
+function Remove-Comments {
+    $x = Get-Content ".\WOTR Toolkit.ahk"   # $x is an array, not a string
+    $out = ".\WOTR Toolkit 1.ahk"
+    if (Test-Path $out) { Clear-Content $out }   # wipe the output file
+
+    $x = $x -split "[\r\n]+"               # Remove all consecutive line-breaks, in any format '-split "\r?\n|\r"' would just do line by line
+    $x = $x | ? { $_ -notmatch "^\s*$" }   # Remove empty lines
+    $x = $x | ? { $_ -notmatch "^\s*;" }   # Remove all lines starting with ; including with whitespace before
+    $x = $x | % { ($_ -split " ;")[0] }    # Remove end of line comments
+    $x = ($x -replace $regex).Trim().Trim()
+    Set-Content $out $x
+    # $x | Out-File $out
+    $x | more
 }
 
 ####################
@@ -9482,6 +9908,7 @@ function Help-ToolkitCoreApps {
     "Selected lists of additional Chocolatey packages:"
     ""
     (cat $HomeFix\Documents\WindowsPowerShell\Modules\Custom-Tools\Custom-Tools.psm1 | sls "function Help-Choco" | sls '"function Help-Choco"' -NotMatch).Line -replace " {", "" -replace "function ", "   "
+    ""
 }
 
 function Help-WindowsTerminal {
@@ -9738,7 +10165,7 @@ function Install-7Zip {
     }
     else
     {
-        "No chocolatey 7-Zip+ package was found, will remove versions if present then reinstall`n"
+        "No chocolatey 7-Zip package was found, will remove versions if present then reinstall`n"
         # Remember, must use /S and not /s for silent uninstall.
         $command = @'
 cmd.exe /C "C:\Program Files (x86)\7-Zip\uninstall.exe" /S
@@ -9804,7 +10231,7 @@ function Install-7ZipDownloadOnly {
 function Install-BitCometPortable {
     $start_time = Get-Date   # Used with the timer on last line of function
     $url = "https://www.bitcomet.com/en/archive"
-    # Solving the First-Launch Configuration Error with PowerShell’s Invoke-WebRequest Cmdlet
+    # Solving the First-Launch Configuration Error with PowerShell Invoke-WebRequest Cmdlet
     # https://stackoverflow.com/questions/38005341/the-response-content-cannot-be-parsed-because-the-internet-explorer-engine-is-no
     # https://wahlnetwork.com/2015/11/17/solving-the-first-launch-configuration-error-with-powershells-invoke-webrequest-cmdlet/
     Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main" -Name "DisableFirstRunCustomize" -Value 2
@@ -9820,8 +10247,8 @@ function Install-BitCometPortable {
     $dl_file
     iwr -Uri $dl_link -OutFile .\$dl_file
     # Maybe test here: f not exist 7z.exe run Install-7zip to make sure it is available
-    $7z = 'C:\Program Files\7-Zip\7z.exe' 
-    & $7z "x" $dl_file "-o./$dl_out" "-y" "-r"
+    $sevenzip = 'C:\Program Files\7-Zip\7z.exe'
+    & $sevenzip "x" $dl_file "-o./$dl_out" "-y" "-r"
     & "$dl_out\BitComet.exe"
     Write-Output "Time to configure: $((Get-Date).Subtract($start_time).Seconds) second(s)"
 }
@@ -10028,7 +10455,7 @@ function Help-ChocoGames {
 @"
 
 https://chocolatey.org/packages?q=games
-https://steamcommunity.com/sharedfiles/filedetails/?id=1167945…
+https://steamcommunity.com/sharedfiles/filedetails/?id=1167945
 https://developer.valvesoftware.com/wiki/Command_Line_Options
 
 ### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put 
@@ -10954,7 +11381,8 @@ function Choco-Index {
                 $published = (( $pkginfo | ? { $_ -match "Published:" } ) -split " Published: ")[1]
                 $pub_day   = ($published -split "/")[0]
                 $pub_month = ($published -split "/")[1]
-                $pub_year  = ($published -split "/")[2]   # Note that month/day are different way around from $approved so correct to yyyy-mm-dd
+                $pub_year  = ($published -split "/")[2]
+                # month/day are different way around from $approved so correct to yyyy-mm-dd, though this might be locale related
                 $published = $pub_year + '-' + $pub_month + '-' + $pub_day
             }
             catch { $published = "--" }
@@ -10970,7 +11398,7 @@ function Choco-Index {
             catch { $approved = "--" }
             if ($approved -eq "--") { $approvedtext = ""} else { $approvedtext = " $approved (A)"}
 
-            $outpkg = "cinst -y $pkg   # $publishedtext$approvedtext$summary$description`r`n"
+            $outpkg = "choco install -y $pkg   # $publishedtext$approvedtext$summary$description`r`n"
             echo $outpkg
             $out = $out + $outpkg + "`r`n"
         }
@@ -11804,7 +12232,7 @@ function Install-ModuleExamples {
     Write-Host "Install-Module Posh-Git (Git Management Cmdlets)" -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "When you run Import-Module posh-git, posh-git checks to see if the PowerShell default prompt is the"
     Write-Host "current prompt. If it is, then posh-git will install a posh-git default prompt that looks like this in v0.x:"
-    Write-Host "C:\Users\Keith\GitHub\posh-git [master ≡]>"
+    Write-Host "C:\Users\Keith\GitHub\posh-git [master ...> (the burger icon)"
     Write-Host "View details on `$GitPromptSettings here:"
     Write-Host "https://github.com/dahlbyk/posh-git/wiki/Customizing-Your-PowerShell-Prompt"
     Write-Host "Write-GitStatus, Write-Prompt, Write-VcsStatus"
@@ -11969,3 +12397,7 @@ function Template-CheckScheduledTasks {
     # Method 4
     if (Get-ScheduledTask FirefoxMaint -ErrorAction Ignore) { "found" } else { "not found" }
 }
+
+# This relates to my StackOverflow question about all module components not being applied 
+# when the module is loaded; this forces all to be exported into the current session.
+Export-ModuleMember -Alias * -Function *
