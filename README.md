@@ -1,13 +1,14 @@
 # Custom-Tools Basics  
-Tools and functions that integrate with the PowerShell console to make it more comfortable to use. There are no mass modifications to the environment, and the functions are all stand-alone so can be used as templates to build on or reuse in other scripts.  
+Tools and functions that integrate with PowerShell terminals, without changing core functionality and
+the functions are deliberately stand-alone so can be used as templates to build on or reuse in other projects.  
 
 
 # Custom-Tools Scripts  
-All functions install and run under normal user space, there is no requirement for Administrator privileges. Full install is done from `BeginSystemConfig.ps1` which can be invoked directly by `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
+Installs and runs under normal user space (no requirement for Administrator privileges). Full install is done from `BeginSystemConfig.ps1` which can be invoked on the command-line directly from GitHub using `iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JqCtf'))`  
 
 `BeginSystemConfig.ps1` adds the `Custom-Tools.psm1` Module and adds two lines to the profile so that `ProfileExtensions.ps1` tools that are dot-sourced in all sessions. `ProfileExtensions` hold fundamental functions and definitions (such as the 'cd' alias which has been replaced by a superset of `Set-Location` to add more functionality). Every function in `Custom-Tools.psm1` is deliberately stand-alone; there are no dependencies on each other so that each function can be completely portable for other projects as required.  
 `Custom-Tools.psm1` is installed under the users profile Module folder (use `$Env:PSModulePath` to see that location).  
-To uninstall the toolkit, simply remove the last two lines from `$profile` that calls the extensions and run `Uninstall-Module Custom-Tools` and all traces of the Toolkit are now completely removed upon opening a new PowerShell console.  
+To uninstall the toolkit, simply remove the two lines at the end of `$profile` that call `ProfileExtensions.ps1` and run `Uninstall-Module Custom-Tools`; all traces of the Toolkit are now completely removed upon opening a new PowerShell terminal.  
   
 
 # How to install Custom-Tools  

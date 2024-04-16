@@ -129,18 +129,18 @@ function Update-PowerShellStartup {
         }
     }
 
-    Write-Host ""
-    Write-Host "Option: Adding powershell.exe to the list of Windows Defender exclusions can speed it up considerably (but might be a risk)."
-    Write-Host "Option: Create a shortcut to powershell.exe, right-click on it > properties, go to options tab, click on 'use legacy console'. With legacy on things can be faster."
-    Write-Host ""
-    Write-Host "Location of PowerShell exe can be found with: (Get-Process -Id `$pid).Path   or   (Get-Command PowerShell.exe).Path"
-    Write-Host "For PowerShell 5.1, this is:   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    Write-Host "For PowerShell 7.1, this is:   C:\Program Files\PowerShell\7\pwsh.exe"
-    Write-Host ""
-    Write-Host "To test PowerShell startup times:"
-    Write-Host "From DOS:        powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell 'Write-Host 1' } ).TotalSeconds"
-    Write-Host "From PowerShell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -ExecutionPolicy Bypass ( Measure-Command { C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe 'Write-Host 1' } ).TotalSeconds"
-    Write-Host ""
+    Write-Output ""
+    Write-Output "Option: Adding powershell.exe to the list of Windows Defender exclusions can speed it up considerably (but might be a risk)."
+    Write-Output "Option: Create a shortcut to powershell.exe, right-click on it > properties, go to options tab, click on 'use legacy console'. With legacy on things can be faster."
+    Write-Output ""
+    Write-Output "Location of PowerShell exe can be found with: (Get-Process -Id `$pid).Path   or   (Get-Command PowerShell.exe).Path"
+    Write-Output "For PowerShell 5.1, this is:   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    Write-Output "For PowerShell 7.1, this is:   C:\Program Files\PowerShell\7\pwsh.exe"
+    Write-Output ""
+    Write-Output "To test PowerShell startup times:"
+    Write-Output "From DOS:        powershell -noprofile -ExecutionPolicy Bypass ( Measure-Command { powershell 'Write-Host 1' } ).TotalSeconds"
+    Write-Output "From PowerShell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noprofile -ExecutionPolicy Bypass ( Measure-Command { C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe 'Write-Host 1' } ).TotalSeconds"
+    Write-Output ""
 }
 
 function Get-Size ($dir) {   # Get-Size using robocopy (about 6x faster than native PowerShell method on reasonably sized folders)
@@ -316,13 +316,13 @@ function Get-CommandsByModule ($usertype) {
 }
 
 
-function Get-CommandTypes ($type) { Get-Module -ListAvailable | foreach {"`n## Module name: $_ `n"; gcm -Module $_.name -CommandType $type | select name; "`r`n" } }
+function Get-CommandType ($type) { Get-Module -ListAvailable | foreach {"`n## Module name: $_ `n"; gcm -Module $_.name -CommandType $type | select name; "`r`n" } }
 # -CommandType {Alias | Function | Filter | Cmdlet | ExternalScript | Application | Script | Workflow | Configuration | All}
 # Get-Module -ListAvailable | foreach { foreach ($i in gcm -Module $_.name -CommandType $type | select name } }
 # $types = @("Alias", "Function", "Filter", "Cmdlet", "ExternalScript", "Application", "Script", "Workflow", "Configuration")
-function Get-Aliases { Get-CommandTypes Alias } ; Set-Alias aliases Get-Aliases
-function Get-Functions { Get-CommandTypes Function } ; Set-Alias functions Get-Functions
-function Get-Filters { Get-CommandTypes Filter } ; Set-Alias filters Get-Filters
+function Get-Aliases { Get-CommandType Alias } ; Set-Alias aliases Get-Aliases
+function Get-Functions { Get-CommandType Function } ; Set-Alias functions Get-Functions
+function Get-Filters { Get-CommandType Filter } ; Set-Alias filters Get-Filters
 
 
 
@@ -11013,7 +11013,7 @@ cinst skype mattermost mumble itch
 "@ | more
 }
 
-function Help-ChocoWebAndSQLServers {
+function Help-ChocoWebAndSQLServer {
 @"
     
 ### WAMP, Windows-Apache-MySQL-PHP, Tomcat
@@ -11213,7 +11213,7 @@ function Get-Choco-Descriptions($x) {
     #  - A pending system reboot request has been detected, however, this is
     # 2 validations performed. 1 success(es), 1 warning(s), and 0 error(s).
 
-    (choco list $x | sort) -notmatch $exclude | Out-File $filetmp
+    (choco search $x | sort) -notmatch $exclude | Out-File $filetmp
     cat $filetmp
     $lines = Get-Content $filetmp
     $num = $lines.count
@@ -11350,7 +11350,7 @@ function Choco-Index {
         #  - A pending system reboot request has been detected, however, this is
         # 2 validations performed. 1 success(es), 1 warning(s), and 0 error(s).
 
-        (choco list $x* | sort) -notmatch $exclude | Out-File $filetmp
+        (choco search $x* | sort) -notmatch $exclude | Out-File $filetmp
         cat $filetmp
         $lines = Get-Content $filetmp
         $num = $lines.count

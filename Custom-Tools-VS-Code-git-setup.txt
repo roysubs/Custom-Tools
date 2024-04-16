@@ -18,12 +18,21 @@ Left Pane: This is the original version of the file from the last commit or the 
 Right Pane: This is the modified version of the file that includes your changes. The green blocks you see indicate added lines or code that were not present in the original version on the left.
 If you just press Commit button at the top, it will automatically stage all modified files.
 However, it will not stage untracked files, so it is sometimes better to manually press the "+" button when hovering over a file to stage each file required (including untracked files if required).
-When you press Commit, it will fail if user.name and user.email are not set.
+When you press commit, it will fail if user.name and user.email are not set.
+If there are no errors, the COMMIT_EDITMSG will appear to add information on the commit.
+After adding something, you have to press the "Accept Commit" tick mark beside the COMMIT_EDITMSG tab.
 
 Push Changes to GitHub:
 ==========
 After committing your changes locally, you'll need to push them to GitHub.
-In the Source Control view, click on the ellipsis (...) at the top and select "Push".
+In the Source Control view, you can either press the "Sync Changes" button, or press the "..." at the top and select "Push".
 If you haven't configured your GitHub credentials yet, VS Code will prompt you to sign in.
 Once signed in, VS Code will push your changes to your GitHub repository.
-That's it! You've now opened your local Git repository in VS Code and committed your changes to GitHub. No additional extensions are required for these basic Git operations in VS Code.
+Note that the timestamp on the files is that of when the Commit was made, and not the time at which the Push happened.
+
+Important VS Code:
+==========
+Toggle PowerShell bar on/off: CTRL+`
+Toggle Left-bar: CTRL+B
+Toggle Zen Mode: CTRL+K => Z, then CTRL+SHIFT+P: "View: Toggle Centered Layout"
+https://stackoverflow.com/questions/60537341/how-can-i-start-powershell-script-as-noprofile-in-visual-studio-code/60555493#60555493
