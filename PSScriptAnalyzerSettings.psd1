@@ -2,5 +2,5 @@
     # Other settings can go here
 
     # Suppress the rule that flags aliases
-    ExcludeRules = @('PSAvoidUsingCmdletAliases')
+    ExcludeRules = @('PSAvoidUsingCmdletAliases', 'PSUseShouldProcessForStateChangingFunctions')
 }
