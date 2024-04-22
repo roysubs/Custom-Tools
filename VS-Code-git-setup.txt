@@ -35,4 +35,6 @@ Important VS Code:
 Toggle PowerShell bar on/off: CTRL+`
 Toggle Left-bar: CTRL+B
 Toggle Zen Mode: CTRL+K => Z, then CTRL+SHIFT+P: "View: Toggle Centered Layout"
+
 https://stackoverflow.com/questions/60537341/how-can-i-start-powershell-script-as-noprofile-in-visual-studio-code/60555493#60555493
+https://code.visualstudio.com/docs/sourcecontrol/overview
