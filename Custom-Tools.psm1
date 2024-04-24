@@ -1942,6 +1942,39 @@ Get-ColorWheel, Get-Complement, Get-Gradient, New-Hyperlink, New-Text, Write-Hos
 
 
 
+
+# # Example usage:
+# $filePath = "C:\Users\Boss\Desktop\PowerShell.lnk"
+# Modify-ConsoleLnkFile -FilePath $filePath
+function Modify-ConsoleLnkFile {
+    param ( [string]$FilePath )
+
+    if (-not (Test-Path -Path $FilePath)) {
+        Write-Host "ERROR: File not found at the specified path."
+        return
+    }
+
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+
+    $ChangeCount = 0
+    foreach ($byteIndex in 0x771..0x871) {
+        if ($bytes[$byteIndex] -eq 20) {
+            $bytes[$byteIndex] = 18
+            $ChangeCount++
+        }
+    }
+
+    if ($ChangeCount -eq 1) {
+        [System.IO.File]::WriteAllBytes($FilePath, $bytes)
+        Write-Host "Modification completed successfully."
+    }
+    else {
+        Write-Host "ERROR: Found $ChangeCount instances of the value 14, where only 1 was expected. File not altered."
+    }
+}
+
+
+
 function cpl {
     param (
         [string]$cplName
