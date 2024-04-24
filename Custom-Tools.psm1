@@ -1,5 +1,5 @@
-#################### 
-# 
+####################
+#
 # Custom-Tools.psm1
 # 2019-11-25 Initial setup
 # 2023-12-17 Current Version
@@ -12,7 +12,7 @@
 # mod <modname>  : View all cmdlets/functions within a given Module.
 # modi <modname> : View detailed info (syntax and type) of each cmdlet/function in a given Module.
 # def <command>  : View definitions for any command type: Cmdlet/Function/Alias/ExternalCommand with location and syntax.
-# 
+#
 # To install the Custom-Tools Module, run the BeginSystemConfig.ps1 script remotely:
 #    iex ((New-Object System.Net.WebClient).DownloadString('https://bit.ly/2R7znLX'))
 # Quick download of BeginSystemConfig.ps1 + ProfileExtensions.ps1 + Custom-Tools.psm1
@@ -526,7 +526,7 @@ Set-Alias gcicolor Enable-PSColor
 Set-Alias dircolor Enable-PSColor
 Set-Alias lscolor Enable-PSColor
 
-function Test-Colors {
+function Test-Color {
     ""
     "To view all Console Colors:   [System.Enum]::GetValues('ConsoleColor')"
     ""
@@ -782,7 +782,7 @@ function Test-Colors {
     # $Colors += "YellowGreen"
 }
 
-function Enable-DirFriendlySizes {
+function Enable-DirFriendlySize {
     # After running this, dir/ls/gci will show friendly sizes (but also sortable etc)
     $file = '{0}myTypes.ps1xml' -f ([System.IO.Path]::GetTempPath()) 
     $data = Get-Content -Path $PSHOME\FileSystem.format.ps1xml
@@ -802,7 +802,7 @@ if($$_ -is [System.IO.FileInfo]) {
     # dir | Select-Object -Property Mode, LastWriteTime, @{N='SizeInKb';E={[double]('{0:N2}' -f ($_.Length/1kb))}}, Name | Sort-Object -Property SizeInKb
 }
 
-function dirfriendly { Enable-DirFriendlySizes ; dir ; "`nThe Enable-DirFriendlySizes function has been enabled for this session.`nFile sizes will be shown in human readable format for dir/ls/gci.`nA new shell will disable this option."  }
+function dirfriendly { Enable-DirFriendlySize ; dir ; "`nThe Enable-DirFriendlySize function has been enabled for this session.`nFile sizes will be shown in human readable format for dir/ls/gci.`nA new shell will disable this option."  }
 function dircolor { Enable-DirColors ; "`nThe Enable-DirColors function has been enabled for this session.`nFiles will be coloured according to their extension type for dir/ls/gci.`nA new shell will disable this option." }
 
 Function Get-FileDialog($InitialDirectory) {
@@ -830,12 +830,12 @@ Function Get-FolderBrowserDialog ( [string]$Description = "Select Folder", [stri
 function ShowDialog( [string]$file ) { 
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
-   
+
     $objForm = New-Object System.Windows.Forms.Form 
     $objForm.Text = "Choice-Box"
     $objForm.Size = New-Object System.Drawing.Size(300,200) 
     $objForm.StartPosition = "CenterScreen"
-   
+
     $objForm.KeyPreview = $True
     $objForm.Add_KeyDown( 
         {
@@ -844,7 +844,7 @@ function ShowDialog( [string]$file ) {
             }
         }
     )
-     
+
     $objForm.Add_KeyDown(
         {
             if ($_.KeyCode -eq "Escape") {
@@ -852,42 +852,42 @@ function ShowDialog( [string]$file ) {
             }
         }
     )
-   
+
     $OKButton = New-Object System.Windows.Forms.Button
     $OKButton.Location = New-Object System.Drawing.Size(75,120)
     $OKButton.Size = New-Object System.Drawing.Size(75,23)
     $OKButton.Text = "OK"
     $OKButton.Add_Click( { $global:x = $objListBox.SelectedItem; $objForm.Close() } )
     $objForm.Controls.Add($OKButton)
-   
+
     $CancelButton = New-Object System.Windows.Forms.Button
     $CancelButton.Location = New-Object System.Drawing.Size(150,120)
     $CancelButton.Size = New-Object System.Drawing.Size(75,23)
     $CancelButton.Text = "Cancel"
     $CancelButton.Add_Click( { $objForm.Close() } )
     $objForm.Controls.Add($CancelButton)
-   
+
     $objLabel = New-Object System.Windows.Forms.Label
     $objLabel.Location = New-Object System.Drawing.Size(10,20) 
     $objLabel.Size = New-Object System.Drawing.Size(280,20) 
     $objLabel.Text = "Please choose any of the below :"
     $objForm.Controls.Add($objLabel) 
-   
+
     $objListBox = New-Object System.Windows.Forms.ListBox 
     $objListBox.Location = New-Object System.Drawing.Size(10,40) 
     $objListBox.Size = New-Object System.Drawing.Size(260,20) 
     $objListBox.Height = 80
-   
+
     $items = gc $file | where { $_ -ne "" }
-    
+
     foreach ($item in $items) {
         [void] $objListBox.Items.Add($item)     
     }
-   
+
     $objForm.Controls.Add($objListBox) 
-   
+
     $objForm.Topmost = $True
-   
+
     $objForm.Add_Shown({$objForm.Activate()})
     [void] $objForm.ShowDialog()
 
@@ -912,7 +912,7 @@ function ShowDialog( [string]$file ) {
 
 
 # Very quickly resolve the drives
-function Get-AllDrives {
+function Get-EveryDrive {
     Get-WmiObject -Class Win32_LogicalDisk -Filter "DriveType = '3'" | 
         Select-Object -Property DeviceID, DriveType, VolumeName, 
         @{L="Capacity GB";E={"{0:N2}" -f ($_.Size/1GB)}},
@@ -1159,9 +1159,9 @@ function Get-DiskFree
                     default { $err = $_.Exception.Message }
                 }
                 Write-Warning "$computer - $err"
-            } 
+            }
         }
-    }  
+    }
     END {}
 }
 function df { Get-DiskFree -Format | Format-Table }
@@ -1171,7 +1171,7 @@ function df { Get-DiskFree -Format | Format-Table }
 # function df {
 #     $colItems = Get-wmiObject -class "Win32_LogicalDisk" -namespace "root\CIMV2" -computername localhost
 #     echo "DevID`t FSname`t Size GB`t FreeSpace GB`t Description"
-# 
+#
 #     foreach ($objItem in $colItems) {
 #         $DevID = $objItem.DeviceID
 # 	      $FSname = $objItem.FileSystem
@@ -1179,18 +1179,18 @@ function df { Get-DiskFree -Format | Format-Table }
 # 	      $FreeSpace = ($objItem.FreeSpace / 1GB).ToString("f2")
 # 	      $description = $objItem.Description
 #         echo "$DevID`t $FSname`t $Size GB`t $FreeSpace GB`t $Description"
-#     }	
+#     }
 # }
 
 
 
 # https://ilovepowershell.com/2015/06/05/find-the-processes-using-the-most-cpu-on-a-computer-with-powershell/
 # Get Highest CPU processes on local or remote systems. Use -Count to specify number of processes.
-Function Get-HighestCPU {   
+Function Get-HighestCPU {
     <#
     .SYNOPSIS
         Retrieve processes that are utilizing the CPU on local or remote systems.
-    
+
     .DESCRIPTION
         Uses WMI to retrieve process information from remote or local machines. You can specify to return X number of the top CPU consuming processes
         or to return all processes using more than a certain percentage of the CPU.
@@ -1199,38 +1199,38 @@ Function Get-HighestCPU {
         Returns the 3 highest CPU consuming processes on the local system.
     .EXAMPLE
          Get-HighCPUProcess -Count 1 -Computername AppServer01
-        Returns the 1 highest CPU consuming processes on the remote system AppServer01.   
+        Returns the 1 highest CPU consuming processes on the remote system AppServer01.
     .EXAMPLE
          Get-HighCPUProcess -MinPercent 15 -Computername "WebServer15","WebServer16"
         Returns all processes that are consuming more that 15% of the CPU process on the hosts webserver15 and webserver160
     #>
-    
+
     [Cmdletbinding(DefaultParameterSetName="ByCount")]
     Param(
         [Parameter(ValueFromPipelineByPropertyName)]
         [Alias("PSComputername")]
         [string[]]$Computername = "localhost",
-        
+
         [Parameter(ParameterSetName="ByPercent")]
         [ValidateRange(1,100)]
         [int]$MinPercent,
-    
+
         [Parameter(ParameterSetName="ByCount")]
         [int]$Count = 3
     )
-    
+
     Process {
         Foreach ($computer in $Computername){
-        
+
             Write-Verbose "Retrieving processes from $computer"
             $wmiProcs = Get-WmiObject Win32_PerfFormattedData_PerfProc_Process -Filter "idProcess != 0" -ComputerName $Computername
-        
+
             if ($PSCmdlet.ParameterSetName -eq "ByCount") {
                 $wmiObjects = $wmiProcs | Sort PercentProcessorTime -Descending | Select -First $Count
             } elseif ($psCmdlet.ParameterSetName -eq "ByPercent") {
-                $wmiObjects = $wmiProcs | Where {$_.PercentProcessorTime -ge $MinPercent} 
+                $wmiObjects = $wmiProcs | Where {$_.PercentProcessorTime -ge $MinPercent}
             } #end IF
-    
+
             $wmiObjects | Foreach {
                 $outObject = [PSCustomObject]@{
                     Computername = $computer
@@ -1241,9 +1241,9 @@ Function Get-HighestCPU {
                 $outObject
             } #End Foreach wmiObject
         } #End Foreach Computer
-    }    
+    }
 }
-    
+
 # Concise output: Computername, ProcessName, Percent (of CPU), and ID (Process ID)
 # Accepts pipeline input by property value of "ComputerName" or "PSComputerName"
 # Easy to use against multiple computers
@@ -1559,54 +1559,24 @@ function Fix-Sounds {
     }
 }
 
-function Fix-LotsOfThings {
-    @"
-Stub function to collect many annoying things to fix.
-Currently, this function does not do anything, just information, might build out to do stuff, and will rename if so...
-
-VS Code and PSScriptAnalyzer are incredibly useful for correcting syntax errors, but flagging "gci / ls / dir" with a warning because they are aliases gets old fast.
-Fix that by creating a white list https://github.com/PowerShell/PSScriptAnalyzer/blob/master/RuleDocumentation/AvoidUsingCmdletAliases.md
-https://github.com/PowerShell/PSScriptAnalyzer/issues/214   # Some points here are fair, but not every script is intended as an "Enterprise Production Mission Critical" thing.
-They go way way way over the top with the "never use aliases" mantra, and it's ridiculous when we use "-gt" as an abbreviation / common-English-language-alias for "greater than" 
-and that's ok, even though, apparently, using "gci / ls / dir" will break the entire world?? Fuck that...
-... details and automate that here ...
-Open the settings file:
-C:\Users\Boss\Documents\WindowsPowerShell\Modules\PSScriptAnalyzer\1.19.1\PSScriptAnalyzer.psd1
-Add an entry for each item to be whitelisted
-@{
-    'Rules' = @{
-        'PSAvoidUsingCmdletAliases' = @{
-            'Whitelist' = @('cd', 'gci', 'ls', 'dir')
-        }
-    }
-}
-Actually, above is WRONG
-Rules = @{
-    PSAvoidUsingCmdletAliases = @{
-        Whitelist = @('cd', 'gci', 'ls', 'dir')
-    }
-}
-
-"@ | more
-}
 
 function Test-ModuleUpdate {
     # https://gist.github.com/jdhitsolutions/8a49a59c5dd19da9dde6051b3e58d2d0
 
     [cmdletbinding()] Param($mods)
-    
+
     Write-Host "Getting installed modules" -ForegroundColor Yellow
     $modules = Get-Module -ListAvailable $mods
-    
+
     #group to identify modules with multiple versions installed
     $g = $modules | group name -NoElement | where count -gt 1
-    
+
     Write-Host "Filter to modules from the PSGallery" -ForegroundColor Yellow
     $gallery = $modules.where({$_.repositorysourcelocation})
-    
+
     Write-Host "Comparing to online versions" -ForegroundColor Yellow
     foreach ($module in $gallery) {
-    
+
          #find the current version in the gallery
          Try {
             $online = Find-Module -Name $module.name -Repository PSGallery -ErrorAction Stop
@@ -1614,7 +1584,7 @@ function Test-ModuleUpdate {
          Catch {
             Write-Warning "Module $($module.name) was not found in the PSGallery"
          }
-    
+
          #compare versions
          if ($online.version -gt $module.version) {
             $UpdateAvailable = $True
@@ -1622,7 +1592,7 @@ function Test-ModuleUpdate {
          else {
             $UpdateAvailable = $False
          }
-    
+
          #write a custom object to the pipeline
          [pscustomobject]@{
             Name = $module.name
@@ -1632,7 +1602,7 @@ function Test-ModuleUpdate {
             Update = $UpdateAvailable
             Path = $module.modulebase
          }
-     
+ 
     } #foreach
 
     Write-Host "Check complete" -ForegroundColor Green
@@ -1673,39 +1643,19 @@ function Uninstall-ModuleIfNotLatest ($ModuleName) {
 }
 
 function Help-OneDrive {
-    Write-Host ''
-    Write-Host 'Disable OneDrive and remove its icon from File Explorer, or restore, with these'
-    Write-Host 'Type GPedit.msc and hit Enter or OK to open Local Group Policy Editor.'
-    Write-Host 'Local Computer Policy -> Computer Configuration -> Administrative Templates -> Windows Components -> OneDrive.'
-    Write-Host 'In the right pane, double click on policy named Prevent the usage of OneDrive for file storage.'
-    Write-Host 'https://techjourney.net/disable-or-uninstall-onedrive-completely-in-windows-10/'
-    Write-Host ''
-    Write-Host 'Convert the below to PowerShell commands and test removal and then restore'
-    Write-Host ''
-    Write-Host 'Windows Registry Editor Version 5.00'
-    Write-Host '; 64-bit Hide OneDrive From File Explorer'
-    Write-Host '[HKEY_CLASSES_ROOT\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000000'
-    Write-Host '[HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000000'
-    Write-Host ''
-    Write-Host 'Windows Registry Editor Version 5.00'
-    Write-Host '; 64-bit Restore OneDrive to File Explorer'
-    Write-Host '[HKEY_CLASSES_ROOT\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000001'
-    Write-Host '[HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000001'
-    Write-Host ''
-    Write-Host 'Windows Registry Editor Version 5.00'
-    Write-Host '; 32-bit Hide OneDrive From File Explorer'
-    Write-Host '[HKEY_CLASSES_ROOT\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000000'
-    Write-Host ''
-    Write-Host 'Windows Registry Editor Version 5.00'
-    Write-Host '; 32-bit Restore OneDrive to File Explorer'
-    Write-Host '[HKEY_CLASSES_ROOT\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}]'
-    Write-Host '"System.IsPinnedToNameSpaceTree"=dword:00000001'
-    Write-Host ''
+    @'
+# Method to download a OneDrive file. Right-click on the file to share then get it's sharing link
+# Remove the part from the ? onwards (including the ?) to get something like https://1drv.ms/u/s!AvSad-pwUc_as9hTQfWfMNYIWXXXXX
+function Pull-OD{param([string] $u); $b64=[System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($u)); $enc='u!'+$b64.TrimEnd('=').Replace('/','_').Replace('+','-'); return 'https://api.onedrive.com/v1.0/shares/'+$enc+'/root/content'}
+iwr -uri $(Pull-OD "https://1drv.ms/u/s!AvSad-pwUc_as9hTQfWfMNYIWXXXXX") -out "$env:Temp\MyFile.txt" -useb
+
+Disable OneDrive and remove its icon from File Explorer, or restore, with these
+Type GPedit.msc and hit Enter or OK to open Local Group Policy Editor.
+Local Computer Policy -> Computer Configuration -> Administrative Templates -> Windows Components -> OneDrive.
+In the right pane, double click on policy named Prevent the usage of OneDrive for file storage.
+https://techjourney.net/disable-or-uninstall-onedrive-completely-in-windows-10/
+    
+'@
 }
 
 
@@ -1990,6 +1940,74 @@ Get-ColorWheel, Get-Complement, Get-Gradient, New-Hyperlink, New-Text, Write-Hos
 '@ | more
 }
 
+
+
+function cpl {
+    param (
+        [string]$cplName
+    )
+
+    $cplCommands = @{
+        "timedate" = { Start-Process "$env:SystemRoot\System32\timedate.cpl" }
+        "telephon" = { Start-Process "$env:SystemRoot\System32\telephon.cpl" }
+        "TabletPC" = { Start-Process "$env:SystemRoot\System32\TabletPC.cpl" }
+        "sysdm" = { Start-Process "$env:SystemRoot\System32\sysdm.cpl" }
+        "sapi" = { Start-Process "$env:SystemRoot\System32\Speech\SpeechUX\sapi.cpl" }
+        "appwiz" = { Start-Process "$env:SystemRoot\System32\appwiz.cpl" }
+        "powercfg" = { Start-Process "$env:SystemRoot\System32\powercfg.cpl" }
+        "bthprops" = { Start-Process "$env:SystemRoot\System32\bthprops.cpl" }
+        "desk" = { Start-Process "$env:SystemRoot\System32\desk.cpl" }
+        "ncpa" = { Start-Process "$env:SystemRoot\System32\ncpa.cpl" }
+        "mmsys" = { Start-Process "$env:SystemRoot\System32\mmsys.cpl" }
+        "main" = { Start-Process "$env:SystemRoot\System32\main.cpl" }
+        "joy" = { Start-Process "$env:SystemRoot\System32\joy.cpl" }
+        "irprops" = { Start-Process "$env:SystemRoot\System32\irprops.cpl" }
+        "intl" = { Start-Process "$env:SystemRoot\System32\intl.cpl" }
+        "inetcpl" = { Start-Process "$env:SystemRoot\System32\inetcpl.cpl" }
+        "hdwwiz" = { Start-Process "$env:SystemRoot\System32\hdwwiz.cpl" }
+        "Firewall" = { Start-Process "$env:SystemRoot\System32\Firewall.cpl" }
+        "ControlPanel" = { Start-Process "rundll32.exe" -ArgumentList "shell32.dll,Control_RunDLL" }
+        "IndexingOptions" = { Start-Process "rundll32.exe" -ArgumentList "shell32.dll,Control_RunDLL srchadmin.dll" }
+        "EditEnvironmentVariables" = { Start-Process "rundll32.exe" -ArgumentList "sysdm.cpl,EditEnvironmentVariables" }
+        "ClearBrowsingHistory" = { Start-Process "RunDll32.exe" -ArgumentList "InetCpl.cpl,ClearMyTracksByProcess 255" }
+        "SystemPropertiesComputerName" = { Start-Process "cmd.exe" -ArgumentList "/c sysdm.cpl,1" }
+        "SystemPropertiesHardware" = { Start-Process "cmd.exe" -ArgumentList "/c sysdm.cpl,2" }
+        "SystemPropertiesAdvanced" = { Start-Process "cmd.exe" -ArgumentList "/c sysdm.cpl,3" }
+        "SystemPropertiesPerformance" = { Start-Process "rundll32.exe" -ArgumentList "shell32.dll,Control_RunDLL sysdm.cpl,,4" }
+        "SystemPropertiesDataExecutionPrevention" = { Start-Process "rundll32.exe" -ArgumentList "shell32.dll,Control_RunDLL sysdm.cpl,,5" }
+        "SystemPropertiesProtection" = { Start-Process "cmd.exe" -ArgumentList "/c sysdm.cpl,4" }
+        "SystemPropertiesRemote" = { Start-Process "cmd.exe" -ArgumentList "/c sysdm.cpl,5" }
+    }
+
+    if (-not $cplName) {
+        Write-Host "Available CPL (Control Panel) files (type 'cpl <name>' to open):`n==========`n"
+        $cplCommands.Keys | Sort-Object
+    }
+    elseif ($cplCommands.ContainsKey($cplName)) {
+        & $cplCommands[$cplName]
+    }
+    else {
+        Write-Host "CPL file or command not found."
+    }
+}
+
+# Register tab completion for the cplName parameter
+Register-ArgumentCompleter -CommandName 'cpl' -ParameterName 'cplName' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    $cplCommands = @(
+        "timedate", "telephon", "TabletPC", "sysdm", "sapi", "appwiz", "powercfg", "bthprops", 
+        "desk", "ncpa", "mmsys", "main", "joy", "irprops", "intl", "inetcpl", "hdwwiz", "Firewall",
+        "ControlPanel", "IndexingOptions", "EditEnvironmentVariables", "ClearBrowsingHistory",
+        "SystemPropertiesComputerName", "SystemPropertiesHardware", "SystemPropertiesAdvanced",
+        "SystemPropertiesPerformance", "SystemPropertiesDataExecutionPrevention", "SystemPropertiesProtection",
+        "SystemPropertiesRemote"
+    )
+
+    $cplCommands | Where-Object { $_ -like "$wordToComplete*" }
+}
+
+
 function Help-WindowsTools {
 # function cpl / sysdm / control / rundll
 # Create a function that opens all of these "sysdm" on it's own shows options, then "sysdm env" would open:
@@ -2045,7 +2063,7 @@ intl               # Region (control intl.cpl)
 devmgmt            # Device Manager (devmgmt.msc)
 main               # Mouse Properties (control main.cpl)
 main keyboard      # Keyboard Properties (control main.cpl keyboard)
-msys               # Multimedia Properties (control mmsys.cpl)
+mmsys              # Multimedia Properties (control mmsys.cpl)
 mmsys sounds       # Sound Properties (control mmsys.cpl sounds)
 control printers   # Devices and Printers
 control sticpl.cpl # Scanners and Cameras (only this exact syntax works)
@@ -11481,26 +11499,26 @@ function Masquerade-PEB {
           * Most of these API's and structs are undocumented. I strongly recommend
             @rwfpl's terminus project as a reference guide!
               + http://terminus.rewolf.pl/terminus/
-        
+
           * Masquerade-PEB is basically a reimplementation of two functions in UACME
             by @hFireF0X. My code is quite different because,  unfortunately, I don't
             have access to all those c++ goodies and I could not get a callback for
             LdrEnumerateLoadedModules working!
               + supMasqueradeProcess: https://github.com/hfiref0x/UACME/blob/master/Source/Akagi/sup.c#L504
               + supxLdrEnumModulesCallback: https://github.com/hfiref0x/UACME/blob/master/Source/Akagi/sup.c#L477
-    
+
     .DESCRIPTION
         Author: Ruben Boonen (@FuzzySec)
         License: BSD 3-Clause
         Required Dependencies: None
         Optional Dependencies: None
-    
+
     .EXAMPLE
         C:\PS> Masquerade-PEB -BinPath "C:\Windows\explorer.exe"
         # Run the script with two arguments.  The first is the full path to the file you wish to pin and the second is either PIN or UNPIN.
         # PinToTaskBar1903.ps1 C:\Windows\notepad.exe PIN
     #>
-    
+
     param (
         [Parameter(Mandatory = $True)]
         [string]$BinPath
@@ -11526,7 +11544,7 @@ function Masquerade-PEB {
         public IntPtr Flink;
         public IntPtr Blink;
     }
-    
+
     [StructLayout(LayoutKind.Sequential)]
     public struct _PROCESS_BASIC_INFORMATION
     {
@@ -11609,7 +11627,7 @@ function Masquerade-PEB {
     {
         [DllImport("ntdll.dll")]
         public static extern int NtQueryInformationProcess(
-            IntPtr processHandle, 
+            IntPtr processHandle,
             int processInformationClass,
             ref _PROCESS_BASIC_INFORMATION processInformation,
             int processInformationLength,
@@ -11624,7 +11642,7 @@ function Masquerade-PEB {
             IntPtr lpCriticalSection);
     }
 "@
-    
+
     # Flag architecture $x32Architecture/!$x32Architecture
     if ([System.IntPtr]::Size -eq 4) {
         $x32Architecture = 1
@@ -11775,7 +11793,7 @@ function Masquerade-PEB {
             Emit-UNICODE_STRING -hProcess $ProcHandle -lpBaseAddress $FullDllNamePtr -dwSize $StructSize -data $BinPath
             Emit-UNICODE_STRING -hProcess $ProcHandle -lpBaseAddress $BaseDllNamePtr -dwSize $StructSize -data $BinPath
         }
-        
+
         $ListIndex = $BufferOffset = $LDREntry.InLoadOrderLinks.Flink.ToInt64()
         $NewIntPtr = New-Object System.Intptr -ArgumentList $BufferOffset
     }
@@ -11787,8 +11805,8 @@ function Masquerade-PEB {
         [Ntdll]::RtlLeaveCriticalSection($PEBFlags.FastPebLock64)
     } # echo "[!] RtlLeaveCriticalSection --> &Peb->FastPebLock`n"
 }
-    
-function PinToTaskBar {    
+
+function PinToTaskBar {
     if (($args[0] -eq "/?") -Or ($args[0] -eq "-h") -Or ($args[0] -eq "--h") -Or ($args[0] -eq "-help") -Or ($args[0] -eq "--help")){
         write-host "This script needs to be run with two arguments."`r`n
         write-host "1 - Full path to the file you wish to pin (surround in quotes)."
@@ -11850,7 +11868,7 @@ function PinToTaskBar {
 
     } else {
         (New-Object -ComObject shell.application).Namespace("$Directory\").parsename("$FileNameWithExt").invokeverb("$PinUnpin")
-    }   
+    }
 }
 
 function Download-Script ($url, $FinalName) {
@@ -11867,7 +11885,7 @@ function Download-Script ($url, $FinalName) {
             if (Test-Path "$ScriptsPath\$DownloadName") {
                 if (Test-Path "$ScriptPath\$FinalName") { Move-Item }
                 Move-Item "$ScriptsPath\$DownloadName" "$ScriptsPath\$FinalName" -Force
-                "Renamed '$DownloadName' to '$FinalName'" 
+                "Renamed '$DownloadName' to '$FinalName'"
            }
         }
     }
@@ -11902,7 +11920,7 @@ function Download-ScriptExamples {
     Download-Script 'https://gallery.technet.microsoft.com/scriptcenter/Powershell-function-to-add-a7ac5229/file/166758/1/Add-Path.ps1'
     # https://superwidgets.wordpress.com/2017/01/04/powershell-script-to-report-on-computer-inventory/
 
-    Download-Script 'https://gallery.technet.microsoft.com/scriptcenter/Powershell-Script-to-ping-15e0610a/file/127965/4/Ping-Report-v3.ps1' 'Ping-Report-v3.ps1' 
+    Download-Script 'https://gallery.technet.microsoft.com/scriptcenter/Powershell-Script-to-ping-15e0610a/file/127965/4/Ping-Report-v3.ps1' 'Ping-Report-v3.ps1'
     # if (Test-Path "$ScriptsPath\Ping-Report-v3.ps1") { Move-Item "$ScriptsPath\Ping-Report-v3.ps1" "$ScriptsPath\Ping-Report.ps1" -Force }   # remove the -v3 from filename
 
     Download-Script 'https://gallery.technet.microsoft.com/scriptcenter/Fast-asynchronous-ping-IP-d0a5cf0e/file/124575/1/Ping-IPrange.ps1'
@@ -12030,7 +12048,7 @@ function Install-ModuleToDirectory {
 #         [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()]                                    $Name,
 #         [Parameter(Mandatory = $true)] [ValidateNotNullOrEmpty()] [ValidateScript({ Test-Path $_ })] $Destination
 #     )
-# 
+#
 #     if (($Profile -like "\\*") -and (Test-Path (Join-Path $UserModulePath $Name))) {
 #         if (Test-Administrator -eq $true) {
 #             # Nothing in here will happen unless working on laptop with a network share
@@ -12080,13 +12098,13 @@ function Install-ModuleToDirectory {
 #     $out = ""; foreach ($i in (Get-Command -Module $Name).Name) {$out = "$out, $i"} ; "" ; Write-Wrap $x.trimstart(", ") ; ""
 #     # return (Get-Module)
 # }
-# 
+#
 # Install-ModuleToDirectory -Name 'XXX' -Destination 'E:\Modules'
 # try {
 #     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
 #     # If the module is already installed, use Update, otherwise use Install
 #     if ([bool](Get-Module $Name -ListAvailable)) {
-#          Update-Module $Name -Verbose -ErrorAction Stop 
+#          Update-Module $Name -Verbose -ErrorAction Stop
 #     } else {
 #          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
 #     }
@@ -12136,13 +12154,13 @@ function Install-ModuleToDirectory {
 #         "to correctly move Modules into the users module folder on C:\"
 #         pause
 #     }
-# 
+#
 #     if ($success -eq 0) {
 #         try {
 #             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
 #             # If the module is already installed, use Update, otherwise use Install
 #             if ([bool](Get-Module $MyModule -ListAvailable)) {
-#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
+#                  Update-Module $MyModule -Verbose -ErrorAction Stop
 #             } else {
 #                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
 #             }
@@ -12171,7 +12189,7 @@ function Install-ModuleExamples {
     #     PSDeploy            = 'latest'  # Maybe pin the version in case he breaks this...
     #     PSTodoTxt           = 'latest'
     # }
-    # 
+    #
     # # Dependencies
     # if (-not (Get-Command -Name 'Get-PackageProvider' -EA silent)) {
     #     $null = Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser
@@ -12181,7 +12199,7 @@ function Install-ModuleExamples {
     #     Write-Verbose 'Bootstrapping NuGet package provider.'
     #     Get-PackageProvider -Name NuGet -ForceBootstrap
     # }
-    # 
+    #
     # # Trust the PSGallery is needed
     # if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne 'Trusted') {
     #     Write-Verbose "Trusting PowerShellGallery."
@@ -12200,9 +12218,9 @@ function Install-ModuleExamples {
     Write-Host "For Windows 10, there is nothing to do, but for Windows 7 (even with PowerShell 5.1)"
     Write-Host "it must also be loaded into every session (unlike Windows 10 where it loads by default)."
     Write-Host "A line in the profile extensions tests for Win 7 then imports PSReadLine if required."
-    if (-not (Get-Module -ListAvailable PSReadLine)) { 
+    if (-not (Get-Module -ListAvailable PSReadLine)) {
         if ($PSver -gt 4) {
-            Install-Module PSReadLine -Scope CurrentUser -Force -Verbose 
+            Install-Module PSReadLine -Scope CurrentUser -Force -Verbose
         }
         else {
             Write-Host "Need to be on PS v5 or higher to run 'Install-Module PSReadLine'" -ForegroundColor Red
@@ -12378,7 +12396,7 @@ function Template-CheckScheduledTasks {
     $taskName = "FireFoxMain"
     $taskExists = Get-ScheduledTask | Where-Object {$_.TaskName -like $taskName }
     if($taskExists) {
-        # Do whatever 
+        # Do whatever
     } else {
         # Do whatever
     }
@@ -12395,6 +12413,6 @@ function Template-CheckScheduledTasks {
     if (Get-ScheduledTask FirefoxMaint -ErrorAction Ignore) { "found" } else { "not found" }
 }
 
-# This relates to my StackOverflow question about all module components not being applied 
+# This relates to my StackOverflow question about all module components not being applied
 # when the module is loaded; this forces all to be exported into the current session.
 Export-ModuleMember -Alias * -Function *
