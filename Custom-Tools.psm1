@@ -4441,33 +4441,33 @@ function SendEmail {
     $cpuThreshold = 99
     $memThreshold = 99
     $diskThreshold = 100
-    
+
     $jobHash = @{}
     $serverHash = @{}
     $serverList = @("localhost")
-    
+
     foreach($server in $serverList) {
         $cpu = Start-Job -ComputerName $server -ScriptBlock { Get-Counter "\processor(_Total)\% Processor Time" -Continuous }
         $mem = Start-Job -ComputerName $server -ScriptBlock { Get-Counter -Counter "\Processor(_Total)\% Processor Time" -Continuous }
         $disk = Start-Job -ComputerName $server -ScriptBlock { Get-Counter -Counter "\LogicalDisk(C:)\% Free Space" -Continuous }
-    
+
         $serverHash.Add("cpu", $cpu)
         $serverHash.Add("mem", $mem)
         $serverHash.Add("disk", $disk)
-    
+
         $jobHash.Add($server, $serverHash)
     }
-    
+
     Start-Sleep 10
     $totalLoops = 0
-    
+
     while ($totalLoops -le 360) {
-    
+
         foreach($server in $jobHash.Keys) {
             $cpu = (Receive-Job $jobHash[$server].cpu | % { (($_.readings.split(':'))[1]).Replace("`n","") } | measure -Maximum).Maximum
             $mem = (Receive-Job $jobHash[$server].mem | % { (($_.readings.split(':'))[1]).Replace("`n","") } | measure -Maximum).Maximum
             $disk = (Receive-Job $jobHash[$server].disk | % { (($_.readings.split(':'))[2]).Replace("`n","") } | measure -Maximum).Maximum
-    
+
             if ($cpu -gt $cpuThreshold -or $mem -gt $memThreshold -or $disk -gt $diskThreshold) {
                 Send-Email $server $cpu $mem $disk
             }
@@ -4476,7 +4476,7 @@ function SendEmail {
         Start-Sleep 1
         $totalLoops ++
     }
-    
+
     Get-Job | Remove-Job
 }
 
@@ -4505,7 +4505,7 @@ function SendEmail {
 function sys {
     $System = get-wmiobject -class "Win32_ComputerSystem"
     $Mem = [math]::Ceiling($System.TotalPhysicalMemory / 1024 / 1024 / 1024)
-    
+
     # $wmi = gwmi -class Win32_OperatingSystem -computer "."   # Removed this method as not CIM compliant
     # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
     # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
@@ -4562,13 +4562,13 @@ function sys {
     $IPDefaultGateway = @(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.DefaultIpGateway})[0].DefaultIPGateway[0]
     "[Default IPAddress : $IPDefaultAddress / $IPDefaultGateway]" 
     ""
-    
+
     # while (!(Test-Path $temp_cpu)) { while ((Get-Item $temp_cpu -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
     # while (!(Test-Path $temp_cpu_cores)) { while ((Get-Item $temp_cpu_cores -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
     # while (!(Test-Path $temp_cpu_logical)) { while ((Get-Item $temp_cpu_logical -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
     # "CPU:       $(cat $temp_cpu_out)"
     # "CPU Cores: $(cat $temp_cpu_cores_out),   CPU Logical Cores: $(cat $temp_cpu_logical_out)"
-    
+
     # while (!(Test-Path $temp_cpu)) { while ((Get-Item $temp_cpu -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
     # "CPU:               $(cat $temp_cpu)"
     # while (!(Test-Path $temp_cpu_cores)) { while ((Get-Item $temp_cpu_cores -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
@@ -4585,13 +4585,11 @@ function sys {
     (gwmi win32_logicaldisk | Format-Table DeviceId, VolumeName, @{ n = "Size(GB)"; e = { [math]::Round($_.Size/1GB,2) } }, @{ n = "Free(GB)"; e = {[math]::Round($_.FreeSpace/1GB,2) } } | Out-String) -replace '(?m)^\r?\n'
     # gwmi win32_logicaldisk | Format-Table DeviceId, VolumeName, @{n="Size(GB)";e={[math]::Round($_.Size/1GB,2)}},@{n="Free(GB)";e={[math]::Round($_.FreeSpace/1GB,2)}}
     # Get-Volume | Where-Object {($_.SizeRemaining -lt 10000000000) -and ($_.DriveType -eq "FIXED") -and ($_.FileSystemLabel -ne "System Reserved")}
-    
     # https://www.hanselman.com/blog/CalculateYourWEIWindowsExperienceIndexUnderWindows81.aspx
     # gwmi win32_winsat | select-object CPUScore,D3DScore,DiskScore,GraphicsScore,MemoryScore,TimeTaken,WinSATAssessmentState,WinSPRLevel,PSComputerName
     ((gwmi win32_winsat | select-object CPUScore,D3DScore,DiskScore,GraphicsScore,MemoryScore,WinSPRLevel | ft) | Out-String) -replace '(?m)^\r?\n'   # removed ,WinSATAssessmentState
     # $out = ""; foreach ($i in $WinSat_output) {$out += " $i,"} ; "" ; Write-Wrap $out.TrimEnd(", ")
 
-    
     # https://superuser.com/questions/769679/powershell-get-list-of-folders-shared
     (get-WmiObject -class Win32_Share | ft | Out-String) -replace '(?m)^\r?\n'
 }
