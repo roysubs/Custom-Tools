@@ -803,6 +803,40 @@ if($$_ -is [System.IO.FileInfo]) {
 }
 
 function dirfriendly { Enable-DirFriendlySize ; dir ; "`nThe Enable-DirFriendlySize function has been enabled for this session.`nFile sizes will be shown in human readable format for dir/ls/gci.`nA new shell will disable this option."  }
+
+# Another human readable sizes variant
+function Get-ChildItemHumanReadable {
+    param(
+        [string]$Path
+    )
+    Get-ChildItem $Path | Select-Object Mode, LastWriteTime, @{
+        Name="Length"; Expression={
+            if ($_.Length -gt 1GB) {
+                "{0:N2} GB" -f ($_.Length / 1GB)
+            } elseif ($_.Length -gt 1MB) {
+                "{0:N2} MB" -f ($_.Length / 1MB)
+            } elseif ($_.Length -gt 1KB) {
+                "{0:N2} KB" -f ($_.Length / 1KB)
+            } else {
+                "$($_.Length) B"
+            }
+        }
+    }, Name   # | Format-Table -AutoSize
+}
+Set-Alias gcih Get-ChildItemHumanReadable
+Set-Alias gch Get-ChildItemHumanReadable
+Set-Alias dirh Get-ChildItemHumanReadable
+Set-Alias dih Get-ChildItemHumanReadable
+Set-Alias lsh Get-ChildItemHumanReadable
+Set-Alias lh Get-ChildItemHumanReadable
+
+
+
+
+
+# To use the function, simply call it with the desired path:
+# Get-HumanReadableSizes -Path "C:\path\to\your\files"
+
 function dircolor { Enable-DirColors ; "`nThe Enable-DirColors function has been enabled for this session.`nFiles will be coloured according to their extension type for dir/ls/gci.`nA new shell will disable this option." }
 
 Function Get-FileDialog($InitialDirectory) {
@@ -1059,17 +1093,17 @@ function Get-DiskFree
         [Alias('hostname')]
         [Alias('cn')]
         [string[]]$ComputerName = $env:COMPUTERNAME,
-        
+
         [Parameter(Position=1,
                    Mandatory=$false)]
         [Alias('runas')]
         [System.Management.Automation.Credential()]$Credential =
         [System.Management.Automation.PSCredential]::Empty,
-        
+
         [Parameter(Position=2)]
         [switch]$Format
     )
-    
+
     BEGIN
     {
         function Format-HumanReadable 
@@ -1085,10 +1119,10 @@ function Get-DiskFree
                 default {"{0}" -f ($size) + "B"}
             }
         }
-        
+
         $wmiq = 'SELECT * FROM Win32_LogicalDisk WHERE Size != Null AND DriveType >= 2'
     }
-    
+
     PROCESS
     {
         foreach ($computer in $ComputerName)
@@ -1106,13 +1140,13 @@ function Get-DiskFree
                              -ComputerName $computer -Credential $Credential `
                              -ErrorAction Stop
                 }
-                
+
                 if ($Format)
                 {
                     # Create array for $disk objects and then populate
                     $diskarray = @()
                     $disks | ForEach-Object { $diskarray += $_ }
-                    
+
                     $diskarray | Select-Object @{n='Name';e={$_.SystemName}}, 
                         @{n='Vol';e={$_.DeviceID}},
                         @{n='Size';e={Format-HumanReadable $_.Size}},
@@ -1135,26 +1169,26 @@ function Get-DiskFree
                                    'FileSystem'=$disk.FileSystem;
                                    'Type'=$disk.Description
                                    'Computer'=$disk.SystemName;}
-                    
+
                         # Create custom PS object and apply type
                         $diskobj = New-Object -TypeName PSObject `
                                    -Property $diskprops
                         $diskobj.PSObject.TypeNames.Insert(0,'BinaryNature.DiskFree')
-                    
+
                         Write-Output $diskobj
                     }
                 }
             }
-            catch 
+            catch
             {
                 # Check for common DCOM errors and display "friendly" output
                 switch ($_)
                 {
                     { $_.Exception.ErrorCode -eq 0x800706ba } `
-                        { $err = 'Unavailable (Host Offline or Firewall)'; 
+                        { $err = 'Unavailable (Host Offline or Firewall)';
                             break; }
                     { $_.CategoryInfo.Reason -eq 'UnauthorizedAccessException' } `
-                        { $err = 'Access denied (Check User Permissions)'; 
+                        { $err = 'Access denied (Check User Permissions)';
                             break; }
                     default { $err = $_.Exception.Message }
                 }

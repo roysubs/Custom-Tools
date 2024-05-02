@@ -1,6 +1,12 @@
-# Can either create this as a global PSScriptAnalyzerSettings.psd1 file in the default PSScriptAnalyzer folder:
-#   $env:UserProfile\Documents\WindowsPowerShell\Modules\PSScriptAnalyzer\1.19.1\PSScriptAnalyzer.psd1
-# Or, can copy this file into any folder with PowerShell scripts to define PSScriptAnalyzer rules. 
+# PSScriptAnalyzer could be installed locally, in which case it will be at 
+#    %UserProfile%\Documents\WindowsPowerShell\Modules\PSScriptAnalyzer\1.19.1
+# But most normally today it will be used in VS Code where it is a component of the PowerShell extension:
+#    %UserProfile%\.vscode\extensions\ms-vscode.powershell-2024.2.1\modules\PSScriptAnalyzer\1.22.0
+# There is no PSScriptAnalyzerSettings.psd1 by default, but note that PSScriptAnalyzer.psd1 is always there,
+# that is a different file, don't confuse them. You can create a PSScriptAnalyzerSettings.psd1 here to apply
+# to all scripts, or you can drop a custom PSScriptAnalyzerSettings.psd1 into a project folder where it will
+# apply to every script in that folder.
+#
 # Run PSScriptAnalyzer directly via the command palette (Ctrl+Shift+P) "PSScriptAnalyzer: Analyze Script" or by right-clicking in the editor and selecting "PSScriptAnalyzer: Analyze Script".
 # View Issues: After running the analyzer, any detected issues will be displayed in the "Problems" panel at the bottom of the editor. You can click on each issue to navigate to the corresponding line in the script.
 # Navigate Between Issues: To navigate between the detected issues, you can use the keyboard shortcut F8 (by default). Pressing F8 will cycle through the issues one by one, highlighting each one in the editor and moving to the corresponding line.
