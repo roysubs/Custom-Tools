@@ -1,4 +1,4 @@
-# PSScriptAnalyzer could be installed locally, in which case it will be at 
+# PSScriptAnalyzer could be installed locally, in which case it will be at
 #    %UserProfile%\Documents\WindowsPowerShell\Modules\PSScriptAnalyzer\1.19.1
 # But most normally today it will be used in VS Code where it is a component of the PowerShell extension:
 #    %UserProfile%\.vscode\extensions\ms-vscode.powershell-2024.2.1\modules\PSScriptAnalyzer\1.22.0
@@ -27,6 +27,7 @@
     ExcludeRules = @(
         'PSAvoidUsingWriteHost',                       # Suppress the rule that flags Write-Host
         'PSAvoidUsingCmdletAliases',                   # Suppress the rule that flags aliases
+        'PSAvoidUsingPositionalParameters',
         'PSUseShouldProcessForStateChangingFunctions'  # Do not flag functions starting: New, Set, Remove, Start, Stop, Restart, Reset, Update
     )
     # You can also use rule configuration to configure independent rules (for those rules that support this granularity):

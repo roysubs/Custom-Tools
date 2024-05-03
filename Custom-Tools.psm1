@@ -41,7 +41,7 @@
 #
 # Chocolatey Automatic Packaging for Maintenance: https://chocolatey.org/docs/automatic-packages
 # Chocolatey Workshop, Organizational Use: https://github.com/chocolatey/chocolatey-workshop-organizational-use/
-# 
+#
 # $args & $input & positional parameters etc: https://stackoverflow.com/questions/2157554/how-to-handle-command-line-arguments-in-powershell
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1#input
 # Advanced Functions: https://stackoverflow.com/questions/64630362/powershell-pipeline-compatible-select-string-function
@@ -59,11 +59,11 @@
 #     # Resolve any relative paths
 #     $paths += $psCmdlet.SessionState.Path.GetUnresolvedProviderPathFromPSPath($aPath)
 # }
-# 
+#
 # foreach ($aPath in $paths) {
 #     if ($pscmdlet.ShouldProcess($aPath, 'Operation')) {
 #         # Process each path
-#         
+#
 #     }
 # }
 #
@@ -79,11 +79,11 @@
 #     MyFunc2
 #     <other code ...>
 # }
-# 
+#
 # function MyFunc {
 #     "Hello, World!"
 # }
-# 
+#
 # Main
 #
 #
@@ -94,10 +94,10 @@
 #     Echo "About to call my function"
 #     MultiplyByTwo 5
 #     Echo "Done calling my function"
-# }  
+# }
 # function MultiplyByTwo([int] $num) { 2 * $num }
 # function MultiplyByTen([int] $num) { 10 * $num }
-# 
+#
 # # Finally, innvoke the script with a single line at the bottom
 # & $block
 #
@@ -122,7 +122,7 @@ function Update-PowerShellStartup {
     $env:PATH = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
     [AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object {
         $path = $_.Location
-        if ($path) { 
+        if ($path) {
             $name = Split-Path $path -Leaf
             Write-Host -ForegroundColor Yellow "`r`nRunning ngen.exe on '$name'"
             ngen.exe install $path /nologo
@@ -163,7 +163,7 @@ function Get-SizePS ($dir) {   # Native PowerShell find size (much slower than r
 # Also, can shorten any parameter as long as no duplicates to that, so can shorten -Attributes to -at
 #    e.g.   -at h  (instead of '-Attributes Hidden'),  -at dir  (instead of '-Attributes Directory')
 # Also, can use "!" to logical -NOT a flag, e.g.  -at !h   ('attributes not-hidden', show all files and folders that are NOT hidden)
-function dir-all ($name) { dir -Force $name }                         # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
+function dir-all ($name) { dir -Force $name }                    # "dir all", shows all files including hidden (keep this here as "-Force" is not the most obvious syntax)
 function dir/ah ($name) { dir -Hidden $name }                    # Mimic DOS dir/ad. Show hideen files/folders. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
 function dir/ad ($name) { dir -Directory $name }                 # Mimic DOS dir/ad. Show directories. Note also:   dir -Force (for Hidden),   OR,   Where Attributes -like '*Hidden*'
 function dir/a-d ($name) { dir -File $name }                     # Mimic DOS dir/a-d. Show files, i.e. "attributes of 'NOT directories'"". Note also:   dir -Force | Where Attributes -like '*Hidden*' }
@@ -171,7 +171,7 @@ function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir
 function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
 function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
-
+function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 # https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
 function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
@@ -189,7 +189,7 @@ function dirq ($name) {   # quick and dirty Size + Name, work in progress
     foreach ($i in (dir $folder | sort Length).FullName) {
         if (Test-Path -Path $i -PathType Container) {
             $size = "[D]"
-            $size_out = "[D]" 
+            $size_out = "[D]"
         }
         else {
             $size = (gci $i | select length).Length
@@ -264,7 +264,7 @@ function Get-CommandsByModule ($usertype) {
 
     function Write-Wrap {
         [CmdletBinding()]
-        Param ( 
+        Param (
             [parameter (Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
             [Object[]] $chunk
         )
@@ -296,7 +296,7 @@ function Get-CommandsByModule ($usertype) {
             foreach ($i in $commands) {
                 $out = "$out, $i"
             }
-            $count = ($out.ToCharArray() | Where-Object { $_ -eq ',' } | Measure-Object).Count   # Could just count $i but this is 
+            $count = ($out.ToCharArray() | Where-Object { $_ -eq ',' } | Measure-Object).Count   # Could just count $i but this is
 
             if ($count -ne 0) {
                 $out = $out.trimstart(", ")
@@ -329,14 +329,14 @@ function Get-Filters { Get-CommandType Filter } ; Set-Alias filters Get-Filters
 
 # function Get-Functions { Get-Module -ListAvailable | foreach {"`n## Module name: $_ `n"; gcm -Module $_.name -CommandType function | select name; "`r`n" } }
 # function Get-Cmdlets { Get-Module -ListAvailable | foreach {"`n## Module name: $_`n"; gcm -Module $_.name -CommandType cmdlet | select name; "`r`n" } }
-Set-Alias cmdlets Get-Cmdlets 
+Set-Alias cmdlets Get-Cmdlets
 
 # function Get-Aliases { Get-Module -ListAvailable | foreach {"`n## Module name: $_`n"; gcm -Module $_.name -CommandType alias | select name; "`r`n" } }
 Set-Alias aliases Get-Aliases
 
 function Get-Verbs { $out = ""; foreach ($i in ((get-verb).verb | sort)) { $out = "$out, $i" } ; "`n:: Registered PowerShell Verbs:`n" ; Write-Wrap $out.trimstart(", ") ; "" }
 Set-Alias verbs Get-Verbs
-# verbs finds all verb types available and sorts them. Using verbs outside of this range will result in 
+# verbs finds all verb types available and sorts them. Using verbs outside of this range will result in
 
 function ver {
     $PSVersionTable
@@ -363,9 +363,9 @@ function ver {
 
 
 
-# Quick Chocolatey Functions, c for Chocolatey, then 2-char shorthand for a command, then y for assume "yes" on all 
+# Quick Chocolatey Functions, c for Chocolatey, then 2-char shorthand for a command, then y for assume "yes" on all
 # There is little point in running these if not Administrator, so always offer to sudo them at runtime.
-function ciny { 
+function ciny {
     if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         choco install -y $args   # c(hoco) in(stall) -y
     }
@@ -389,7 +389,7 @@ function cuny {
             gsudo choco uninstall -y $args   # c(hoco) un(install) -y
         }
     }
-} 
+}
 function cupy { choco upgrade -y all }       # cup (choco upgrade) all -y
 
 # function g { } # test for existence of gsudo, if not there, choco install -y it and then use it with the command given
@@ -428,10 +428,10 @@ function Get-EventTesting {
 # https://community.spiceworks.com/topic/398280-powershell-get-the-size-of-several-subfolders
 
 # Function Get-FolderSize {
-# 
+#
 # [cmdletbinding()]
 # Param ( $folder = $(Throw "no folder name specified"))
-# 
+#
 # # calculate folder size and recurse as needed
 # $size = 0
 # Foreach ($file in $(ls $folder -recurse)){
@@ -439,12 +439,12 @@ function Get-EventTesting {
 #     $size += $file.length
 #     }
 # }
-# 
+#
 # # return the value and go back to caller
 # return $size
-# 
+#
 # }
-# 
+#
 # get-foldersize C:\foo\bin
 
 
@@ -454,7 +454,7 @@ function Get-EventTesting {
 #         [Parameter(Mandatory=$true)]
 #         [string]$Path
 #     )
-# 
+#
 #     If (Test-Path $Path -PathType Container)
 #     {   ForEach ($Folder in (Get-ChildItem $Path -Directory -Recurse))
 #         {   [PSCustomObject]@{
@@ -464,7 +464,7 @@ function Get-EventTesting {
 #         }
 #     }
 # }
-# 
+#
 # Get-FolderSizes -Path c:\Dropbox\test
 
 
@@ -475,7 +475,7 @@ function Test-PendingReboot {
     if (Get-ChildItem "HKLM:\Software\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending" -EA Ignore) { return $true }
     if (Get-Item "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" -EA Ignore) { return $true }
     if (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name PendingFileRenameOperations -EA Ignore) { return $true }
-    try { 
+    try {
         $util = [wmiclass]"\\.\root\ccm\clientsdk:CCM_ClientUtilities"
         $status = $util.DetermineIfRebootPending()
         if(($status -ne $null) -and $status.RebootPending) { return $true }
@@ -503,18 +503,18 @@ Set-Alias ip Get-IPAddress
 # function ipv6 { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv6" } } ; Set-Alias ip6 ipv6
 # function ip { ipconfig | where { $_ -match "^Ethernet|^Wireless|IPv4|IPv6" } }
 
-function Enable-PSColor {    
+function Enable-PSColor {
     # Enable colour directory listings
     ""
-    if ( (!(Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor")) -and (!(Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor")) ) { 
+    if ( (!(Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor")) -and (!(Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor")) ) {
         "Installing PSColor Module ..."
         Install-Module PSColor
     }
-    if ( (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") -or (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") ) { 
+    if ( (Test-Path "C:\Program Files\WindowsPowerShell\Modules\PSColor") -or (Test-Path "C:\Users\$env:USERNAME\Documents\WindowsPowerShell\Modules\PSColor") ) {
         "Importing PSColor Module ..."
         Import-Module PSColor
     }
-    if (Get-Module -All PSColor) { 
+    if (Get-Module -All PSColor) {
         dir
     } else {
         "PSColor failed to install or import"
@@ -551,7 +551,7 @@ function Test-Color {
 
     function Download-Script ($url) {
         $FileName = ($url -split "/")[-1]   # Could also use:  $url -split "/" | select -last 1   # 'hi there, how are you' -split '\s+' | select -last 1
-        $OutPath = Join-Path $UserScriptsPath $FileName 
+        $OutPath = Join-Path $UserScriptsPath $FileName
         Write-Host "Downloading  $FileName to $OutPath ..."
         try { (New-Object System.Net.WebClient).DownloadString($url) | Out-File $OutPath }
         catch { "Could not download $FileName ..." }
@@ -594,20 +594,20 @@ function Test-Color {
     # $host.PrivateData.ErrorBackgroundColor = "White"
 
     # https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/using-colors-in-powershell-console
-    
+
     # https://www.commandline.ninja/easily-display-powershell-console-colors/
-    $List = [enum]::GetValues([System.ConsoleColor]) 
-    
+    $List = [enum]::GetValues([System.ConsoleColor])
+
     ForEach ($Color in $List){
         Write-Host "      $Color" -ForegroundColor $Color -NonewLine
-        Write-Host "" 
-        
+        Write-Host ""
+
     } #end foreground color ForEach loop
 
     ForEach ($Color in $List){
         Write-Host "                   " -backgroundColor $Color -noNewLine
         Write-Host "   $Color"
-                
+
     } #end background color ForEach loop
 
     # https://stackoverflow.com/questions/64203354/set-the-text-color-in-powershell
@@ -622,9 +622,9 @@ function Test-Color {
     # ni $0 -f
     # sp $0 ColorTable00 0x00562401
     # sp $0 ColorTable07 0x00f0edee
-    
+
     # https://jdhitsolutions.com/blog/powershell/7753/powershell-color-combos/
-        
+
     # https://4sysops.com/wiki/change-powershell-console-syntax-highlighting-colors-of-psreadline/
     # Get-PSReadlineOption  # list all.  (alias: just 'psreadlineoption')
     # Set-PSReadLineOption -Colors @{ "Command"="White" }
@@ -639,7 +639,7 @@ function Test-Color {
 
     # I have used all these, many are most likely duplicate colors, but they all work
     # $Colors = @()
-    # 
+    #
     # $Colors += "AliceBlue"
     # $Colors += "AntiqueWhite"
     # $Colors += "Aqua"
@@ -784,7 +784,7 @@ function Test-Color {
 
 function Enable-DirFriendlySize {
     # After running this, dir/ls/gci will show friendly sizes (but also sortable etc)
-    $file = '{0}myTypes.ps1xml' -f ([System.IO.Path]::GetTempPath()) 
+    $file = '{0}myTypes.ps1xml' -f ([System.IO.Path]::GetTempPath())
     $data = Get-Content -Path $PSHOME\FileSystem.format.ps1xml
     # Note: Change $N=1 to $N=2 if want 2 decimal places in output
     $data -replace '<PropertyName>Length</PropertyName>', @'
@@ -797,7 +797,7 @@ if($$_ -is [System.IO.FileInfo]) {
 } else { $null }
 </ScriptBlock>
 '@ | Set-Content -Path $file
-    Update-FormatData -PrependPath $file    
+    Update-FormatData -PrependPath $file
     # https://martin77s.wordpress.com/2017/05/20/display-friendly-file-sizes-in-powershell/
     # dir | Select-Object -Property Mode, LastWriteTime, @{N='SizeInKb';E={[double]('{0:N2}' -f ($_.Length/1kb))}}, Name | Sort-Object -Property SizeInKb
 }
@@ -809,7 +809,8 @@ function Get-ChildItemHumanReadable {
     param(
         [string]$Path
     )
-    Get-ChildItem $Path | Select-Object Mode, LastWriteTime, @{
+    # Mode, LastWriteTime,   # have removed these as found them to not be useful
+    Get-ChildItem $Path | Select-Object @{
         Name="Length"; Expression={
             if ($_.Length -gt 1GB) {
                 "{0:N2} GB" -f ($_.Length / 1GB)
@@ -829,10 +830,6 @@ Set-Alias dirh Get-ChildItemHumanReadable
 Set-Alias dih Get-ChildItemHumanReadable
 Set-Alias lsh Get-ChildItemHumanReadable
 Set-Alias lh Get-ChildItemHumanReadable
-
-
-
-
 
 # To use the function, simply call it with the desired path:
 # Get-HumanReadableSizes -Path "C:\path\to\your\files"
@@ -861,17 +858,17 @@ Function Get-FolderBrowserDialog ( [string]$Description = "Select Folder", [stri
 
 # https://docs.microsoft.com/en-us/powershell/scripting/samples/multiple-selection-list-boxes?view=powershell-6
 # In the function, can either "return $x" or in the function change the $x declaration to "$xglobal:$x" to make it visible outside of the function
-function ShowDialog( [string]$file ) { 
+function ShowDialog( [string]$file ) {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 
-    $objForm = New-Object System.Windows.Forms.Form 
+    $objForm = New-Object System.Windows.Forms.Form
     $objForm.Text = "Choice-Box"
-    $objForm.Size = New-Object System.Drawing.Size(300,200) 
+    $objForm.Size = New-Object System.Drawing.Size(300,200)
     $objForm.StartPosition = "CenterScreen"
 
     $objForm.KeyPreview = $True
-    $objForm.Add_KeyDown( 
+    $objForm.Add_KeyDown(
         {
             if ($_.KeyCode -eq "Enter") {
                 $x = $objListBox.SelectedItem; $objForm.Close()
@@ -902,23 +899,23 @@ function ShowDialog( [string]$file ) {
     $objForm.Controls.Add($CancelButton)
 
     $objLabel = New-Object System.Windows.Forms.Label
-    $objLabel.Location = New-Object System.Drawing.Size(10,20) 
-    $objLabel.Size = New-Object System.Drawing.Size(280,20) 
+    $objLabel.Location = New-Object System.Drawing.Size(10,20)
+    $objLabel.Size = New-Object System.Drawing.Size(280,20)
     $objLabel.Text = "Please choose any of the below :"
-    $objForm.Controls.Add($objLabel) 
+    $objForm.Controls.Add($objLabel)
 
-    $objListBox = New-Object System.Windows.Forms.ListBox 
-    $objListBox.Location = New-Object System.Drawing.Size(10,40) 
-    $objListBox.Size = New-Object System.Drawing.Size(260,20) 
+    $objListBox = New-Object System.Windows.Forms.ListBox
+    $objListBox.Location = New-Object System.Drawing.Size(10,40)
+    $objListBox.Size = New-Object System.Drawing.Size(260,20)
     $objListBox.Height = 80
 
     $items = gc $file | where { $_ -ne "" }
 
     foreach ($item in $items) {
-        [void] $objListBox.Items.Add($item)     
+        [void] $objListBox.Items.Add($item)
     }
 
-    $objForm.Controls.Add($objListBox) 
+    $objForm.Controls.Add($objListBox)
 
     $objForm.Topmost = $True
 
@@ -928,7 +925,7 @@ function ShowDialog( [string]$file ) {
     return $x
 }
 
-# Handle scriptname and 
+# Handle scriptname and
 # https://stackoverflow.com/questions/817198/how-can-i-get-the-current-powershell-executing-file
 # $scriptFull = $script:MyInvocation.MyCommand.Definition
 # $scriptPath = $script:MyInvocation.MyCommand.Path
@@ -939,7 +936,7 @@ function ShowDialog( [string]$file ) {
 # $scriptLog = $scriptName.Replace(".ps1",".log")
 # $scriptInput = $scriptName.Replace(".ps1",".txt")
 # echo $scriptFull $scriptName $scriptPathNoExt $scriptPathOnly $scriptInput
-# 
+#
 # $OutputEncoding = ShowDialog $scriptInput
 # write-host $out
 
@@ -947,8 +944,8 @@ function ShowDialog( [string]$file ) {
 
 # Very quickly resolve the drives
 function Get-EveryDrive {
-    Get-WmiObject -Class Win32_LogicalDisk -Filter "DriveType = '3'" | 
-        Select-Object -Property DeviceID, DriveType, VolumeName, 
+    Get-WmiObject -Class Win32_LogicalDisk -Filter "DriveType = '3'" |
+        Select-Object -Property DeviceID, DriveType, VolumeName,
         @{L="Capacity GB";E={"{0:N2}" -f ($_.Size/1GB)}},
         @{L='FreeSpace GB';E={"{0:N2}" -f ($_.FreeSpace /1GB)}}
 }
@@ -967,7 +964,7 @@ function Update-SharingAllDrives {
 function Get-RemoteDrives ($computernames) {
     # $computernames = Get-Content 'I:\NodeList\SNL.txt'
     $CSVpath = "C:\0\RemoveDrives.csv"
-    Remove-Item $CSVpath -Force -EA Silent  
+    Remove-Item $CSVpath -Force -EA Silent
     $Report = @()
 
     foreach ($computer in $computernames) {
@@ -992,17 +989,17 @@ function Get-RemoteDrives ($computernames) {
 }
 
 # An easy way to get the functionality of a list box is to use Out-GridView. For example:
-# 
+#
 # 'one','two','three','four' | Out-GridView -OutputMode Single
 # The user can select an item, and it will be returned in the pipeline.
-# 
+#
 # You can also use -OutputMode Multiple for multi-selection.
-# 
+#
 # Another example:
-# 
+#
 # get-process | Out-GridView -OutputMode Multiple
 # This returns the selected object:
-# 
+#
 # Handles  NPM(K)    PM(K)      WS(K) VM(M)   CPU(s)     Id ProcessName
 # -------  ------    -----      ----- -----   ------     -- -----------
 #     396      24     5008       8964   113     8,88   3156 AuthManSvr
@@ -1012,7 +1009,7 @@ function Get-RemoteDrives ($computernames) {
 # https://binarynature.blogspot.com/2010/04/powershell-version-of-df-command.html
 # PowerShell equivalent of the df command
 # Get-DiskFree | Get-Member
-# 'db01','sp01' | Get-DiskFree -Credential $cred -Format | ft -GroupBy Name -auto  
+# 'db01','sp01' | Get-DiskFree -Credential $cred -Format | ft -GroupBy Name -auto
 # Name Vol Size  Used  Avail Use% FS   Type
 # ---- --- ----  ----  ----- ---- --   ----
 # DB01 C:  39.9G 15.6G 24.3G   39 NTFS Local Fixed Disk
@@ -1049,19 +1046,19 @@ function Get-DiskFree
     Import-Module ActiveDirectory
     $servers = Get-ADComputer -Filter { OperatingSystem -like '*win*server*' } | Select-Object -ExpandProperty Name
     Get-DiskFree -cn $servers | Where-Object { ($_.Volume -eq 'C:') -and ($_.Available / $_.Size) -lt .20 } | Select-Object Computer
-    
+
     Out-GridView: filter on drives of four servers and have the output displayed in an interactive table.
     $cred = Get-Credential 'example\administrator'
     $servers = 'dc01','db01','exch01','sp01'
     Get-DiskFree -Credential $cred -cn `$servers -Format | ? { $_.Type -like '*fixed*' } | select * -ExcludeProperty Type | Out-GridView -Title 'Windows Servers Storage Statistics'
-    
+
     Output to CSV: similar to the previous except we will also sort the disks by the percentage of usage. We've also decided to narrow the set of properties to name, volume, total size, and the percentage of the drive space currently being used.
     $cred = Get-Credential 'example\administrator'
     $servers = 'dc01','db01','exch01','sp01'
     Get-DiskFree -Credential $cred -cn $servers -Format | ? { $_.Type -like '*fixed*' } | sort 'Use%' -Descending | select -Property Name,Vol,Size,'Use%' | Export-Csv -Path $HOME\Documents\windows_servers_storage_stats.csv -NoTypeInformation
     .NOTES
     Some notes ...
-    
+
     Based on code posted by weestro at http://weestro.blogspot.com/
     http://weestro.blogspot.com/2009/08/sudo-for-powershell.html
     https://joeit.wordpress.com/
@@ -1106,10 +1103,10 @@ function Get-DiskFree
 
     BEGIN
     {
-        function Format-HumanReadable 
+        function Format-HumanReadable
         {
             param ($size)
-            switch ($size) 
+            switch ($size)
             {
                 {$_ -ge 1PB}{"{0:#.#'P'}" -f ($size / 1PB); break}
                 {$_ -ge 1TB}{"{0:#.#'T'}" -f ($size / 1TB); break}
@@ -1147,7 +1144,7 @@ function Get-DiskFree
                     $diskarray = @()
                     $disks | ForEach-Object { $diskarray += $_ }
 
-                    $diskarray | Select-Object @{n='Name';e={$_.SystemName}}, 
+                    $diskarray | Select-Object @{n='Name';e={$_.SystemName}},
                         @{n='Vol';e={$_.DeviceID}},
                         @{n='Size';e={Format-HumanReadable $_.Size}},
                         @{n='Used';e={Format-HumanReadable `
@@ -1158,7 +1155,7 @@ function Get-DiskFree
                         @{n='FS';e={$_.FileSystem}},
                         @{n='Type';e={$_.Description}}
                 }
-                else 
+                else
                 {
                     foreach ($disk in $disks)
                     {
@@ -1331,11 +1328,11 @@ function Get-SizeRecurse ( [string]$path, [long]$d ) {
     if (-not (Test-Path $path)) {
         Write-Error "$path is an invalid path."
         return $false
-    }  
-    
+    }
+
     try {
         $files = @(Get-ChildItem -Path $path -ErrorAction Ignore)
-        
+
         $countfiles = 0 ; $countdirs = 0 ; $total = 0
         foreach ($file in $files) {
 
@@ -1352,13 +1349,13 @@ function Get-SizeRecurse ( [string]$path, [long]$d ) {
     } catch {
         Write-Host "Cannot access $file"
     }
-    
+
     if ($d -lt 2)
     {
          $size = "{0:N2}" -f ($total / 1MB)
          Write-Host ('"' + $path + '","' + $size +' MB","files:' + $countfiles + '","dirs:' + $countdirs + '"')
     }
-    
+
     [long] $total
 }
 
@@ -1398,7 +1395,7 @@ function Restart-Explorer
 
         $fullName = $x.Windows().Item($i).FullName;
 
-        # This also catches IE windows, so I only add items where the full name is %WINDIR%\explorer.exe 
+        # This also catches IE windows, so I only add items where the full name is %WINDIR%\explorer.exe
         if ($fullName.Equals($explorerPath))
         {
             $windows += $url
@@ -1438,7 +1435,7 @@ function Restart-Explorer
 # }
 
 
-# Need to make this generic: BackupFolder ($path), 
+# Need to make this generic: BackupFolder ($path),
 # Then make various functions, function BackupProfile { BackupFolder "$($env:USERPROFILE)" }, etc.
 # Also some work on media type and zero-size backups ( /create )
 #    robocopy C:\0 ..\0_Backup_Books_zero_size *.mobi *.epub *.pdf /s /purge /create /r:1 /w:1
@@ -1478,8 +1475,8 @@ function Backup-Profile {
                 param($file,$attribute)
                 $val = [System.IO.FileAttributes]$attribute
                 if((gci $file -force).Attributes -band $val -eq $val){$true;} else { $false }
-            } 
-            
+            }
+
             function Set-FileAttribute {
                 param($file,$attribute)
                 $file =(gci $file -force)
@@ -1501,7 +1498,7 @@ function Backup-Profile {
 function Backup-ZeroSize ($source) {
     if ($source -eq $null) { "No folder specified." ; break }
     if ($source -eq ".") { $source = (Get-Location).Path }
-   
+
     $now = Get-Date -format "yyyy-MM-dd__HH-mm"
     $extramsg = "`n"
     $destC = "C:\0\Backup" + "-" + ($source).replace(":\", "-").replace("\", "-") + "__" + $now + "_[zero-size]"
@@ -1519,7 +1516,7 @@ function Backup-ZeroSize ($source) {
     $answer = $host.ui.PromptForChoice("", $message, $choices, 0)   # Set to 0 to default to "yes" and 1 to default to "no"
     if ($answer -eq '0') {
         if (!(Test-Path "D:\Backup")) { New-Item -Type Directory "D:\Backup" -EA silent }
-        # Add a timespan to the whole operation        
+        # Add a timespan to the whole operation
         # Remember that if $source / $dest are objects, do not need " around them, but if string, need to surround with "
         $toRun = "robocopy `"$source`" `"$dest`" /mir /r:1 /w:1 /xjd /s /purge /create $extra"
         Write-Host "`n$($toRun)"
@@ -1575,7 +1572,7 @@ function hh {
     $Uptime = $CurrentDate - $BootUpTime
     $s = "" ; if ($Uptime.Days -ne 1) {$s = "s"}
     $uptime_string = "$($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min $($uptime.seconds) sec"
-    
+
     "Hostname (Domain): $($System.Name) ($($System.Domain)),   Make/Model: $($System.Manufacturer)/($($System.Model))"
     "PowerShell $($PSVersionTable.PSVersion),   Windows Version: $($PSVersionTable.BuildVersion),   Windows ReleaseId: $((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name 'ReleaseId').ReleaseId)"
     "Last Boot Time:  $([Management.ManagementDateTimeConverter]::ToDateTime((Get-WmiObject Win32_OperatingSystem | select 'LastBootUpTime').LastBootUpTime)),   Uptime: $uptime_string"
@@ -1636,7 +1633,7 @@ function Test-ModuleUpdate {
             Update = $UpdateAvailable
             Path = $module.modulebase
          }
- 
+
     } #foreach
 
     Write-Host "Check complete" -ForegroundColor Green
@@ -1688,7 +1685,7 @@ Type GPedit.msc and hit Enter or OK to open Local Group Policy Editor.
 Local Computer Policy -> Computer Configuration -> Administrative Templates -> Windows Components -> OneDrive.
 In the right pane, double click on policy named Prevent the usage of OneDrive for file storage.
 https://techjourney.net/disable-or-uninstall-onedrive-completely-in-windows-10/
-    
+
 '@
 }
 
@@ -1845,7 +1842,7 @@ function Help-PowershellConsole {
     # Quicksudo ...
     # function sudo {
     #     $command = "powershell -noexit " + $args + ";#";
-    #     
+    #
     #     Set-ItemProperty -Path "HKCU:\Environment" -Name "windir" -Value $command ;
     #     schtasks /run /tn \Microsoft\Windows\DiskCleanup\SilentCleanup /I;
     #     Remove-ItemProperty -Path "HKCU:\Environment" -Name "windir"
@@ -1929,23 +1926,23 @@ function Get-Funky{
             }
             " "{Write-Host " " -NoNewline}
 
-        } 
+        }
     }
 }
 
 $art = " .:::.   .:::.`n:::::::.:::::::`n:::::::::::::::
 ':::::::::::::'`n  ':::::::::'`n    ':::::'`n      ':'"
-Get-Funky $art 
+Get-Funky $art
 
 # https://jdhitsolutions.com/blog/powershell/7278/friday-fun-powershell-ascii-art/
 $t = @"
-  _____                       _____ _          _ _ 
+  _____                       _____ _          _ _
  |  __ \                     / ____| |        | | |
  | |__) |____      _____ _ __ (___ | |__   ___| | |
  |  ___/ _ \ \ /\ / / _ \ '__\___ \| '_ \ / _ \ | |
  | |  | (_) \ V  V /  __/ |  ____) | | | |  __/ | |
  |_|   \___/ \_/\_/ \___|_| |_____/|_| |_|\___|_|_|
-                                                   
+
 "@
 
 for ($i=0;$i -lt $t.length;$i++) {
@@ -2063,7 +2060,7 @@ Register-ArgumentCompleter -CommandName 'cpl' -ParameterName 'cplName' -ScriptBl
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
     $cplCommands = @(
-        "timedate", "telephon", "TabletPC", "sysdm", "sapi", "appwiz", "powercfg", "bthprops", 
+        "timedate", "telephon", "TabletPC", "sysdm", "sapi", "appwiz", "powercfg", "bthprops",
         "desk", "ncpa", "mmsys", "main", "joy", "irprops", "intl", "inetcpl", "hdwwiz", "Firewall",
         "ControlPanel", "IndexingOptions", "EditEnvironmentVariables", "ClearBrowsingHistory",
         "SystemPropertiesComputerName", "SystemPropertiesHardware", "SystemPropertiesAdvanced",
@@ -2087,12 +2084,12 @@ function Help-WindowsTools {
 # sys hardware => Hardware tab + Device Manager + Devices and Printers etc etc
 # Also should sort of say what command is being run *just write it below
 # Maybe just a bunch of switches? sys -systemproperties
-# # 
+# #
 @"
 
 List of command line for various Windows Tools:
 secpol.msc   # Local Security Policy
-appwiz.cpl   # Programs and Features 
+appwiz.cpl   # Programs and Features
 netplwiz.exe # User Accounts (can set unattended logon password here)
 
 # https://www.tenforums.com/tutorials/77458-rundll32-commands-list-windows-10-a.html
@@ -2114,7 +2111,7 @@ SystemPropertiesAdvanced     # Advanced tab
     cmd.exe /c "sysdm.cpl,3"
     SystemPropertiesPerformance  # Performance Options (dialogue under Avvanced tab)
     SystemPropertiesDataExecutionPrevention # Data Execution Prevention tab on Performance Options
-SystemPropertiesProtection   # Protection tab 
+SystemPropertiesProtection   # Protection tab
     cmd.exe /c "sysdm.cpl,4"
 SystemPropertiesRemote       # Remote tab
     cmd.exe /c "sysdm.cpl,5"
@@ -2161,7 +2158,7 @@ powercfg.exe       # Command-line Power Management tool
 # Run, control netcpl.cpl ; Network Properties
 # Run, control netconnections
 # return
-# 
+#
 # :*:cccd::   ; Devices, Mouse, Keyboard, Joystick, Printers, etc
 # Run, control hdwwiz.cpl   ; Device Manager
 # Run, control desk.cpl ; Display Properties
@@ -2287,7 +2284,7 @@ Start the new VM:
     Get-VM | where {$_.State -eq 'Off'} | Start-VM     # Start all currently powered off VMs
     Get-VM | where {$_.State -eq 'Running'} | Stop-VM  # Stop all running VMs
     Get-VM -Name <VM Name> | Checkpoint-VM -SnapshotName <name for snapshot>   # Create a VM checkpoint
-An alternative way to 
+An alternative way to
     $VMName = "VMNAME"
     $VM = @{
         Name = $VMName
@@ -2314,7 +2311,7 @@ Can also use:
     Import-VM "D:\VMs\Win7\Virtual Machines\62ECC257-F4F8-4D94-8ECE-D9135EB695D6.vmcx" -Copy -GenerateNewId
 -Copy will copy all files into the default Hyper-V folder.
 -GenerateNewId is useful when importing multiple VMs to avoid ID conflicts
-    
+
 Example of a bulk import:
     $VMlist = Get-ChildItem D:\VM-Exports -recurse -include *.exp
     $VMlist | foreach { Import-VM -path $_.Fullname -Copy -VhdDestinationPath $VMDefaultDrive -VirtualMachinePath $VMDefaultPath -SnapshotFilePath $VMDefaultPath -SmartPagingFilePath $VMDefaultPath -GenerateNewId }
@@ -2322,7 +2319,7 @@ When done, simply attach these machines to the current network using the Connect
 
 Default locations for Virtual Machines on installing Hyper-V are:
     Get-VMHost | select VirtualHardDiskPath, VirtualMachinePath | fl
-    
+
     VirtualHardDiskPath : C:\Users\Public\Documents\Hyper-V\Virtual Hard Disks
     VirtualMachinePath  : C:\ProgramData\Microsoft\Windows\Hyper-V
 
@@ -2488,7 +2485,7 @@ Sometimes, on Windows WSL, the upgrade cannot update the latest repo available f
 system will say there is no upgrade then manually add Ubuntu 19.10 "Eoan Ermine" official repo to our existing "Disco Dingo".
 If so, sudo nano /etc/apt/sources.list and add the following line anywhere:
     deb http://archive.ubuntu.com/ubuntu/ eoan main
-    
+
 The wsl (wsl.exe) command is usable from DOS or PowerShell for all interaction with installed distros.
     wsl                 # type on its own to instantly launches the default shell. (use -d <distro name> to enter a different distro).
     wsl -e <commands>   # --exec execute commands without entering linux shell
@@ -2629,7 +2626,7 @@ function Measure-Command2 ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch]
 .SYNOPSIS
   Runs the given script block and returns the execution duration.
   Discovered on StackOverflow. http://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
-  
+
 .EXAMPLE
   Measure-Command2 { ping -n 1 google.com }
 #>
@@ -2648,17 +2645,17 @@ function Measure-Command2 ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch]
       $sw.Stop()
     }
     $timings += $sw.Elapsed
-    
+
     $Samples--
   }
   while ($Samples -gt 0)
-  
+
   Write-Host
-  
+
   $stats = $timings | Measure-Object -Average -Minimum -Maximum -Property Ticks
-  
+
   # Print the full timespan if the $Long switch was given.
-  if ($Long) {  
+  if ($Long) {
     Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).ToString())"
     Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).ToString())"
     Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).ToString())"
@@ -2699,7 +2696,7 @@ To enable Timeline in Windows 10, do the following.
     Open Settings.
     Go to Privacy - Activity History.
     Enable "Filter activities for your Microsoft Account".
-    Enable the option Collect Activities. 
+    Enable the option Collect Activities.
 
 Timeline introduces a new way to resume past activities that you started on this PC, other Windows PCs, and iOS/Android devices. Timeline enhances Task View, allowing you to switch between currently running apps and past activities.
 
@@ -2761,10 +2758,10 @@ Set-Alias Setup-Toolkit Install-Toolkit -Description "Start Custom-Tools configu
 Set-Alias Update-Toolkit Install-Toolkit -Description "Start Custom-Tools configuration from the Github repo (or update an existing installation)."
 
 function git-push {
-    if (!(Test-Path ".git")) { 
-        "Crrent folder is not a git repository (no .git folder is present)" 
+    if (!(Test-Path ".git")) {
+        "Crrent folder is not a git repository (no .git folder is present)"
     }
-    else { 
+    else {
         "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status`n=>  git commit -m `"Update`"  =>  [pause to check]  =>  git status  =>  git push -u origin main`n`n"
         pause
         git status
@@ -2779,10 +2776,10 @@ function git-push {
 }
 
 function git-push-master {
-    if (!(Test-Path ".git")) { 
-        "Crrent folder is not a git repository (no .git folder is present)" 
+    if (!(Test-Path ".git")) {
+        "Crrent folder is not a git repository (no .git folder is present)"
     }
-    else { 
+    else {
         "`nWill run the following if choose to continue:`n`n=>  git status  =>  git add .  [add all files]  =>  git status  [pause to check]`n=>  git commit -m `"Update`"    =>  git status    =>  git push -u origin master`n`n"
         pause
         git status
@@ -2812,7 +2809,7 @@ function git-push-master {
 #    # Use HomeFix due to use of network shares (like ING etc) to always use C:\ drive
 #    # then get the name (Leaf) from $HOME in case of username aliases different from the Home folder name
 #    $HomeFix = $HOME
-#    $HomeLeaf = split-path $HOME -leaf   
+#    $HomeLeaf = split-path $HOME -leaf
 #    if ($HomeFix -like "\\*") { $HomeFix = "C:\Users\$(Split-Path $HOME -Leaf)" }
 #    $UserScriptsPath = "$HomeFix\Documents\WindowsPowerShell\Scripts"
 #    if (!(Test-Path $UserScriptsPath)) { md $UserScriptsPath -Force -EA silent | Out-Null }
@@ -2832,7 +2829,7 @@ function git-push-master {
 #
 #    # Does Ping-IPRange.ps1 exist, if not, get it from PS Gallery
 #    # Also, add the Users Scripts folder to the PATH if not already on the User PATH statement
-#    if (!(Test-Path "$UserScriptsPath\Ping-IPRange.ps1")) { 
+#    if (!(Test-Path "$UserScriptsPath\Ping-IPRange.ps1")) {
 #
 #        $url = 'https://gallery.technet.microsoft.com/scriptcenter/Fast-asynchronous-ping-IP-d0a5cf0e/file/124575/1/Ping-IPrange.ps1'
 #        $FileName = ($url -split "/")[-1]   # Could also use:  $url -split "/" | select -last 1   # 'hi there, how are you' -split '\s+' | select -last 1
@@ -2846,8 +2843,8 @@ function git-push-master {
 #        $PathArray = $PathOld -Split ";" -replace "\\+$", ""
 #        # Add to Path if required
 #        $FoundPath = 0
-#        foreach ($Path in $PathArray) { 
-#            if ($Path -contains $UserScriptsPath ) { $FoundPath = 1 } 
+#        foreach ($Path in $PathArray) {
+#            if ($Path -contains $UserScriptsPath ) { $FoundPath = 1 }
 #        }
 #        if ($FoundPath -eq 0) {
 #            $PathNew = $PathOld + ";" + $UserScriptsPath
@@ -2861,7 +2858,7 @@ function git-push-master {
 #        $ErrorActionPreference = 'Stop'
 #        try { if (Get-Command $command) { return $true } }       # Note that return is not required here, but handy to clarify that the function will return this
 #        catch { Write-Host "$command does not exist" ; return $false }
-#        finally { $ErrorActionPreference = $oldPreference }    
+#        finally { $ErrorActionPreference = $oldPreference }
 #    }
 #
 #    # Test if the "Ping-IPRange" Function is available. If not, then run the script to load the function
@@ -2890,7 +2887,7 @@ function git-push-master {
 #
 #    # Check for file with existing IPs and only scan that range on this run
 #    $iparray = @()
-#    if (Test-Path $OutIPs) { 
+#    if (Test-Path $OutIPs) {
 #        $ipstart = Get-Content $OutIPs -First 1
 #        $ipend = Get-Content $OutIPs -Last 1    # can also use say: last 3 lines with [-1 .. -3], but more for characters than lines
 #        if ($null -eq $ipstart -or $null -eq $ipend) { "Problem with IP file format: $OutIPs" ; break }
@@ -2927,7 +2924,7 @@ function git-push-master {
 #
 #    # Check for file with existing Hostname#Username#Password (using ":::" as delimiter, which assumes that 3x ":" in a row are not in password)
 #    $hosts = @()
-#    if (Test-Path $ScriptPWD) { 
+#    if (Test-Path $ScriptPWD) {
 #        foreach ($i in gc $ScriptPWD) { $hosts += $i }
 #        # Assume all credentials in the .pwd file are correct, so remove and then reload credentials for each host
 #        foreach ($h in $hosts) {
@@ -2944,7 +2941,7 @@ function git-push-master {
 #    # Get-WindowsOptionalFeature -Online -FeatureName *smb*
 #
 #    $shares = @()
-#    # ping each ip in the range and use that to resolve all 
+#    # ping each ip in the range and use that to resolve all
 #    foreach ($i in $(ping-iprange $ipstart $ipend | select ipaddress)) {
 #
 #        try { $ip = $i.IPAddress } catch { $ip = "NA" }
@@ -2965,7 +2962,7 @@ function git-push-master {
 ##
 ##        $netview = "No shares found"
 ##        if ($hostname -ne "NA") {      # -and $i.IPAddress -ne $iphere
-##            $netview = @()   # initialise to ensure 
+##            $netview = @()   # initialise to ensure
 ##            # I asked the following on external (non-PowerShell) outputs: https://stackoverflow.com/questions/64196373/suppress-and-handle-stderr-error-output-in-powershell-script?noredirect=1#comment113520006_64196373
 ##            # As an unfortunate side effect, in versions up to v7.0, a 2> redirection can also throw a script-terminating error if $ErrorActionPreference = 'Stop' happens to be in effect, if at least one stderr line is emitted.
 ##            $netview = net view \\$hostname /all 2>$null | select -Skip 7 | ? {$_ -match 'disk*'} | % { $_ -match '^(.+?)\s+Disk*' | Out-Null ; $matches[1] }
@@ -2995,7 +2992,7 @@ function git-push-master {
 ##        # Then, mount a share or try to access the server (net view for example). The saved credentials will be used:
 ##        #   net use P: \\%Server%\share /user:%domain%\%user% /persistent:yes
 ##        # You can check stored credentials by typing
-##        # After this, shares will work persistently after reboots etc.    
+##        # After this, shares will work persistently after reboots etc.
 ##        # ToDo: look for PowerShell equivalents of the above commands.
 ##
 ##        # 1. If net view does not work, open a dialogue to collect user/pass information for that server.
@@ -3006,7 +3003,7 @@ function git-push-master {
 ##        "$ip : $hostname : $netview"
 ##
 ##        if ($netview -ne "No shares found") {
-##            foreach ($m in $netview) { 
+##            foreach ($m in $netview) {
 ##                # Using hidden ($) shares would be best, but that would require an admin password for each host (or pass-through authentication if password here is same as there)
 ##                # Instead of that, just look for the open shares that are available without password and crawl those (so exclude C: drive, all hidden, and non-useful entry points)
 ##                # or main media analysis, following is non-generic / my share conventions. Also remove all hidden ($) shares: C$, D$, "Drives$" (using $ regex end of string)"
@@ -3025,11 +3022,11 @@ function git-push-master {
 ##
 ##    ""
 ##    "Array of drives on '$(hostname)' local computer (excluding C:):"
-##    $localdrives   # no need to sort 
+##    $localdrives   # no need to sort
 ##    ""
 ##    "Array of required network shares (root drives only; exclude C: and hidden shares):"
 ##    $shares = $shares | sort   # sort shares before display and outputting to share file
-##    $shares   # no need to sort these 
+##    $shares   # no need to sort these
 ##    ""
 ##    $hr = (Get-Date).Subtract($start_time).Hours ; $min = (Get-Date).Subtract($start_time).Minutes ; $sec = (Get-Date).Subtract($start_time).Seconds
 ##    if ($hr -ne 0) { $times += "$hr hr " } ; if ($min -ne 0) { $times += "$min min " } ; $times += "$sec sec"
@@ -3056,7 +3053,7 @@ function git-push-master {
 #     if ($? -eq $True) { $_ +": "+ $hostname >> "C:\machinenames.txt" }
 #     else { $_ +": Cannot resolve hostname" >> "C:\machinenames.txt" }
 # }
-# 
+#
 # # Get IP addresses from each line of CSV file, and output IP and Hostname to a different CSV
 # Import-Csv C:\0\ip-addresses.csv | ForEach-Object {
 #     $hostname = ([System.Net.Dns]::GetHostByAddress($_.IPAddress)).Hostname
@@ -3106,7 +3103,7 @@ ls c:\windows | ? {$_ -like 'Win*'} | % {echo "$_.Name : $_.LastWriteTime"}
 help about_Pipelines    (help about_pip*)
 
 :: Looking at the aliases in the above:
-Get-Alias -Name ls,%,?,echo      # 
+Get-Alias -Name ls,%,?,echo      #
 # Note how h and r also return here, due to '?' being a wildcard here
 # For that with: Get-Alias -Name ls,%,'`?',echo
 A note on aliases: People often say "never use aliases in scripts!". This is a *lot of crap*.
@@ -3174,7 +3171,7 @@ function Help-Edit {
 
 These functions are standard on PS v5+, for previous versions of PS, you must install ReadLine:
 Install-Module ReadLine
-    
+
 1. ` [Back apostrophe key] : Insert a line break to continue longer commands onto next line.
      You do not need this if you have a pipe (|) at the end of a line (assumes continuation).
 2. ` Alternatively, inside a string, this is an escape character to make a literal character.
@@ -3318,7 +3315,7 @@ string[] Split(string[] separator, int count, System.StringSplitOptions options)
 There are still some problems with this, since we cannot see what valid options exist
 for things like "Sysmte.StringSplitOptions options" but the following helps:
 
-[Enum]::GetNames([StringSplitOptions]) 
+[Enum]::GetNames([StringSplitOptions])
 
 -------------------
 None
@@ -3332,12 +3329,12 @@ You can also iterate over all of the above methods with something like:
 '@
 echo $out | more
 }
-    
+
 function Help-Output {
     $out = @'
 
 Firstly, the purist PowerShell position (from the author of PowerShell even!) is "Never
-use Write-Host. If you do, then you are doing it wrong!". But he only cares about the 
+use Write-Host. If you do, then you are doing it wrong!". But he only cares about the
 "Holy Pipeline". For most normal people, the pipeline is not the be all and end all.
 https://www.jsnover.com/blog/2013/12/07/write-host-considered-harmful/
 
@@ -3431,7 +3428,7 @@ or directories with that name in the top-level source and destination
 directories of the copy session.
 
 Robocopy notes:
-# Save to Registry as default settings: robocopy /REG /R:1 /W:1                    
+# Save to Registry as default settings: robocopy /REG /R:1 /W:1
 
 # In most cases, remember the following most used defaults:
 robocopy <src> <dst> /r:1 /w:1 /mir /xjd /xd $recycle.bin
@@ -3444,7 +3441,7 @@ echo $out
 
 function Help-sls {
     $out = @'
-    
+
 :: sls (Select-String) vs grep vs findstr
 
 grep: grep <pattern> files.txt   cat *.log | grep <pattern>
@@ -3477,9 +3474,9 @@ Get-Service | Out-String -Stream | Select-String "Stop" -CaseSensitive -SimpleMa
 
 # Get-Childitem "C:\Windows\" -Recurse -Include *.log -ErrorAction SilentlyContinue | Select-String "Error" -ErrorAction SilentlyContinue | Group-Object filename | Sort-Object Count -Descending
 # ls "C:\Windows\" -i *.log -r -EA Silent | sls "Error" -EA Silent | group filename | sort Count -Descending
-    
+
 '@
-    
+
 echo $out
 }
 
@@ -3498,7 +3495,7 @@ function Help-PowerShellLanguageReference {
     Invoke-WebRequest -Uri $url -OutFile $destination -UseBasicParsing
     # open downloaded file in associated program
     Invoke-Item -Path $destination
-    # ToDo: Wait for the process started by Invoke-Item to exit, then delete the downloaded $destination file 
+    # ToDo: Wait for the process started by Invoke-Item to exit, then delete the downloaded $destination file
 }
 
 function Help-PowerShellMagazineQuick {
@@ -3529,7 +3526,7 @@ function Help-Gci-FilterIncludeExclude {}   # This is just for all shitty issues
 # Good explanation of the mess by Alex K. Angelopoulos from 2013 here: https://social.technet.microsoft.com/Forums/en-US/62c85fc4-1d44-4c3a-82ea-d49109423471/inconsistency-between-getchilditem-include-and-exclude-parameters?forum=winserverpowershell
 # A more up to date explanation from mklement0 (2016, but updated May 2022): https://stackoverflow.com/questions/38269209/using-get-childitem-exclude-or-include-returns-nothing/38308796#38308796
 # The mklement0 answer explains how some of the issues have been fixed in PS 7.x but will never be fixed in 5.x
-# 
+#
 ### -Filter is the most useful parameter to refine output of PowerShell cmdlets (much better than -Include or -Exclude).
 # Get-ChildItem $Env:windir\System32 -Filter *.dll
 # gci $Env:windir\System32\*.dll   # This works just as well
@@ -3539,7 +3536,7 @@ function Help-Gci-FilterIncludeExclude {}   # This is just for all shitty issues
 # } ).TotalMilliseconds
 # $Timing =[math]::round($Timing)
 # Write-Host "TotalMilliseconds" $Timing "`nFile count:" $Result.count
-# 
+#
 # $Timing = (Measure-Command {
 #     $Result = Get-ChildItem $env:windir\System32 -Include *.dll -Recurse -EA SilentlyContinue
 # } ).TotalMilliseconds
@@ -3592,7 +3589,7 @@ gci C:\0\*.txt -adhrs -Recurse
 
 https://stackoverflow.com/questions/19091750/how-to-search-for-a-folder-with-powershell
 https://stackoverflow.com/questions/55029472/list-folders-at-or-below-a-given-depth-in-powershell
-gci C:\pr* *wind* -Recurse -Directory   
+gci C:\pr* *wind* -Recurse -Directory
 
 ### Basic Dir with selection of items
 Get-ChildItem C:\ | Where-Object { $_.Name -Like '*pr*' }
@@ -3639,7 +3636,7 @@ But note that this will find all folders first, then exclude the ones not to mat
 (gci -recurse *.aspx,*.ascx).fullname -notmatch '\\obj\\|\\bin\\'   # \obj\ or \bin\   # remember that PowerShell is case-insensitive by default, so -inotmatch is not needed
 gci -path c:\ -filter temp.* -exclude temp.xml   # Returns no results
 gci -path c:\* -filter temp.* -exclude temp.xml  # Returns  all the temp.* files, except temp.xml, note the c:\* which causes this
-gci $source -Directory -recurse | ? {$_.fullname -NotMatch "\\\s*_"} | % { $_.fullname }   # "\\\s*_" is regex for \, any amount of whitespace, _ 
+gci $source -Directory -recurse | ? {$_.fullname -NotMatch "\\\s*_"} | % { $_.fullname }   # "\\\s*_" is regex for \, any amount of whitespace, _
 
 ### DeDup, using 'Group-Object'
 $env:PSModulePath.Split(";") | gci -Directory | group Name | where Count -gt 1 | select Count,Name,@{ n = "ModulePath"; e = { $_.Group.Parent.FullName } }
@@ -3779,7 +3776,7 @@ function Help-WIP {
     $out = @'
 
 Essentials to know!!!
- 
+
 SEARCH COMMAND HISTORY:
 Press Ctrl+r, a new subprompt will appear "bck-i-search:".
 Now enter some text, the newest match to that text will be shown.
@@ -3796,7 +3793,7 @@ gci env:*     *or*      gci env:                  # Also show all Environment Va
 
 Random tips:
 
-(123.456).ToString("C")       -> £123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other 
+(123.456).ToString("C")       -> £123.46     # Currency, note, in PS, just takes locale, you cannot do .ToString("C", fr-Fr) to get other
 (5/21).ToString("P")          -> 23.81%      # Percentage
 (-1052.032911).ToString("e8") -> -1.052e+003 # Exponential (Scientific)
 1234 ("D") -> 1234 , -1234 ("D6") -> -001234 # Decimal, will retain negative sign if required
@@ -3830,7 +3827,7 @@ echo $out | more
 function Get-OpenWindows { Get-Process | where {$_.mainWindowTitle} | Format-Table id, name, mainwindowtitle -autosize }   # Just show all open windows
 
 function Install-TrustedSubnet ($ThirdOctet) {   # Quickly set local subnet as TrustedHosts.
-    if ($ThirdOctet -eq $null) { "nothing entered..." } 
+    if ($ThirdOctet -eq $null) { "nothing entered..." }
     else {
         "Current TrustedHosts (Get-Item WSMan:\localhost\Client\TrustedHosts):"
         Get-Item WSMan:\localhost\Client\TrustedHosts
@@ -3897,15 +3894,15 @@ function Enable-WinRM {
     # winrm.cmd
     #
     # Windows Remote Management Command Line Tool
-    # 
+    #
     # Windows Remote Management (WinRM) is the Microsoft implementation of
     # the WS-Management protocol which provides a secure way to communicate
     # with local and remote computers using web services.
-    # 
+    #
     # Usage:
     #   winrm OPERATION RESOURCE_URI [-SWITCH:VALUE [-SWITCH:VALUE] ...]
     #         [@{KEY=VALUE[;KEY=VALUE]...}]
-    # 
+    #
     # For help on a specific operation:
     #   winrm g[et] -?        Retrieving management information.
     #   winrm s[et] -?        Modifying management information.
@@ -3919,7 +3916,7 @@ function Enable-WinRM {
     #                         requests from other machines.
     #   winrm configSDDL -?   Modify an existing security descriptor for a URI.
     #   winrm helpmsg -?      Displays error message for the error code.
-    # 
+    #
     # For help on related topics:
     #   winrm help uris       How to construct resource URIs.
     #   winrm help aliases    Abbreviations for URIs.
@@ -3940,7 +3937,7 @@ function Enable-WinRM {
     # https://www.petri.com/powershell-remoting-tip-setting-a-network-category-to-private
     # https://www.jorgebernhardt.com/how-to-force-a-network-profile-in-windows-using-powershell/
     # https://www.tenforums.com/tutorials/6815-set-network-location-private-public-domain-windows-10-a.html?__cf_chl_jschl_tk__=301f3d0cab8cd80583db1ef23f88e1182066f27f-1585677722-0-Ae-1ogRWPkRiQKXDElWTmiQwhweekx5PJuej82kH-h3W7F2fuuhYV3BzefOeap1e0A0wwgcqpmeVvvG2MaTGq7iltikCZbEzleZSPoStNho5WWekaPMZFxKIGGSkW-q-pcyZGTtB4K2DLV0HmWmovhhYijQTUbeLWI_f93pC9-W96oT4bAo0Xz0pvOjwax1iXnXaRrOqFFA6qtdMlb7iWot6Kv8-YcAMKuKBz7DzP5450jLLHO9ZAovwgViMdNcHcWGi0cP-F_MRKgjXUMn2O2-h4I-JK4luqpViHpaj1C1XlwnFXQtoYYdpxAZaA3-zXwFJSZcw5eV-_sq3E82Ia_DxP9wn1_TNxwh2DZxFopbAM_ESTajO1je1YL-uPkbyX_T6u8K2MMZQ0pIjAljVqkYnBVc3cZmRyX2j3x6afbH3dhLBRyn6M4Wj6v7JpCeIRQ
-    
+
     ####################
     # 1. Run Enable-PSRemoting
     ####################
@@ -4203,7 +4200,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     Path -Loaded [-Quick]   Display the currently loaded path in this session, split and sorted. Add -q to show the raw registry value
 
     Path -AddPath <path>    Add path to the System path (as this is default switch, can just use 'Path <path>')
-    Path -RemovePath <path> Remove path from the System path    
+    Path -RemovePath <path> Remove path from the System path
     .EXAMPLE
     .
     Path -AddPath "C:\Program Files\Calibre2"      # -AddPath is default so can be omitted
@@ -4218,7 +4215,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     # System Path: (Get-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" ).GetValue('Path', '', 'DoNotExpandEnvironmentNames')
     $PathFull = [Environment]::GetEnvironmentVariable("Path")   # HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment
     $PathFullArray = $PathSystem -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ -ne ""} | sort   # The ? (where) eliminates blank entries, leave the paths unsorted
-    
+
     $PathSystem = [Environment]::GetEnvironmentVariable("Path", "Machine")   # HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment
     $PathSystemArray = $PathSystem -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ -ne ""} | sort   # The ? (where) eliminates blank entries, leave the paths unsorted
     $regSystemEnv = "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment"   # Note the ":". Without this, PSProvider path is not valid
@@ -4228,7 +4225,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     $PathUserArray = $PathUser -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ -ne ""} | sort   # The ? (where) eliminates blank entries, leave the paths unsorted
     $regUserEnv = "HKCU:\Environment"   # Note that the ":" is very important to specify using a PSProvider
     $regUserEnvPath = (Get-ItemProperty $regUserEnv -Name Path).Path.TrimEnd(";")
-    
+
     if ($AddPath -ne $null) {
         # First add it to the registry then add it to currently loaded path ...
         # But which to add to?? Add to System if running as Admin and User otherwise?
@@ -4250,7 +4247,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     }
 
     $PathArray = $env:Path -Split ";" -replace "\\+$", "" | sort
-    
+
     if ($System -eq $true) {
         $PathSystem = [Environment]::GetEnvironmentVariable("Path", "Machine")   # HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment
         ""
@@ -4260,7 +4257,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
             # The ?{$_} used to be ($_ -ne "") but don't need '-ne ""'! This eliminates empty path entries ";;"
             # Note that $PathSystem contains warts and all, but $PathArray is the cleaned set of paths
             # $PathArray.Split('', [System.StringSplitOptions]::RemoveEmptyEntries), RemoveEmptyEntries is another option
-            foreach ($Path in $PathArray) { $Path = $Path.TrimEnd('\') ; echo $Path }  # % { $_.TrimEnd('\') })) { echo $Path }    
+            foreach ($Path in $PathArray) { $Path = $Path.TrimEnd('\') ; echo $Path }  # % { $_.TrimEnd('\') })) { echo $Path }
         }
         ""
         break
@@ -4270,9 +4267,9 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
         ""
         if ($Quick -eq $true) { $PathUser }
         else {
-            $PathArray = $PathUser -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ } | sort  
+            $PathArray = $PathUser -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ } | sort
             foreach ($Path in $PathArray) { $Path = $Path.TrimEnd('\') ; echo $Path }
-        } 
+        }
         ""
         break
     }
@@ -4283,7 +4280,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
         else {
             $PathArray = $PathLoaded -Split ";" -replace "\\+$", "" -replace "^;", "" -replace ";$", "" | ? { $_ } | sort
             foreach ($Path in $PathArray) { $Path = $Path.TrimEnd('\') ; echo $Path }
-        } 
+        }
         ""
         break
     }
@@ -4308,7 +4305,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     echo '[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\bin", "Machine")   # Add a path to "Machine" (can also use "User"), updates only current session'
     echo 'rundll32 sysdm.cpl,EditEnvironmentVariables   # Open Environment Variables dialogue'
     ""
-    echo '$RegistrySystemPath = "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"   # System PATH' 
+    echo '$RegistrySystemPath = "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"   # System PATH'
     echo '$RegistrySystemPath = "Registry::HKEY_CURRENT_USER\Environment"   # User PATH, also at "HKCU:\Environment"'
     echo '(Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path'
     echo '$PathArray = (Get-ItemProperty -Path $RegistrySystemPath -Name Path).Path -Split ";" -Replace "\\+$", ""'
@@ -4317,9 +4314,9 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
     ""
     $Paths = $env:Path.Split(';') | select -Unique | sort   # Array of current Paths
     # $CleanedInputList = @()
-    # $NewPath | % { if (Test-Path $_) { 
+    # $NewPath | % { if (Test-Path $_) {
     if ($NewPath -ne $null) {
-        if (Test-Path $NewPath) { 
+        if (Test-Path $NewPath) {
             $NewPaths = $Paths + $NewPath | select -Unique
             [Environment]::SetEnvironmentVariable( "Path", $($NewPaths -join ';'), [System.EnvironmentVariableTarget]::Machine )
             Write-Verbose "Processed the following new path (removed duplicates and bad paths):"
@@ -4329,7 +4326,7 @@ function Path ($AddPath, $RemovePath, [switch]$System, [switch]$User, [switch]$L
 }
 
 function AddTo-Path {
-    param ( 
+    param (
         [string]$PathToAdd,
         [Parameter(Mandatory=$true)][ValidateSet('System','User')]      [string]$UserType,
         [Parameter(Mandatory=$true)][ValidateSet('Path','PSModulePath')][string]$PathType
@@ -4425,16 +4422,16 @@ function mod ($Module, $searchfor, [switch]$ShowModulesHere, [switch]$Info) {
         $ModuleVer = (Get-Module $Module -ListAvailable | select Version).Version | sls "\d"
     }
     else { "## Could not find Module '$Module' in any available Module folders:`n   $env:PSModulePath`n" ; break }
-    
+
     # ":: '$Module' is version $($ModuleVer)`n   $ModulePath"
-    
+
     $ModuleRoot = Split-Path ((Get-Module $Module | select Path).Path).TrimEnd("\")
     $ModulesHere = (dir $Path -Directory | Select -ExpandProperty Name) -join ", "
-    
+
     if ($Info) {
         ""
-        foreach ($i in (Get-Command -Module $Module).Name) { 
-            $out = $i   # Parse the info string from after the "{" 
+        foreach ($i in (Get-Command -Module $Module).Name) {
+            $out = $i   # Parse the info string from after the "{"
             $type = "" ; try { $type = ((gcm $i -EA silent).CommandType); } catch { $searchforerr = 1 }
             $out += "   # $type"
             $syntax = Get-Command $i -Syntax
@@ -4444,7 +4441,7 @@ function mod ($Module, $searchfor, [switch]$ShowModulesHere, [switch]$Info) {
             $out
             if ($type -eq "Function") { $syntax = $syntax -replace $i, "" }
             if ($type -eq "Cmdlet") { $syntax = $syntax -replace $i, "" }
-            if (!([string]::IsNullOrWhiteSpace($syntax))) { 
+            if (!([string]::IsNullOrWhiteSpace($syntax))) {
                 $syntax -split '\r\n' | where {$_} | foreach { "Syntax =>   $_" | Write-Wrap }
             }
             ""
@@ -4504,7 +4501,7 @@ function Find-ModuleDuplicates {   # Broken WIP I think
                 $arr_j = (gci $j -Dir).Name
                 foreach ($x in $arr_j) {
                     if ($arr_i -contains $x) {
-                        $hits += "Module '$x' in '$i' has a duplicate`n" 
+                        $hits += "Module '$x' in '$i' has a duplicate`n"
                     }
                 }
             }
@@ -4518,7 +4515,7 @@ function Find-ModuleDuplicates {   # Broken WIP I think
 
 
 function SendEmail {
-    param($server, $cpu, $mem, $disk) 
+    param($server, $cpu, $mem, $disk)
     # Code goes here to send email
     # https://stackoverflow.com/questions/60049690/need-to-monitor-server-resources-utilization-for-30-minutes-and-send-mail-in-pow/60050380#60050380
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-counter?view=powershell-7
@@ -4632,7 +4629,7 @@ function sys {
 
     # Note: -EA silent on Get-Item or will get an error
     Wait-Job $job_cpu         | Out-Null ; $job_cpu_out = Receive-Job -Job $job_cpu
-    Wait-Job $job_cpu_cores   | Out-Null ; $job_cpu_cores_out = Receive-Job -Job $job_cpu_cores 
+    Wait-Job $job_cpu_cores   | Out-Null ; $job_cpu_cores_out = Receive-Job -Job $job_cpu_cores
     Wait-Job $job_cpu_logical | Out-Null ; $job_cpu_logical_out = Receive-Job -Job $job_cpu_logical
     "CPU:             $job_cpu_out"
     "CPU Cores:       $job_cpu_cores_out,      CPU Logical Cores:   $job_cpu_logical_out"
@@ -4645,7 +4642,7 @@ function sys {
     Get-Netipaddress | where AddressFamily -eq IPv4 | select IPAddress,InterfaceIndex,InterfaceAlias | sort InterfaceIndex
     $IPDefaultAddress = @(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.DefaultIpGateway})[0].IPAddress[0]
     $IPDefaultGateway = @(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.DefaultIpGateway})[0].DefaultIPGateway[0]
-    "[Default IPAddress : $IPDefaultAddress / $IPDefaultGateway]" 
+    "[Default IPAddress : $IPDefaultAddress / $IPDefaultGateway]"
     ""
 
     # while (!(Test-Path $temp_cpu)) { while ((Get-Item $temp_cpu -EA silent).length -eq 0kb) { Start-Sleep -Milliseconds 500 } }
@@ -4680,7 +4677,7 @@ function sys {
 }
 
 function Get-PCInfo {
-<# 
+<#
  .SYNOPSIS
   Function to ping and report on given one or more Windows computers.
 
@@ -4697,7 +4694,7 @@ function Get-PCInfo {
  .PARAMETER Refresh
   This switch will supress progress messages to speed up processing.
 
- .OUTPUTS 
+ .OUTPUTS
   The function returns a PS object that has the following properties/example:
     ComputerName   : WIN10G2-Sam1
     Status         : Online
@@ -4713,7 +4710,7 @@ function Get-PCInfo {
     LastBootTime   : 3/26/2020 9:38:45 PM
 
  .EXAMPLE
-  Get-PCInfo 
+  Get-PCInfo
   This returns the current PC information
 
  .EXAMPLE
@@ -4729,12 +4726,12 @@ function Get-PCInfo {
   Get-PCInfo -ComputerName Server111 -Cred (Get-SBCredential 'domain\user')
   This example will report on information of the provided computer using the provided credentials
 
- .LINK 
+ .LINK
   https://superwidgets.wordpress.com/2017/01/04/powershell-script-to-report-on-computer-inventory/
 
  .NOTES
   Function by Sam Boutros
-    31 October 2014 v0.1 
+    31 October 2014 v0.1
     4  January 2017 v0.2
     17 March   2017 v0.3 - chnaged the logic to output 1 record per computer even when it has several NICs
     2  April   2020 v0.4 - Added Silent switch to speed up processing of large number of computers
@@ -4744,7 +4741,7 @@ function Get-PCInfo {
 
 #>
 
-    [CmdletBinding(ConfirmImpact='Low')] 
+    [CmdletBinding(ConfirmImpact='Low')]
     Param(
         [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
             [String[]]$ComputerName = $env:COMPUTERNAME,
@@ -4755,33 +4752,33 @@ function Get-PCInfo {
     Begin { }
 
     Process {
-        
+
         foreach ($PC in $ComputerName) {
             if (-not $Silent) { Write-Log 'Checking computer',$PC Green,Cyan -NoNewLine }
-            
+
             try {
-                $Result = Test-Connection -ComputerName $PC -Count 2 -ErrorAction Stop 
+                $Result = Test-Connection -ComputerName $PC -Count 2 -ErrorAction Stop
                 if ($Cred) {
                     $OS  = Get-SBWMI -ComputerName $PC -Class Win32_OperatingSystem -Cred $Cred -EA 0
                     $Mfg = Get-SBWMI -ComputerName $PC -Class Win32_ComputerSystem  -Cred $Cred -EA 0
                     $CPU = Get-SBWMI -ComputerName $PC -Class Win32_Processor       -Cred $Cred -EA 0
-                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 | 
+                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 |
                             Where { $_.IpEnabled }).IPAddress | where { $_ -match "\." } # IPv4 only
                 } else {
                     $OS  = Get-SBWMI -ComputerName $PC -Class Win32_OperatingSystem -EA 0
                     $Mfg = Get-SBWMI -ComputerName $PC -Class Win32_ComputerSystem  -EA 0
                     $CPU = Get-SBWMI -ComputerName $PC -Class Win32_Processor       -EA 0
-                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 | 
+                    $IPs = (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 |
                             Where { $_.IpEnabled }).IPAddress | where { $_ -match "\." } # IPv4 only
                 }
                 $MACs = foreach ($IPAddress in $IPs) {
                     if ($Cred) {
-                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 | 
+                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -Cred $Cred -EA 0 |
                             Where { $_.IPAddress -eq $IPAddress }).MACAddress
                     } else {
-                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 | 
+                        (Get-SBWMI -ComputerName $PC -Class Win32_NetworkAdapterConfiguration -EA 0 |
                             Where { $_.IPAddress -eq $IPAddress }).MACAddress
-                    }                        
+                    }
                 }
                 if (-not $Silent) { Write-Log 'done' Green }
                 [PSCustomObject]@{
@@ -4800,7 +4797,7 @@ function Get-PCInfo {
                     FreeRAM        = 100 - [math]::Round(($OS.FreePhysicalMemory/$OS.TotalVisibleMemorySize)*100,0)
                     CPU            = [math]::Round(($CPU | measure LoadPercentage -Average).Average,0)
                 }
-            } catch { # either ping failed or access denied 
+            } catch { # either ping failed or access denied
                 if ($Result) {
                     if (-not $Silent) { Write-Log 'done' Magenta }
                     [PSCustomObject]@{
@@ -4865,10 +4862,10 @@ function Add-RegistryFavorites {
 # You can also add this as a function in your profile:   function bg() {Start-Process -NoNewWindow @args}
 # and then the invocation becomes:   bg ping google.com
 # In my opinion, Start-Job is an overkill for the simple use case of running a process in the background:
-# 
+#
 #     Start-Job does not preserve the current directory (because it runs in a separate session). You cannot do "Start-Job {notepad myfile.txt}" where myfile.txt is in the current directory.
 #     The output is not displayed automatically. You need to run Receive-Job with the ID of the job as parameter.
-# 
+#
 # NOTE: Regarding your initial example, "bg sleep 30" would not work because sleep is a Powershell commandlet. Start-Process only works when you actually fork a process.
 
 
@@ -4963,7 +4960,7 @@ function m ($cmd, [switch]$Definition, [switch]$Examples, [switch]$Synopsis, [sw
     # if ($cmd -eq '.net' -or $cmd -eq 'dotnet' -or $cmd -eq 'system.string') {
     #     Write-Host "`nSystem.String (with a string):"
     #     Write-Wrap ("" | get-member | select Name | % { "." + $_.Name + "," } | Out-String).replace("about_", "").replace("`r`n", " ").trim(", ")
-    
+
     # https://docs.microsoft.com/en-GB/dotnet/api/System.String.Clone?view=netframework-4.8
     # https://docs.microsoft.com/en-GB/dotnet/api/System.String.<XXX>?view=netframework-4.8
     # https://docs.microsoft.com/en-GB/dotnet/api/System.String?view=netframework-4.8
@@ -4975,10 +4972,10 @@ function m ($cmd, [switch]$Definition, [switch]$Examples, [switch]$Synopsis, [sw
         if ($cmd -eq '.CompareTo') { "".compareto
 Write-Wrap @"
 Compares this instance with a specified object or String and returns an integer that indicates whether this instance precedes, follows, or appears in the same position in the sort order as the specified object or String.
-    
-CompareTo(String)	
+
+CompareTo(String)
 Compares this instance with a specified String object and indicates whether this instance precedes, follows, or appears in the same position in the sort order as the specified string.
-    
+
 "@ ; return }
         if ($cmd -eq '.Contains') { "".contains
 @"
@@ -4995,10 +4992,10 @@ Determines whether the end of this string instance matches a specified string.
 EndsWith(String)
 Determines whether the end of this string instance matches the specified string.
 
-EndsWith(String, StringComparison)	
+EndsWith(String, StringComparison)
 Determines whether the end of this string instance matches the specified string when compared using the specified comparison option.
 
-EndsWith(String, Boolean, CultureInfo)	
+EndsWith(String, Boolean, CultureInfo)
 Determines whether the end of this string instance matches the specified string when compared using the specified culture.
 "@ ; return }
         if ($cmd -eq '.Equals') { "".equals ; return }
@@ -5020,7 +5017,7 @@ Determines whether the end of this string instance matches the specified string 
         if ($cmd -eq ".Split") { "".split
 @"
 StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array returned; or None to include empty array elements in the array returned.
-[Enum]::GetNames([StringSplitOptions]) 
+[Enum]::GetNames([StringSplitOptions])
 "@ ; return }
         if ($cmd -eq '.StartsWith') { "".startswith ; return }
         if ($cmd -eq '.Substring') { "".substring ; return }
@@ -5050,7 +5047,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
         if ($cmd -eq '.TrimStart') { "".trimstart ; return }
         if ($cmd -eq '.Chars') { "".chars ; return }
         if ($cmd -eq '.Length') { "".length ; return }
-        return 
+        return
     } }
 
     # reserved keywords
@@ -5089,7 +5086,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
     # command            private
     # configuration      static
     # enum               type
-    # interface          
+    # interface
 
     if ($cmd -notmatch "^about_") {
         # { $cmd = $cmd -replace "about_", "" }  # Make input consistent with just the topic name
@@ -5155,7 +5152,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
         # +                         ~~~~~~~~~~~~~~~~~~
         #     + CategoryInfo          : ObjectNotFound: (C:\Users\Boss\A...lp_synopsis.txt:String) [Get-Content], ItemNotFoundException
         #     + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
-        # 
+        #
         # Nothing was found from 'help *' ...
         # Last attempt is to directly try:
         #    help define
@@ -5163,14 +5160,14 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
 
     # Expand Synopsis: https://stackoverflow.com/questions/9775272/how-to-access-noteproperties-on-the-inputobject-to-a-remoting-session
     # For abount_ files, 'Synopsis' is a NoteProperty and only returns the first line (even with -ExpandProperty)
-    # [array]$x = $profile | select -ExpandProperty 
+    # [array]$x = $profile | select -ExpandProperty
     # [array]$x = get-help about_wql | select -ExpandProperty Synopsis
     # for ($i = 0; $i -lt $x.Count; $i ++)
     # {
     #     Write-Host -ForeGroundColor "Magenta" $i
     #     $x[$i]
     # }
-    
+
     $about_name = "$($env:TEMP)\ps_about_name.txt"
     $about_namecsv = "$($env:TEMP)\ps_about_name.csv"
     $about_synopsis = "$($env:TEMP)\ps_about_synopsis.txt"
@@ -5266,14 +5263,14 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
             [datetime]$dateinpast = (Get-Date).AddDays(-$helpolderthan)
 
             if (Test-Path $updatefile) { [datetime]$updatetime = (Get-Item $updatefile).LastWriteTime }
-            
+
             Write-Host ""
             Write-Host ""
             Write-Host "n========================================" -ForegroundColor Green
             Write-Host "Update Help Files if more than $helpolderthan days old." -F Yellow -B Black
             Write-Host "Checking PowerShell Help definitions ..." -F Yellow -B Black
-            Write-Host "" 
-            Write-Host "Note: This section will only show if you are running as Administrator." 
+            Write-Host ""
+            Write-Host "Note: This section will only show if you are running as Administrator."
             Write-Host "========================================" -ForegroundColor Green
             Write-Host ""
             if ($PSVersionTable.PSVersion.Major -eq 2) {
@@ -5317,7 +5314,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
             # $job_about_synopsis = Start-Job { if (-not (Test-Path $using:about_synopsis)) { ($using:about | select Name,Synopsis | sort Name -Unique | % { $_.Name + " :: " + $_.Synopsis } | Out-String) -replace "[Aa]bout_", "" > $using:about_synopsis } }
             # $job_help_name = Start-Job { if (-not (Test-Path $using:help_name)) { get-help * | ? { $_.Name -NotMatch '^about' } | select Name | sort Name -Unique > $using:help_name } }
             # $job_help_synopsis = Start-Job { if (-not (Test-Path $using:help_synopsis)) { get-help * | ? { $_.Name -NotMatch '^about' } | select Name,Synopsis | sort Name -Unique | % { $_.Name + " :: " + $_.Synopsis } > $using:help_synopsis } }
-            # Wait-Job $job_about_name, $job_about_namecsv, $job_about_synopsis, $job_help_name, $job_help_synopsis 
+            # Wait-Job $job_about_name, $job_about_namecsv, $job_about_synopsis, $job_help_name, $job_help_synopsis
         }
         ""
     } else {
@@ -5431,9 +5428,9 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
             $out_name = cat $help_name
             if (! (Test-Path $help_synopsis)) { if (-not (Test-Path $help_synopsis)) { get-help * | ? { $_.Name -NotMatch '^about' } | select Name,Synopsis | sort Name -Unique | % { $_.Name + " :: " + $_.Synopsis } > $help_synopsis } }
             $out_synopsis = cat $help_synopsis
-            
+
             # check for matches in $help_name
-            if ((cat $help_name) -match [regex]::Escape($cmd)) {   
+            if ((cat $help_name) -match [regex]::Escape($cmd)) {
                 $matchlist = (cat $help_name) -match [regex]::Escape($cmd)   # sort Name breaks this
                 $n = ($matchlist).count
                 if ($n -eq 0) {
@@ -5459,7 +5456,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
                         else {
                         Get-Help $matchname -Detailed | more
                     }
-                } 
+                }
                 else {
                     $x = @()
                     foreach ($i in $matchlist) {
@@ -5520,7 +5517,7 @@ function Search-ManPagesWIP ($search, $help) {
 
 
 # Find definitions for any Cmdlet, Function, Alias, External Script, Application
-function what {   
+function what {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -5553,7 +5550,7 @@ function what {
     try { $type = ((gcm $cmd -EA silent).CommandType); if ($null -eq $type) { $deferr = 1 } } catch { $deferr = 1 }
 
     if ($deferr -eq 1) {
-        if ($cmd -eq $null) { Write-Host "Object is `$null" ; return } 
+        if ($cmd -eq $null) { Write-Host "Object is `$null" ; return }
         Write-Host "`$object | ConvertTo-Json:" -F Cyan
         $cmd | ConvertTo-Json
         ""
@@ -5595,13 +5592,13 @@ function what {
     if ($deferr -eq 0) {
 
         if ($cmd -like '*`**') { Get-Command $cmd ; break }   # If $cmd contains a *, then just check for commands, don't find definitions
-   
+
         if ($type -eq 'Cmdlet') {
             Write-Host "`n'$cmd' is a Cmdlet:`n" -F Green
             Write-Host "SYNOPSIS, DESCRIPTION, SYNTAX for '$cmd'.   " -F Green
             Write-Host "------------"
             Write-Host ""
-            Write-Host "(Get-Help $cmd).Synopsis" -F Cyan 
+            Write-Host "(Get-Help $cmd).Synopsis" -F Cyan
             Write-Host "$((Get-Help $cmd).Synopsis)"
             Write-Host ""
             Write-Host "(Get-Help $cmd).Description.Text" -F Cyan
@@ -5650,13 +5647,13 @@ function what {
             Write-Host "------------"
             $arrsynopsis = ((Get-Help $cmd).Synopsis).TrimStart("").Split("`n")  # Trim empty first line then split by line breaks
             $arrsyntax = (Get-Command $cmd -syntax).TrimStart("").Split("`n")    # Often synopsis=syntax for function so use Compare-Object
-            if ($null -eq $(Compare-Object $arrsynopsis $arrsyntax -SyncWindow 0)) { 
+            if ($null -eq $(Compare-Object $arrsynopsis $arrsyntax -SyncWindow 0)) {
                 Write-Host "'(Get-Help $cmd).Synopsis'" -F Cyan -N
                 Write-Host " and " -N
                 Write-Host "'Get-Command $cmd -Syntax'" -F Cyan -N
                 Write-Host " have the same output for this function:`n"
                 foreach ($i in $arrsynopsis) { Write-Wrap $i }   # Wrap lines properly to console width
-            } else { 
+            } else {
                 Write-Host "(Get-Help $cmd).Synopsis" -F Cyan
                 foreach ($i in $arrsynopsis) { Write-Wrap $i }   # Wrap lines properly to console width
                 Write-Host ""
@@ -5729,7 +5726,7 @@ function CookieKiller ($search) {
     # Cookie Keeper might be best option, set domain rules for cookies you want to keep, all other cookies are deleted.
     # https://chrome.google.com/webstore/detail/cookie-keeper/hkdjopjjoogbicnmbcenniplfnmcnhof
     # An alternative might be to use AutoHotkey, natigate to chrome://settings/content/cookies, etc
-    # get-childitem "C:\Users\testuser1\AppData\Local\Microsoft\Windows\Temporary Internet Files\*" -include * -recurse -force | ? {$_.name -match "videoplayback"} | Remove-item -force -recurse 
+    # get-childitem "C:\Users\testuser1\AppData\Local\Microsoft\Windows\Temporary Internet Files\*" -include * -recurse -force | ? {$_.name -match "videoplayback"} | Remove-item -force -recurse
     # The above tested on the win7 machine. Change the location and matching criteria.
     # The below is the single command to remove the browser history: RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8
     # PowerShell remove cookies (but maybe IE or Edge only?): http://csoposh.blogspot.com/2011/11/delete-cookies.html
@@ -5741,7 +5738,7 @@ function CookieKiller ($search) {
 
 # Need to update this so that it will purge the choco lines from the profile...
 function Enable-Choco {
-    # Removed from $Profile as 1.5 s load time, can load this whenever required with this function 
+    # Removed from $Profile as 1.5 s load time, can load this whenever required with this function
     $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
     if(Test-Path $ChocolateyProfile) {
         Import-Module "$ChocolateyProfile"
@@ -5799,7 +5796,7 @@ function Install-Firefox {
 
     # Detection
 
-    # if (-not (Test-Path ($env:ProgramFiles + "\Mozilla Firefox\uninstall\helper.exe") ) -and 
+    # if (-not (Test-Path ($env:ProgramFiles + "\Mozilla Firefox\uninstall\helper.exe") ) -and
     #     -not (Test-Path ($env:USERPROFILE + "\AppData\Local\Mozilla Firefox\uninstall\helper.exe") ) -and
     #     -not (Test-Path (${env:ProgramFiles(x86)} + "\Mozilla Firefox\uninstall\helper.exe") ) )
 
@@ -5924,18 +5921,18 @@ function Get-Scaling {
     # https://hinchley.net/articles/get-the-scaling-rate-of-a-display-using-powershell/
 
     Add-Type @'
-using System; 
+using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
 
-public class DPI {  
+public class DPI {
   [DllImport("gdi32.dll")]
   static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
 
   public enum DeviceCap {
     VERTRES = 10,
     DESKTOPVERTRES = 117
-  } 
+  }
 
   public static float scaling() {
     Graphics g = Graphics.FromHwnd(IntPtr.Zero);
@@ -5961,33 +5958,33 @@ public class DPI {
 # Following from bradleyschact.com, saves counters to .csv for analysis
 function Get-PerformanceCounters {
     cls
- 
+
     $outputDirectory = "C:\0\Performance Counters" # Directory where the restult file will be stored.
-    
+
     $computerName = ""    # Set the Computer from which to collect counters. Leave blank for local computer.
     $sampleInterval = 5   # Collection interval in seconds.
     $maxSamples = 240     # How many samples should be collected at the interval specified. Set to 0 for continuous collection.
-    
-    # Check to see if the output directory exists. If not, create it. 
+
+    # Check to see if the output directory exists. If not, create it.
     if (-not(Test-Path $outputDirectory))
         {
             Write-Host "Output directory does not exist. Directory will be created."
             $null = New-Item -Path $outputDirectory -ItemType "Directory"
             Write-Host "Output directory created."
         }
-    
-    # Strip the \ off the end of the directory if necessary. 
+
+    # Strip the \ off the end of the directory if necessary.
     if ($outputDirectory.EndsWith("\")) {$outputDirectory = $outputDirectory.Substring(0, $outputDirectory.Length - 1)}
-    
+
     # Create the name of the output file in the format of "computer date time.csv".
     $outputFile = "$outputDirectory\$(if($computerName -eq ''){$env:COMPUTERNAME} else {$computerName}) $(Get-Date -Format "yyyy_MM_dd HH_mm_ss").csv"
-    
+
     # Write the parameters to the screen.
     Write-Host "
-    
+
     Collecting counters...
     Press Ctrl+C to exit."
-    
+
     # Specify the list of performance counters to collect.
     $counters =
         @(`
@@ -6001,15 +5998,15 @@ function Get-PerformanceCounters {
         ,"\LogicalDisk(*)\Disk Read Bytes/sec" `
         ,"\LogicalDisk(*)\Disk Write Bytes/sec" `
         ,"\LogicalDisk(*)\Disk Reads/sec" `
-        ,"\LogicalDisk(*)\Disk Writes/sec"    
+        ,"\LogicalDisk(*)\Disk Writes/sec"
         )
-    
+
     # Set the variables for the Get-Counter cmdlet.
     $variables = @{
         SampleInterval = $sampleInterval
         Counter = $counters
     }
-    
+
     # Add the computer name if it was not blank.
     if ($computerName -ne "") {$variables.Add("ComputerName","$computerName")}
 
@@ -6039,7 +6036,7 @@ function Create-Shortcut {
     $icoFile.Close()
     $icon.Dispose()
     $bmap.Dispose()
-    
+
     # I use $makeIcon = $true and then extract the first icon with a try and catch because if
     # it has no icon then it should skip that part, you can work it out
     # It is also quite smart as if there are spaces it will handle itself.
@@ -6075,9 +6072,9 @@ function Start-SubnetQuery {
 }
 
 function Format-TableCompact {
-    [CmdletBinding()]  
+    [CmdletBinding()]
     Param (
-        [parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)] 
+        [parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
         [PsObject]$InputObject,
         [switch]$AppendNewline
     )
@@ -6113,14 +6110,14 @@ function Enable-RDP {
 # Based on: Powershell Gallery Open-RDPGUI (2014)
 # Should accept a hash table with IP : Username
 # For a given IP-Username, have an encrypted password file in %temp%
-# Leverage the 
+# Leverage the
 function Open-RDPGUI {
     [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
     [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") | Out-Null
 
     # -------------------------
     #    Variable definition
-    # ------------------------- 
+    # -------------------------
     $Icon = [system.drawing.icon]::ExtractAssociatedIcon("C:\Windows\System32\mstsc.exe")
     $RDPServer = ""
     $Server = ""
@@ -6133,15 +6130,15 @@ function Open-RDPGUI {
     $arrServers += "192.168.0.26"
     $arrServers += "192.168.0.28"
     $arrServers += "192.168.0.29"
-    
+
     # [void] $objListBox.Items.Add("192.168.0.11")
     # [void] $objListBox.Items.Add("192.168.0.26")
     # [void] $objListBox.Items.Add("192.168.0.28")
     # [void] $objListBox.Items.Add("192.168.0.29")
-    
+
     # -------------------------
     #  RDP Connection Function
-    # ------------------------- 
+    # -------------------------
     Function Connect{
         mstsc.exe -v $RDPServer
         Out-File -FilePath $LogFilePath -InputObject "$Date - RDP connection was opened against $RDPServer" -Append
@@ -6149,8 +6146,8 @@ function Open-RDPGUI {
 
     # -------------------------
     #      Creates Form
-    # ------------------------- 
-    $objForm = New-Object System.Windows.Forms.Form 
+    # -------------------------
+    $objForm = New-Object System.Windows.Forms.Form
     $objForm.Text = "Remote Connection"
     $objForm.Size = New-Object System.Drawing.Size(190,350)
     $objForm.StartPosition = "CenterScreen"
@@ -6185,7 +6182,7 @@ function Open-RDPGUI {
     # -------------------------
     $objLabel = New-Object System.Windows.Forms.Label
     $objLabel.Location = New-Object System.Drawing.Size(10,15)
-    $objLabel.Size = New-Object System.Drawing.Size(280,20) 
+    $objLabel.Size = New-Object System.Drawing.Size(280,20)
     $objLabel.Font = $Font
     $objLabel.Text = "Double click to connect:"
 
@@ -6216,13 +6213,13 @@ function Open-RDPGUI {
     # -------------------------
     #     Creates Text Box
     # -------------------------
-    $objTextBox = New-Object System.Windows.Forms.TextBox 
-    $objTextBox.Location = New-Object System.Drawing.Size(10,250) 
-    $objTextBox.Size = New-Object System.Drawing.Size(160,20) 
+    $objTextBox = New-Object System.Windows.Forms.TextBox
+    $objTextBox.Location = New-Object System.Drawing.Size(10,250)
+    $objTextBox.Size = New-Object System.Drawing.Size(160,20)
 
     # -------------------------
     #  Creates Open Log Button
-    # ------------------------- 
+    # -------------------------
     $OKButton = New-Object System.Windows.Forms.Button
     $OKButton.Location = New-Object System.Drawing.Size(10,285)
     $OKButton.Size = New-Object System.Drawing.Size(160,23)
@@ -6231,7 +6228,7 @@ function Open-RDPGUI {
 
     # -------------------------------
     #  Add objects and Activate Form
-    # ------------------------------- 
+    # -------------------------------
     $objForm.Controls.Add($objLabel)
     $objForm.Controls.Add($objListBox)
     $objForm.Controls.Add($objTextBox)
@@ -6267,7 +6264,7 @@ function rdphalf ($hostname, $username) {
     # https://adamtheautomator.com/powershell-get-credential/
     # https://stackoverflow.com/questions/6239647/using-powershell-credentials-without-being-prompted-for-a-password
     # Start-Process -WindowStyle Hidden "C:\Program Files\Internet Explorer\iexplore.exe" "www.google.com"   #
-    
+
     # Get exactly half-width and full height (minus the Start Bar height)
     $width = (Get-WmiObject -Class Win32_DesktopMonitor | Select-Object ScreenWidth).ScreenWidth
     $height = (Get-WmiObject -Class Win32_DesktopMonitor | Select-Object ScreenHeight).ScreenHeight
@@ -6284,15 +6281,15 @@ function rdphalf ($hostname, $username) {
 # $Server   = "username"
 # $User     = "computername\username"
 # $Password = "password"
-# 
+#
 # cmdkey /delete:"$Server" # probably not needed, just clears the credentials
 # cmdkey /generic:"$Server" /user:"$user" /pass:"$password"
-# 
+#
 # mstsc /v:"$Server" /admin # /admin probably not needed either
 
 # "Identity is not fully verified. Please enter new credentials" After google search could be a permissions issue
 # with saved credentials passing through RDP. From what I have found I will need to edit the group policy underer:
-#   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation 
+#   Computer Configuration -> Administrative Templates -> System -> Credentials Delegation
 
 function Fix-WorkLaptop {
     # Remove some bloat put on by company, kill some processes, reset some things
@@ -6304,7 +6301,7 @@ function Fix-WorkLaptop {
     kill -name AutoHotkey -force -EA Silent  # Restart this with Main and Main-ING to fix any issues
     kill -name Rainmeter -force -EA Silent   # Rainmeter, until I know how to configure properly
     kill -name "My Epson*" -force -EA Silent # My Epson printer tools
-    
+
     $user = [Security.Principal.WindowsIdentity]::GetCurrent()
 
     function DoIfAdmin ($job) {
@@ -6316,15 +6313,15 @@ function Fix-WorkLaptop {
     DoIfAdmin "Disable-BitLockerEncryption | Out-Null"   # Allow all USB devices read/write, Note that encyption will re-enable in time when the policy is reapplied
         # Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker -Name PreventDeviceEncryption -Value 1 -Force -EA Silent
         # Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Policies\Microsoft\FVE -Name RDVDenyWriteAccess -Value 0 -Force -EA Silent
-    
+
     # Apply some Startup Tasks, but test if available first
     # C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -WindowStyle Hidden -file "C:\0\SysTray\SysTray.ps1"
-   
+
     # Start Main.ahk
     if (Test-Path C:\0\Scripts_AHK\Basics.ahk) { Start-Process C:\0\Scripts_AHK\Basics.ahk }
     if (Test-Path C:\0\Scripts_AHK\Main-ING.ahk) { Start-Process C:\0\Scripts_AHK\Main-ING.ahk }
     if (Test-Path "C:\0\Scripts_AHK\WOTR Toolkit.ahk") { Start-Process "C:\0\Scripts_AHK\WOTR Toolkit.ahk" }
-    
+
     # Option to gracefully shutdown process   https://stackoverflow.com/questions/28481811/how-to-correctly-check-if-a-process-is-running-and-stop-it
     # $firefox = Get-Process firefox -ErrorAction SilentlyContinue
     # if ($firefox) {
@@ -6555,7 +6552,7 @@ function Push-Gist {
 function Get-DiskSpeed {
 
     param( [string]$driveLetter = "C:", [int]$sampleSize = 5 )
-    
+
     # Script is from: https://kimconnect.com/powershell-benchmark-disk-speed/
     # Requires diskspd.exe : https://gallery.technet.microsoft.com/DiskSpd-A-Robust-Storage-6ef84e62
     # https://www.trishtech.com/2017/01/benchmark-storage-disks-with-microsoft-diskspeed-tool/
@@ -6568,7 +6565,7 @@ function Get-DiskSpeed {
 
     if($driveLetter.Length -eq 1) { $driveLetter+=":"; }
     Write-Host "Obtaining disk speed of $driveLetter ..."
-    
+
     function isPathWritable {
         param($testPath)
         # Create random test file name
@@ -6576,14 +6573,14 @@ function Get-DiskSpeed {
         $filename = "diskSpeedTest-"+[guid]::NewGuid()
         $tempFilename = (Join-Path $tempFolder $filename)
         New-Item -ItemType Directory -Path $tempFolder -Force -EA SilentlyContinue | Out-Null
-        try { 
+        try {
             # Try to add a new file
             # New-Item -ItemType Directory -Path $tempFolder -Force -EA SilentlyContinue
             [io.file]::OpenWrite($tempFilename).Close()
-            # Write-Host -ForegroundColor Green "$testPath is writable."         
+            # Write-Host -ForegroundColor Green "$testPath is writable."
             # Delete test file after done
-            # Remove-Item $tempFilename -Force -ErrorAction SilentlyContinue 
-                
+            # Remove-Item $tempFilename -Force -ErrorAction SilentlyContinue
+
             # Set return value
             $feasible=$true;
         }
@@ -6605,7 +6602,7 @@ function Get-DiskSpeed {
             if ($validLocalPath) {
                 $GLOBAL:localPath=$true
                 Write-Host "Validating path... Local directory detected."
-                
+
                 $volumeName = if($driveLetter.Length -le 2) { $driveLetter+"\" } else { $driveLetter.Substring(0,3) }
                 $GLOBAL:clusterSize = (Get-WmiObject -Class Win32_Volume | Where-Object { $_.Name -eq $volumeName }).BlockSize
                 Write-Host "Cluster size detected as $clusterSize."
@@ -6632,14 +6629,14 @@ function Get-DiskSpeed {
             Return $false
         }
     }
-    
+
     if (validatePath) {
         # Set variables
         $tempDirectory = "$driveLetter`\getDiskSpeed"
         # New-Item -ItemType Directory -Force -Path $tempDirectory|Out-Null
         $testFile = "$tempDirectory`\testfile.dat"
         $processors = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-           
+
         # Use Chocolatey to ensure that diskspd.exe is available in the system
         $diskSpeedUtilityAvailable = Get-Command diskspd.exe -EA SilentlyContinue
         if (!($diskSpeedUtilityAvailable)) {
@@ -6650,7 +6647,7 @@ function Get-DiskSpeed {
             choco install diskspd -y --ignore-checksums
             refreshenv
         }
-    
+
         function getIops {
         # Sometimes, the test result throws this error "diskspd Error opening file:" if no switches were used
         # The work around is to specify more parameters
@@ -6659,7 +6656,7 @@ function Get-DiskSpeed {
         # $testResult=diskspd.exe -b4K -t1 -r -w50 -o32 -d10 -c8192 $testFile
         # Note: remove the -c option to avoid this error when running with unprivileged accounts
         # diskspd.exe : WARNING: Error adjusting token privileges for SeManageVolumePrivilege (error code: 1300)
-        
+
         try {
             if ($localPath) {
                 #$expression="diskspd.exe -b8k -d1 -o$processors -t$processors -r -L -w25 -c1G $testfile"
@@ -6667,13 +6664,13 @@ function Get-DiskSpeed {
             } else {
                 $expression = "Diskspd.exe -b8K -d1 -h -L -o$processors -t1 -r -w30 -c1G $testfile 2>&1"
             }
-            
+
             # Write-Host $expression
             $testResult = Invoke-Expression $expression
             <#
             diskspd.exe -b8k -d1 -o4 -t4 -r -L -w25 -c1G $testfile
             8K block size; 1 second random I/O test;4 threads; 4 outstanding I/O operations;
-            25% write (implicitly makes read 75% ratio); 
+            25% write (implicitly makes read 75% ratio);
             #>
         }
         catch {
@@ -6684,10 +6681,10 @@ function Get-DiskSpeed {
         }
         $x = $testResult | select-string -Pattern "total*" -CaseSensitive | select-object -First 1 | Out-String
         $iops = $x.split("|")[-3].Trim()
-        #$mebibytesPerSecond=$x.split("|")[-4].Trim()            
+        #$mebibytesPerSecond=$x.split("|")[-4].Trim()
         return $iops
     }
-    
+
     function selectHighIops {
         $testArray = @()
         for($i = 1; $i -le $sampleSize; $i++) {
@@ -6705,8 +6702,8 @@ function Get-DiskSpeed {
         }
         $highestResult = ($testArray | measure -Maximum).Maximum
         return $highestResult
-    } 
-    
+    }
+
     # Trigger several tests and select the highest value
     $selectedIops = selectHighIops
     # Cleanup
@@ -6731,13 +6728,13 @@ function Get-DiskSpeed {
             return $false
         }
     }
-    
+
     do {
         sleep 1
         isFileLocked | out-null
     } until (!(isFileLocked))
     Remove-Item -Recurse -Force $tempDirectory
-    
+
     $mebibytesPerSecond = [math]::round($(([int]$selectedIops) / 128), 2)
     return "Highest: $selectedIops IOPS ($mebibytesPerSecond MiB/s)"
     } else {
@@ -6763,25 +6760,25 @@ function changeAutoLock {
 
     $registryHive = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization"
     $registryKey = "NoLockScreen"
-    $keyItem = Get-ItemProperty -Path $registryHive -Name $registryKey -ErrorAction SilentlyContinue 
-    $keyValue  = $keyItem.NoLockScreen 
- 
+    $keyItem = Get-ItemProperty -Path $registryHive -Name $registryKey -ErrorAction SilentlyContinue
+    $keyValue  = $keyItem.NoLockScreen
+
 	if ($enable)
 	{
 		if ($keyValue) {
-			#Remove item property 
-			Remove-Item -Path $registryHive -Recurse -Confirm:$false  | Out-Null 
+			#Remove item property
+			Remove-Item -Path $registryHive -Recurse -Confirm:$false  | Out-Null
 			Write-Host "Enabled lock screen successfully."
 		} else {
 			Write-Host "Lock screen has already been enabled prior."
 		}
-		
+
 	} else {
 	    if ($keyValue) {
 		    Write-Host  "Lock screen has already been disabled."
 	    } else {
-		    New-Item -Path $registryHive -ErrorAction SilentlyContinue  | Out-Null 
-		    New-ItemProperty -Path $registryHive -Type "DWORD" -Name "NoLockScreen"  -Value 1 | Out-Null 
+		    New-Item -Path $registryHive -ErrorAction SilentlyContinue  | Out-Null
+		    New-ItemProperty -Path $registryHive -Type "DWORD" -Name "NoLockScreen"  -Value 1 | Out-Null
 		    Write-Host "Disabled lock screen successfully."
 	    }
 	}
@@ -6796,11 +6793,11 @@ function Benchmark-Command ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch
     Runs the given script block and returns the execution duration. http://zduck.com/2013/benchmarking-with-Powershell/
     Hat tip to StackOverflow. http://stackoverflow.com/questions/3513650/timing-a-commands-execution-in-powershell
     Benchmark-Command { ping -n 1 google.com } -Samples 50 -Silent
-      
+
     .EXAMPLE
     Benchmark-Command { ping -n 1 google.com } -Samples 50 -Silent
     #>
-    
+
     $timings = @()
     do {
         $sw = New-Object Diagnostics.Stopwatch
@@ -6820,11 +6817,11 @@ function Benchmark-Command ([ScriptBlock]$Expression, [int]$Samples = 1, [Switch
     }
     while ($Samples -gt 0)
     Write-Host
-    
+
     $stats = $timings | Measure-Object -Average -Minimum -Maximum -Property Ticks
-    
+
     # Print the full timespan if the $Long switch was given.
-    if ($Long) {  
+    if ($Long) {
         Write-Host "Avg: $((New-Object System.TimeSpan $stats.Average).ToString())"
         Write-Host "Min: $((New-Object System.TimeSpan $stats.Minimum).ToString())"
         Write-Host "Max: $((New-Object System.TimeSpan $stats.Maximum).ToString())"
@@ -6865,8 +6862,8 @@ function Search-Registry {
         .SYNOPSIS
             Searches the registry on one or more computers for a specified text pattern.
         .DESCRIPTION
-            Searches the registry on one https://www.youtube.com/watch?v=H3FP1eim4hYor more computers for a specified text pattern. 
-            Supports searching for any combination of key names, value names, and/or value data. 
+            Searches the registry on one https://www.youtube.com/watch?v=H3FP1eim4hYor more computers for a specified text pattern.
+            Supports searching for any combination of key names, value names, and/or value data.
             The search pattern is either a regular expression or a wildcard pattern using the 'like' operator.
             (both are case-insensitive)
         .PARAMETER ComputerName
@@ -6884,14 +6881,14 @@ function Search-Registry {
             If not specified, the hive must be part of the 'KeyPath' parameter.
         .PARAMETER KeyPath
             (Optional) Starts the search at the specified registry key. The key name contains only the subkey.
-            This parameter can be prefixed with the hive name. 
+            This parameter can be prefixed with the hive name.
             In that case, parameter 'Hive' is ignored as it is then taken from the given path.
-            Examples: 
+            Examples:
               HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Uninstall
               HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall
               Software\Microsoft\Windows\CurrentVersion\Uninstall
         .PARAMETER MaximumResults
-            (Optional) Specifies the maximum number of results per computer searched. 
+            (Optional) Specifies the maximum number of results per computer searched.
             A value <= 0 means will return the maximum number of possible matches (2147483647).
         .PARAMETER SearchKeyName
             (Optional) Searches for registry key names. You must specify at least one of -SearchKeyName, -SearchPropertyName, or -SearchPropertyValue.
@@ -6945,17 +6942,17 @@ function Search-Registry {
         .EXAMPLE
             Search-Registry -KeyPath 'HKCR\.odt' -RegexPattern '.*' -SearchKeyName -MaximumResults 10 -Verbose
 
-            or 
+            or
 
             Search-Registry -Hive HKCR -KeyPath '.odt' -RegexPattern '.*' -SearchKeyName -MaximumResults 10 -Verbose
 
-            Outputs at most ten matches if the specified key exists. 
-            This command returns a result if the current computer has a program registered to open files with the .odt extension. 
+            Outputs at most ten matches if the specified key exists.
+            This command returns a result if the current computer has a program registered to open files with the .odt extension.
             The pattern '.*' means match everything.
         .EXAMPLE
             Get-Content Computers.txt | Search-Registry -KeyPath "HKLM:\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine" -Pattern '*' -SearchPropertyName | Export-Csv -Path 'D:\powershell.csv' -NoTypeInformation
 
-            Searches for any property name in the registry on each computer listed in the file Computers.txt starting at the specified subkey. 
+            Searches for any property name in the registry on each computer listed in the file Computers.txt starting at the specified subkey.
             Output is sent to the specified CSV file.
         .EXAMPLE
             Search-Registry -KeyPath 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Desktop\NameSpace' -SearchPropertyName -Recurse -Verbose
@@ -7067,7 +7064,7 @@ function Search-Registry {
             if ($SearchKeyName) {
                 foreach ($keyName in $subKeys) {
                     if ($script:resultCount -lt $MaximumResults) {
-                        if ($useRegEx) { $isMatch = ($keyName -match $RegexPattern) } 
+                        if ($useRegEx) { $isMatch = ($keyName -match $RegexPattern) }
                         else { $isMatch = ($keyName -like $Pattern) }
                         if ($isMatch) {
                             # for PowerShell < 3.0 use: New-Object -TypeName PSObject -Property @{ ... }
@@ -7104,7 +7101,7 @@ function Search-Registry {
 
                         }
                         else {
-                            if ($useRegEx) { $isMatch = ($data -match $RegexPattern -or $raw -match $RegexPattern) } 
+                            if ($useRegEx) { $isMatch = ($data -match $RegexPattern -or $raw -match $RegexPattern) }
                             else { $isMatch = ($data -like $Pattern -or $raw -like $Pattern) }
                         }
 
@@ -7188,30 +7185,30 @@ function Search-Registry {
 # 1 m = 39.37 inches = .3281 ft = 1.094 yards
 # 1 cm = 10 mm = 0.394 inches
 # 1 mm = 0.04 inches
-# 
+#
 # Area Conversions
 # 1 section = 1 sq. mile = 640 acres = 2.59 sq km = 259 hectares
 # 1 acre = 43,560 sq ft = 0.405 ha = 4047 sq m
 # 1 sq ft = 0.093 sq m
 # 1 sq km = 1,000,000 sq m = 100 ha = 247.1 acres
 # 1 ha = 10,000 sq m = 2.471 ac
-# 
+#
 # Capacity conversions
 # 1 gallon = 4 quarts = 8 pints = 16 cups = 3.785 liters
 # 1 quart = 0.946 liters
 # 1 liter = 1.057 quarts = 0.264 gallons
-# 
+#
 # Weight Conversions
 # 1 ton = 2,000 lbs = 907.18 kg
 # 1 lb = 16 oz = 453.59 g = 0.454 kg
 # 1 oz = 28.35 g
 # 1 kg = 2.205 lbs = 1,000 g = 1,000,000 mg
-# 
+#
 # Rate Conversions
 # 1 lb/ac = 1.121 kg/ha
 # 1 kg/ha = 0.891 lbs/ac
 # 1 ppm = 1 mg/kg
-# 
+#
 # Miscellaneous Conversions
 # Degrees Fahrenheit = (9/5 X degrees C) + 32
 # Degrees Celsius = 5/9 X (degrees F - 32)
@@ -7245,58 +7242,58 @@ function ConvertTo-Metric
     # The unit the value is in
     [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=1)]
     [ValidateSet('Inch','Inches','Foot','Feet','Yard','Yards','Mile','Miles', 'Pound', 'Pounds', 'Lb', 'Lbs', 'In', 'Mi', 'Ft')]
-    [string]$Unit   
+    [string]$Unit
     )
-        
+
     process {
         switch ($unit) {
-            { 'Inch', 'Inches', 'In' -contains $_ } {                
+            { 'Inch', 'Inches', 'In' -contains $_ } {
                 New-Object PSObject |
                     Add-Member NoteProperty mm ($value * 25.4) -PassThru |
                     Add-Member NoteProperty cm ($value * 2.54) -PassThru |
                     Add-Member NoteProperty m ($value * .0254) -PassThru |
-                    Add-Member NoteProperty km ($value * .0000254) -PassThru 
+                    Add-Member NoteProperty km ($value * .0000254) -PassThru
             }
             { 'Foot', 'Feet', 'Ft' -contains $_ } {
                 New-Object PSObject |
                     Add-Member NoteProperty mm ($value * 304.8) -PassThru |
                     Add-Member NoteProperty cm ($value * 30.48) -PassThru |
                     Add-Member NoteProperty m ($value * .3048) -PassThru |
-                    Add-Member NoteProperty km ($value * .0003048) -PassThru 
+                    Add-Member NoteProperty km ($value * .0003048) -PassThru
             }
             { 'Yard', 'Yards' -contains $_ } {
                 New-Object PSObject |
                     Add-Member NoteProperty km ($value * .0009144) -PassThru |
                     Add-Member NoteProperty m ($value * .9144) -PassThru |
                     Add-Member NoteProperty cm ($value * 91.44) -PassThru |
-                    Add-Member NoteProperty mm ($value * 914.4) -PassThru                   
-                    
+                    Add-Member NoteProperty mm ($value * 914.4) -PassThru
+
             }
             { 'Mile', 'Miles', 'Mi' -contains $_ } {
                 New-Object PSObject |
                     Add-Member NoteProperty km ($value * 1.609) -PassThru |
                     Add-Member NoteProperty m ($value * 1609) -PassThru |
                     Add-Member NoteProperty cm ($value * 160900) -PassThru |
-                    Add-Member NoteProperty mm ($value * 1609000) -PassThru                                                           
+                    Add-Member NoteProperty mm ($value * 1609000) -PassThru
             }
-              
-            
+
+
             { 'Pound', 'Pound', 'Lbs', 'Lb' -contains $_ }  {
                 New-Object PSObject |
-                    Add-Member NoteProperty mg ($value * 4536000) -PassThru |                                                         
+                    Add-Member NoteProperty mg ($value * 4536000) -PassThru |
                     Add-Member NoteProperty g ($value *  4536) -PassThru |
                     Add-Member NoteProperty kg ($value *  .4536 ) -PassThru
             }
-            
+
             { 'Ton', 'Tons', 'Tn' -contains $_ }  {
                 New-Object PSObject |
-                    Add-Member NoteProperty mg ($value * 900000000) -PassThru |                                                         
+                    Add-Member NoteProperty mg ($value * 900000000) -PassThru |
                     Add-Member NoteProperty g ($value *  900000) -PassThru |
                     Add-Member NoteProperty kg ($value *  900 ) -PassThru
-            }                       
+            }
         }
     }
-} 
+}
 
 # https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/converting-currencies
 # Illustrates how a dynamic parameter can be populated by dynamic data, and how this data is cached
@@ -7309,32 +7306,32 @@ function ConvertTo-Euro
     param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)] [Double] $Value
     )
-  
+
     dynamicparam
     {
         $Bucket = New-Object -TypeName System.Management.Automation.RuntimeDefinedParameterDictionary
-    
-        $Attributes = New-Object -TypeName System.Collections.ObjectModel.Collection[System.Attribute]    
+
+        $Attributes = New-Object -TypeName System.Collections.ObjectModel.Collection[System.Attribute]
         $AttribParameter = New-Object System.Management.Automation.ParameterAttribute
         $AttribParameter.Mandatory = $true
         $Attributes.Add($AttribParameter)
-        
+
         if ($script:currencies -eq $null)
         {
             $url = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
             $result = Invoke-RestMethod  -Uri $url
             $script:currencies = $result.Envelope.Cube.Cube.Cube.currency
         }
-        
+
         $AttribValidateSet = New-Object System.Management.Automation.ValidateSetAttribute($script:currencies)
         $Attributes.Add($AttribValidateSet)
-    
+
         $Parameter = New-Object -TypeName System.Management.Automation.RuntimeDefinedParameter('Currency',[String], $Attributes)
         $Bucket.Add('Currency', $Parameter)
-    
+
         $Bucket
     }
-  
+
     begin
     {
       foreach ($key in $PSBoundParameters.Keys)
@@ -7344,14 +7341,14 @@ function ConvertTo-Euro
               Set-Variable -Name $key -Value $PSBoundParameters.$key
           }
       }
-    
+
       $url = 'http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
       $rates = Invoke-RestMethod -Uri $url
-      $rate = $rates.Envelope.Cube.Cube.Cube | 
+      $rate = $rates.Envelope.Cube.Cube.Cube |
       Where-Object { $_.currency -eq $Currency} |
       Select-Object -ExpandProperty Rate
     }
-  
+
     process
     {
         $result = [Ordered]@{
@@ -7361,7 +7358,7 @@ function ConvertTo-Euro
             Euro = ($Value / $rate)
             Date = Get-Date
         }
-      
+
         New-Object -TypeName PSObject -Property $result
     }
 }
@@ -7434,7 +7431,7 @@ function color {
     #    Magenta DarkMagenta
 
     [CmdletBinding()]
-    param( [Parameter(Mandatory)] [string] $BackgroundColor, 
+    param( [Parameter(Mandatory)] [string] $BackgroundColor,
            [Parameter(Mandatory)] [string] $ForegroundColor )
 
     $a = (Get-Host).UI.RawUI
@@ -7617,7 +7614,7 @@ function Install-ModuleToDirectory {
 #     # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
 #     # If the module is already installed, use Update, otherwise use Install
 #     if ([bool](Get-Module $Name -ListAvailable)) {
-#          Update-Module $Name -Verbose -ErrorAction Stop 
+#          Update-Module $Name -Verbose -ErrorAction Stop
 #     } else {
 #          Install-Module $Name -Scope CurrentUser -Verbose -ErrorAction Stop
 #     }
@@ -7668,13 +7665,13 @@ function Install-ModuleToDirectory {
 #         "to correctly move Modules into the users module folder on C:\"
 #         pause
 #     }
-# 
+#
 #     if ($success -eq 0) {
 #         try {
 #             # Note additional switches if required: -Repository $MyRepoName -Credential $Credential
 #             # If the module is already installed, use Update, otherwise use Install
 #             if ([bool](Get-Module $MyModule -ListAvailable)) {
-#                  Update-Module $MyModule -Verbose -ErrorAction Stop 
+#                  Update-Module $MyModule -Verbose -ErrorAction Stop
 #             } else {
 #                  Install-Module $MyModule -Scope CurrentUser -Verbose -ErrorAction Stop
 #             }
@@ -7717,34 +7714,34 @@ function Install-ProfileForceLocalForFasterLoading {
         $ProfileAdmin = "C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1"
         # $ProfileName = (($).split("\"))[-1]   # Not needed, but Do this to capture correct prefix PowerShell, VSCode, etc
         $ProfileUser = "C:\Users\$ProfileLeaf\Documents\WindowsPowerShell\$(($Profile).split('\')[-1])"
-    
+
         # Note: Cannot rely upon these variables if BeginSystemConfig is run inside an existing session
         #       as the original $profile has already been overwritten so test them to see if empty after creation.
         Write-Host "Press 'X' to create and use the VPN bypass." -F Yellow -B Black
         Write-Host "Press any other key to skip this function." -F Yellow -B Black
-    
+
         $x = New-Object System.Management.Automation.Host.ChoiceDescription "&X", "X";
         $no  = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "No";
         $choices = [System.Management.Automation.Host.ChoiceDescription[]]($x, $no);
         $caption = ""   # Did not need this before, but now getting odd errors without it.
         $answer = $host.ui.PromptForChoice($caption, $message, $choices, 1)   # Set to 0 to default to "yes" and 1 to default to "no"
-    
+
         if ($answer -eq 0) {
             # 1. Create $Profile.AllUsersAllHosts
             # 2. Add: Set-Location C:\Users\$($env:Username)   (override Admin defaulting into system32)
             # 3. Add: dotsource C:\Users\$($env:Username)\Documents\WindowsPowerShell\$($ShellId)_profile.ps1
-            #         As this is the normal offline location, 
-            # 4. Add: 
+            #         As this is the normal offline location,
+            # 4. Add:
             # 5. mklink to somewhere easier like C:\PS and add scripts folder to path?
-    
+
             if (!(Test-Path $(Split-Path $ProfileAdmin))) { mkdir $(Split-Path $ProfileAdmin) -Force }
             if (!(Test-Path $(Split-Path $ProfileUser))) { mkdir $(Split-Path $ProfileUser) -Force }
-    
+
             $ProfileUserCFormatted = '"C:\Users\$($env:Username)\Documents\WindowsPowerShell\$(($Profile).split(`"\`")[-1])"'
-    
+
             Write-Host "`nCreating backup of existing profile ..."
             if (Test-Path $ProfileAdmin) { Move-Item -Path "$($ProfileAdmin)" -Destination "$($ProfileAdmin)_$(Get-Date -format "yyyy-MM-dd__HH-mm-ss").txt" }
-    
+
             Write-Host ":: Writing VPN bypass to $ProfileAdmin" -F Yellow -B Black
             Write-Host ""
             Set-Content -Path $ProfileAdmin -Value "Set-Location C:\Users\`$(`$env:Username)   # Default to user folder, even if start as Admin" -PassThru
@@ -7773,7 +7770,7 @@ function Install-ProfileForceLocalForFasterLoading {
             Write-Host ""
         }
     }
-}    
+}
 
 
 
@@ -7798,7 +7795,7 @@ function PullCustomFromGist ($Name) {
     Write-Host ""
     Write-Host "Downaload and install latest Custom-$Title.psm1 Module from Gist." -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "Note: Will first backup and datetime stamp current Custom-$Title.psm1 in the Mdoules parent folder." -ForegroundColor Yellow -BackgroundColor Black
-    
+
     $ModuleRoot = "C:\Users\$UserProfileLeaf\Documents\WindowsPowerShell\Modules\Custom-$Title"
     if (-not (Test-Path $ModuleRoot)) { md $ModuleRoot }
     # if (!(Test-Path $ModuleRoot)) { New-Item -Type Directory $ModuleRoot -Force }
@@ -7808,7 +7805,7 @@ function PullCustomFromGist ($Name) {
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }   # Windows 10 compatible
     Clear-DnsClientCache
     [System.Net.ServicePointManager]::DnsRefreshTimeout = 0;
-    
+
     $now = Get-Date -format "yyyy-MM-dd__HH-mm-ss"
     if (Test-Path $ModuleRoot) {
         if (Test-Path $ModulePSM1) { cp $ModulePSM1 "$(Split-Path $ModuleRoot)\Custom-$($Title)_$($now).psm1" }
@@ -7826,12 +7823,12 @@ function PushCustomToGist ($Name) {
     if ($name -eq "Roy") { $Title = "Tools" ; $Name = "Roy" ; $GistUser = "roysubs" ; $GistId = "5c6a16ea0964cf6d8c1f9eed7103aec8" }
     if ($name -eq "Edwin") { $Title = "Edwin" ; $Name = "Edwin" ; $GistUser = "e-d-h" ; $GistId = "fd6e178848214614e373c5c36410f648" }
     if ($name -eq "Kevin") { $Title = "Kevin" ; $Name = "Kevin" ; $GistUser = "????" ; $GistId = "????" }
-    
+
     Write-Host ""
     Write-Host "Upload Custom-$Title.psm1 Module from Modules folder to Gist." -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "Note: Only $Name can upload to his Gist using his GitHub key and password." -ForegroundColor Yellow -BackgroundColor Black
     Write-Host "Note: Will first backup and datetime stamp current Custom-$Title.psm1 in the Mdoules parent folder." -ForegroundColor Yellow -BackgroundColor Black
-    
+
     $ModuleRoot = "C:\Users\$($env:USERNAME)\Documents\WindowsPowerShell\Modules\Custom-$Title"
     if (-not (Test-Path $ModuleRoot)) { md $ModuleRoot }
     $ModulePSM1 = Join-Path $ModuleRoot "Custom-$Title.psm1"
@@ -7844,7 +7841,7 @@ function PushCustomToGist ($Name) {
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }   # Windows 10 compatible
     Clear-DnsClientCache
     [System.Net.ServicePointManager]::DnsRefreshTimeout = 0
-    
+
     $now = Get-Date -format "yyyy-MM-dd__HH-mm-ss"
     if (Test-Path $ModuleRoot) {
         if (Test-Path $ModulePSM1) { cp $ModulePSM1 "$(Split-Path $ModuleRoot)\Custom-$($Title)_$($now).psm1" }
@@ -7858,7 +7855,7 @@ function PushCustomToGist ($Name) {
 
         # https://adamtheautomator.com/powershell-get-credential/
         # https://stackoverflow.com/questions/6239647/using-powershell-credentials-without-being-prompted-for-a-password
-        
+
         try {
             echo "iwr `"https://gist.github.com/$($GistUser)/$($GistId)/raw`""
             iwr "https://gist.github.com/$GistUser/$GistId/raw"
@@ -7877,10 +7874,10 @@ function PushCustomToGist ($Name) {
                 rm $GistPassword -Force -EA Silent
             }
         }
-        
+
         # Test if Posh-Gist is installed
         if (![bool](Get-Module Posh-Gist -ListAvailable)) { "Posh-Gist must be installed to run this" ; break }
-        
+
         # Securely upload the Gists, testing existence and non-zero size
         function Push-GistUpdate ($file, $id) {
             if (Test-Path($file)) {
@@ -7890,7 +7887,7 @@ function PushCustomToGist ($Name) {
             }
         }
         Push-GistUpdate $ModulePSM1 $GistId
-        
+
         # Try clearing the DNS client cache to resolve the endpoint caching (this does not work in my experience)
         Clear-DnsClientCache
         [System.Net.ServicePointManager]::DnsRefreshTimeout = 0
@@ -7923,9 +7920,9 @@ Function Read-MyHost {
     [Parameter(HelpMessage = "Convert the result to an object.")]
     [switch]$AsObject
     )
-     
+
     $response = $host.ui.Prompt($PromptTitle,$Message,$Key)
-     
+
     if ($AsObject) {
         #create a custom object
         New-Object -TypeName PSObject -Property $response
@@ -7934,7 +7931,7 @@ Function Read-MyHost {
         #write the result to the pipeline
         $response
     }
-     
+
 } #end function
 
 #An alternative to the built-in PromptForChoice providing a consistent UI across different hosts
@@ -7992,8 +7989,8 @@ function Get-Choice {
         $temp.UseVisualStyleBackColor = $True
         $temp.Text = $option
         $buttonX = ($index + 1) * $spacing + $index * $buttonWidth
-        $temp.Add_Click({ 
-            $script:result = $this.Text; $form.Close() 
+        $temp.Add_Click({
+            $script:result = $this.Text; $form.Close()
         })
         $temp.Location = New-Object System.Drawing.Point($buttonX,$buttonY)
         $form.Controls.Add($temp)
@@ -8035,11 +8032,11 @@ function Start-KeepAliveEdwin {
             Start-Sleep 180
         }
     }
- 
+
     # # Runspace alternative
     # $rs = [runspacefactory]::CreateRunspace([initialsessionstate]::CreateDefault2())
     # $rs.Open()
-    # 
+    #
     # # Create a [powershell] object to bind our script to the above runspaces
     # $ps = [powershell]::Create().AddScript({
     #     $wsh = New-Object -ComObject WScript.Shell
@@ -8048,10 +8045,10 @@ function Start-KeepAliveEdwin {
     #         Start-Sleep 60
     #     }
     # })
-    # 
+    #
     # # Tell powershell to run the code in the runspace we created
     # $ps.Runspace = $rs
-    # 
+    #
     # # Invoke the code asynchronously
     # $handle = $ps.BeginInvoke()
 }
@@ -8064,7 +8061,7 @@ function Show-Tools {
 Function Set-DefaultDownloadPath
 {
     Param ( [String] $DownloadPath = "%USERPROFILE%\Downloads" )
-	
+
     $userShellFoldersPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
     if((Test-Path -Path $DownloadPath) -eq $false) {
          New-Item $DownloadPath -Type Directory -ErrorAction Stop | Out-Null
@@ -8078,15 +8075,15 @@ Function Set-DefaultDownloadPath
     {
         Set-ItemProperty -Path $userShellFoldersPath -Name '{7D83EE9B-2244-4E70-B1F5-5393042AF1E4}' -Value $DownloadPath
     }
-    
-	#Restart Explorer to change it immediately   
+
+	#Restart Explorer to change it immediately
 	Stop-Process -Name Explorer
 }
 
 Function ChangeWinDefaultDownloadPath
 {
     Param ( [String] $DownloadPath = "%USERPROFILE%\Downloads" )
-	
+
     $userShellFoldersPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
     if((Test-Path -Path $DownloadPath) -eq $false) {
          New-Item $DownloadPath -Type Directory -ErrorAction Stop | Out-Null
@@ -8100,8 +8097,8 @@ Function ChangeWinDefaultDownloadPath
     {
         Set-ItemProperty -Path $userShellFoldersPath -Name '{7D83EE9B-2244-4E70-B1F5-5393042AF1E4}' -Value $DownloadPath
     }
-    
-	#Restart Explorer to change it immediately   
+
+	#Restart Explorer to change it immediately
 	Stop-Process -Name Explorer
 }
 
@@ -8110,10 +8107,10 @@ function Create-ScheduledTasks {
     # This is not possible with a startup folder or startup registry task (specifically blocked by Microsoft by security)
     # but is possible by creating a Scheduled Task (though a bit trickier to setup).
 
-    # Becuase the SysTray task is running elevated, starting tasks from here bypasses UAC (User Access Control) popups.    
+    # Becuase the SysTray task is running elevated, starting tasks from here bypasses UAC (User Access Control) popups.
     # These tasks trigger at logon with credentials of user running this script.
     # -RunLevel Highest is the key part that starts the task with elevated privileges.
-    
+
     $action = New-ScheduledTaskAction -Execute "powershell.exe"
     $trigger = New-ScheduledTaskTrigger -AtLogOn
     $principal = New-ScheduledTaskPrincipal -RunLevel Highest -UserId (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty UserName)
@@ -8139,25 +8136,25 @@ function Start-KeepAlive {
        This function should only be run when your computer is locked in a secure location.
     .EXAMPLE
        Start-KeepAlive
-       Id     Name            PSJobTypeName   State         HasMoreData     Location            
-       --     ----            -------------   -----         -----------     --------            
-       90     KeepAlive       BackgroundJob   Running       True            localhost           
-    
+       Id     Name            PSJobTypeName   State         HasMoreData     Location
+       --     ----            -------------   -----         -----------     --------
+       90     KeepAlive       BackgroundJob   Running       True            localhost
+
        KeepAlive set to run until 10/01/2012 00:35:03
-    
+
        By default the keepalive will run for 1 hour, with a keypress every 5 minutes.
     .EXAMPLE
        Start-KeepAlive -KeepAliveHours 3
-       Id     Name            PSJobTypeName   State         HasMoreData     Location            
-       --     ----            -------------   -----         -----------     --------            
-       92     KeepAlive       BackgroundJob   Running       True            localhost           
-    
+       Id     Name            PSJobTypeName   State         HasMoreData     Location
+       --     ----            -------------   -----         -----------     --------
+       92     KeepAlive       BackgroundJob   Running       True            localhost
+
        KeepAlive set to run until 10/01/2012 02:36:12
-       
+
        You can specify a longer KeepAlive period using the KeepAlive parameter E.g. specify 3 hours
     .EXAMPLE
        Start-KeepAlive -KeepAliveHours 2 -SleepSeconds 600
-       
+
        You can also change the default period between each keypress, here the keypress occurs every 10 minutes (600 Seconds).
     .EXAMPLE
        KeepAliveHours -Query
@@ -8166,11 +8163,11 @@ function Start-KeepAlive {
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around 9.96 Minutes
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around 4.96 Minutes
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around -0.04 Minutes
-    
+
        KeepAlive has now completed... job will be cleaned up.
-    
+
        KeepAlive has now completed.
-    
+
        Run with the Query Switch to get an update on how long the timout will have to run.
     .EXAMPLE
        KeepAliveHours -Query
@@ -8179,21 +8176,21 @@ function Start-KeepAlive {
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around 9.96 Minutes
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around 4.96 Minutes
        Job will run till 09/30/2012 17:20:05 + 5 minutes, around -0.04 Minutes
-    
+
        KeepAlive has now completed... job will be cleaned up.
-    
+
        KeepAlive has now completed.
-       
+
        The Query switch will also clean up the background job if you run this once the KeepAlive has complete..EXAMPLE
     .EXAMPLE
        KeepAliveHours -EndJob
        KeepAlive has now ended...
-       
+
        Run Endjob once you download has complete to stop the Keepalive and remove the background job.
     .EXAMPLE
        KeepAliveHours -EndJob
        KeepAlive has now ended...
-    
+
        Run EndJob anytime to stop the KeepAlive and remove the Job.
     .INPUTS
        KeepAliveHours - The time the keepalive will be active on the system
@@ -8209,11 +8206,11 @@ function Start-KeepAlive {
        This utility should only be used in the privacy of your own home or locked office.
     .FUNCTIONALITY
        Call this function to enable a temporary KeepAlive for your computer. Allow you to download a large file without sleepin the computer.
-    
+
        If the KeepAlive ends and you do not run -Query or -EndJob, then the completed job will remain.
-    
+
        You can run Get-Job to view the job. Get-Job -Name KeepAlive | Remove-Job will cleanup the Job.
-    
+
        By default you cannot create more than one KeepAlive Job, unless you provide a different JobName. There should be no reason to do this. With Query or EndJob, you can cleanup any old Jobs and then create a new one.
     .LINK
        https://gallery.technet.microsoft.com/scriptcenter/Keep-Alive-Simulates-a-key-9b05f980
@@ -8227,11 +8224,11 @@ function Start-KeepAlive {
             $KeyToPress = '{SCROLLLOCK}'   # Original function pressed  <Ctrl> = '^', changed this to ScrollLock
             # Reference for other keys: http://msdn.microsoft.com/en-us/library/office/aa202943(v=office.10).aspx
         )
-    
+
         BEGIN {
             $Endtime = (Get-Date).AddHours($KeepAliveHours)
         } # BEGIN
-    
+
         PROCESS {
             # Manually end the job and stop the KeepAlive.
             if ($EndJob) {
@@ -8266,7 +8263,7 @@ function Start-KeepAlive {
                 $Job = {
                     param ($Endtime,$SleepSeconds,$JobName,$KeyToPress)
                     "`nStarttime is $(Get-Date)"
-    
+
                     While ((Get-Date) -le (Get-Date $EndTime)) {
                         # Wait SleepSeconds to press (This should be less than the screensaver timeout)
                         Start-Sleep -Seconds $SleepSeconds
@@ -8278,14 +8275,14 @@ function Start-KeepAlive {
                     }
                     try {
                         "`n$JobName has now completed... job will be cleaned up."
-    
+
                         # Would be nice if the job could remove itself, below will not work.
                         # Receive-Job -AutoRemoveJob -Force
                         # Still working on a way to automatically remove the job
                     }
                     catch { "Something went wrong, manually remove job $JobName" }
                 } # Job
-    
+
                 $JobProperties =@{   # Hash table
                     ScriptBlock  = $Job
                     Name         = $JobName
@@ -8296,8 +8293,8 @@ function Start-KeepAlive {
             }
         } # PROCESS
     } # Start-KeepAlive
-    
-    
+
+
 # if ($computertype -eq Server) {
 #     do not enable ProfileExtensions or load Custom-Tools.psm1
 #     Load .psm1 from an ad hoc directory?
@@ -8306,7 +8303,7 @@ function Start-KeepAlive {
 # If server + administrator, then WARNING
 
 # Windows Registry Editor Version 5.00
-# 
+#
 # [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server]
 # "KeepAliveEnable"=dword:00000001
 
@@ -8324,16 +8321,16 @@ function Update-AllModules {
 
     foreach ($module in $modules.Name) {
         $currentVersion = $null
-    
+
         if ($null -ne (Get-InstalledModule -Name $module -ErrorAction SilentlyContinue)) {
             $currentVersion = (Get-InstalledModule -Name $module -AllVersions).Version
         }
-    
+
         $moduleInfos = Find-Module -Name $module
-    
+
         if ($null -eq $currentVersion) {
-            Write-Host -ForegroundColor Cyan "Install from PowerShellGallery : $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)"  
-        
+            Write-Host -ForegroundColor Cyan "Install from PowerShellGallery : $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)"
+
             try {
                 Install-Module -Name $module -Force
             }
@@ -8355,8 +8352,8 @@ function Update-AllModules {
                 Write-Host -ForegroundColor red "$_.Exception.Message"
             }
 
-            Write-Host -ForegroundColor Cyan "Install from PowerShellGallery : $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)"  
-        
+            Write-Host -ForegroundColor Cyan "Install from PowerShellGallery : $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)"
+
             try {
                 Install-Module -Name $module -Force
             }
@@ -8364,8 +8361,8 @@ function Update-AllModules {
                 Write-Host -ForegroundColor red "$_.Exception.Message"
             }
         }
-        else {       
-            Write-Host -ForegroundColor Cyan "Update from PowerShellGallery from $currentVersion to $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)" 
+        else {
+            Write-Host -ForegroundColor Cyan "Update from PowerShellGallery from $currentVersion to $($moduleInfos.Name) - $($moduleInfos.Version). Release date: $($moduleInfos.PublishedDate)"
             try {
                 Update-Module -Name $module -Force
             }
@@ -8404,29 +8401,29 @@ function Convert-ImageToAsciiArt {
     # https://www.nextofwindows.com/turning-any-image-file-to-an-ascii-art-in-powershell
     # https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/create-ascii-art
 
-    # load drawing functionality 
-    Add-Type -AssemblyName System.Drawing 
-    $characters = '$#H&@*+;:-,. '.ToCharArray()   # characters from dark to light  
-    $c = $characters.count 
-    $image = [Drawing.Image]::FromFile($path )   # load image and get image size 
+    # load drawing functionality
+    Add-Type -AssemblyName System.Drawing
+    $characters = '$#H&@*+;:-,. '.ToCharArray()   # characters from dark to light
+    $c = $characters.count
+    $image = [Drawing.Image]::FromFile($path )   # load image and get image size
     [int]$maxheight = $image.Height / ($image.Width / $maxwidth) / $ratio
-    $bitmap = new-object Drawing.Bitmap($image ,$maxwidth,$maxheight)   # paint image on a bitmap with the desired size 
+    $bitmap = new-object Drawing.Bitmap($image ,$maxwidth,$maxheight)   # paint image on a bitmap with the desired size
     [System.Text.StringBuilder]$sb = ""   # use a string builder to store the characters
-    for ([int]$y=0; $y -lt $bitmap.Height; $y++) {  # take each pixel line...  
-        for ([int]$x=0; $x -lt $bitmap.Width; $x++) {   # take each pixel column... 
-            # examine pixel 
+    for ([int]$y=0; $y -lt $bitmap.Height; $y++) {  # take each pixel line...
+        for ([int]$x=0; $x -lt $bitmap.Width; $x++) {   # take each pixel column...
+            # examine pixel
             $color = $bitmap.GetPixel($x, $y)
-            $brightness = $color.GetBrightness() 
+            $brightness = $color.GetBrightness()
             # choose the character that best matches the pixel brightness
-            [int]$offset = [Math]::Floor($brightness*$c) 
-            $ch = $characters[$offset] 
-            if (-not $ch) { $ch = $characters[-1] }  
-            # add character to line 
+            [int]$offset = [Math]::Floor($brightness*$c)
+            $ch = $characters[$offset]
+            if (-not $ch) { $ch = $characters[-1] }
+            # add character to line
             $null = $sb.Append($ch)
         }
-        $null = $sb.AppendLine()   # add a new line 
-    } 
-    $image.Dispose()   # clean up and return string 
+        $null = $sb.AppendLine()   # add a new line
+    }
+    $image.Dispose()   # clean up and return string
     $sb.ToString()
 }
 # To call the function, generate the ASCII file and display it.
@@ -8465,7 +8462,7 @@ function Help-VSCodeKeyboardShortcutsForWindows {
 # while (1) { ps | Sort-Object -Property cpu -Descending | select -First 10 ; Write-Host "`nRefresh in 3 sec...`n" ; sleep -Seconds 3 }
 
 # Like Top, this should stay in same position on screen
-# $saveY = [console]::CursorTop ; # $saveX = [console]::CursorLeft      
+# $saveY = [console]::CursorTop ; # $saveX = [console]::CursorLeft
 # while ($true) { Get-Process | Sort -Descending CPU | Select -First 10 ; Sleep -Seconds 2 ; [console]::setcursorposition($saveX,$saveY+3) }
 
 function TopPS ([string]$SortCol = "Memory", [int]$Top = 30) {
@@ -8475,7 +8472,7 @@ function TopPS ([string]$SortCol = "Memory", [int]$Top = 30) {
 
     $LogicalProcessors = (Get-WmiObject -class Win32_processor -Property NumberOfLogicalProcessors).NumberOfLogicalProcessors;
 
-    ## Check user level of PowerShell 
+    ## Check user level of PowerShell
     if ( ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) ) {
         $procTbl = get-process -IncludeUserName | select ID, Name, UserName, Description, MainWindowTitle
     } else {
@@ -8497,9 +8494,9 @@ function TopPS ([string]$SortCol = "Memory", [int]$Top = 30) {
             ID = $_.Group[0].CookedValue;
             User = $procTbl.UserName[$procIndex]
             CPU = if($_.Group[0].InstanceName -eq "idle") {
-                $_.Group[1].CookedValue / $LogicalProcessors 
+                $_.Group[1].CookedValue / $LogicalProcessors
                 } else {
-                $_.Group[1].CookedValue 
+                $_.Group[1].CookedValue
                 };
             Memory = $_.Group[2].CookedValue / 1KB;
             Description = $procTbl.Description[$procIndex];
@@ -8544,7 +8541,7 @@ function Lock-Toolkit {
     # Add-Type -A System.IO.Compression.FileSystem
     # [IO.Compression.ZipFile]::CreateFromDirectory('foo', 'foo.zip')
     # [IO.Compression.ZipFile]::ExtractToDirectory('foo.zip', 'bar')
-    
+
     # If Java installed, compress to a zip using the jar command:
     # jar -cMf targetArchive.zip sourceDirectory
     # c = Creates a new archive file, M = do not add manifest file to archive, f = target file name.
@@ -8698,7 +8695,7 @@ function PromptUserAndExecutionTimer {
         # $HistoryId = '{0:d4}' -f $MyInvocation.HistoryId
         Write-Host -Object "$HistoryId " -NoNewline -ForegroundColor Cyan
 
-    
+
         ### Time calculation
         $Success = $?
         $LastExecutionTimeSpan = if (@(Get-History).Count -gt 0) {
@@ -8709,7 +8706,7 @@ function PromptUserAndExecutionTimer {
         else {
             New-TimeSpan
         }
-    
+
         $LastExecutionShortTime = if ($LastExecutionTimeSpan.Days -gt 0) {
             "$($LastExecutionTimeSpan.Days + [Math]::Round($LastExecutionTimeSpan.Hours / 24, 2)) d"
         }
@@ -8729,14 +8726,14 @@ function PromptUserAndExecutionTimer {
         else {
             "0 s"
         }
-    
+
         if ($Success) {
             Write-Host -Object "[$LastExecutionShortTime] " -NoNewline -ForegroundColor Green
         }
         else {
             Write-Host -Object "! [$LastExecutionShortTime] " -NoNewline -ForegroundColor Red
         }
-    
+
         ### User, removed
         $IsAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
         # Write-Host -Object "$($env:USERNAME)$(if ($IsAdmin){ '[A]' } else { '[U]' }) " -NoNewline -ForegroundColor DarkGreen
@@ -8748,7 +8745,7 @@ function PromptUserAndExecutionTimer {
         Write-Host "[" -NoNewline
         if ($IsAdmin) { Write-Host 'A' -NoNewline -F Red } else { Write-Host -Object 'U' -NoNewline }
         Write-Host "] " -NoNewline
-    
+
         # ### Path
         # $Drive = $pwd.Drive.Name
         # $Pwds = $pwd -split "\\" | Where-Object { -Not [String]::IsNullOrEmpty($_) }
@@ -8892,7 +8889,7 @@ Set-Alias p-ott PromptSlightlyBroken
 #         $Display = "$days, $hours, $minutes"
 #         Write-Output $Display
 #     }
-# 
+#
 #     if ($host.name -eq 'ConsoleHost') {
 #         fff
 #         $Shell = $Host.UI.RawUI
@@ -8931,7 +8928,7 @@ Set-Alias p-ott PromptSlightlyBroken
 #         Write-Host "[" -noNewLine
 #         Write-Host $($(Get-Location).Path.replace($home,"~")) -ForegroundColor Yellow -noNewLine
 #         Write-Host $(if ($nestedpromptlevel -ge 1) { '>>' }) -noNewLine
-#         Write-Host "] " 
+#         Write-Host "] "
 #         $Shell = $Host.UI.RawUI
 #         $Shell.BackgroundColor = "Black"
 #         $Shell.ForegroundColor = "White"
@@ -8960,20 +8957,20 @@ Set-Alias p-ott PromptSlightlyBroken
 ###   # $GitPromptSettings.DefaultPromptBeforeSuffix.Text = '`n$([DateTime]::now.ToString("MM-dd HH:mm:ss"))'
 ###   # $GitPromptSettings.DefaultPromptBeforeSuffix.ForegroundColor = 0x808080
 ###   # $GitPromptSettings.DefaultPromptSuffix = ' $((Get-History -Count 1).id + 1)$(">" * ($nestedPromptLevel + 1)) '
-###   
+###
 ###   # More advanced:
 ###   # https://hodgkins.io/ultimate-powershell-prompt-and-git-setup
-###   
+###
 ###   # Alternatives:
 ###   # $host.UI.RawUI.WindowTitle = "Windows PowerShell: ...  $path  ..."
 ###   # Get current time: # $date = Get-Date -Format 'ddd, MMM dd' # $time = Get-Date -Format 'hh:mm:ss'
-###   
+###
 ###   # Changes PowerShell prompt to current folder only (shorter prompt) in lowercase.
 ###   # function prompt {
 ###   #     "$((Get-Location | Split-Path -leaf).ToLower())> "
 ###   # }
-###   
-###   # function global:prompt {    
+###
+###   # function global:prompt {
 ###   #     # ### Path
 ###   #     # $Drive = $pwd.Drive.Name
 ###   #     # $Pwds = $pwd -split "\\" | Where-Object { -Not [String]::IsNullOrEmpty($_) }
@@ -8992,11 +8989,11 @@ Set-Alias p-ott PromptSlightlyBroken
 ###   #     # }
 ###   #     # else { "" }
 ###   #     # Write-Host -Object "$Drive`:\$PwdPath" -NoNewline
-###   # 
+###   #
 ###   #     Write-Host $pwd -NoNewline
 ###   #     return "> "
 ###   # }
-###   
+###
 ###   #  View current prompt with: (get-item function:prompt).scriptblock   or   cat function:\prompt
 
 
@@ -9050,7 +9047,7 @@ Set-Alias p-ott PromptSlightlyBroken
 #         $cdelim = [ConsoleColor]::DarkCyan
 #         $chost = [ConsoleColor]::Green
 #         $cloc = [ConsoleColor]::Cyan
-#         
+#
 #         write-host "$([char]0x0A7) " -n -f $cloc
 #         write-host ([net.dns]::GetHostName()) -n -f $chost
 #         write-host ' {' -n -f $cdelim
@@ -9061,7 +9058,7 @@ Set-Alias p-ott PromptSlightlyBroken
 #     if ($MyInvocation.InvocationName -eq "PromptShortenPath") {
 #         "`nWarning: Must dotsource '$($MyInvocation.MyCommand)' or it will not be applied to this session.`n`n   . $($MyInvocation.MyCommand)`n"
 #     } else {
-#         . prompt 
+#         . prompt
 #     }
 # }
 
@@ -9204,7 +9201,7 @@ function New-BackgroundProcess {
 
 # gohash options:
 # key-value hash table: could have multi-keys / mulit-values. This is possible but maybe too much hassle.
-# 
+#
 # co same as cc but open the folder in windows explorer (could also add work locations etc)
 # we can completely replace cd, if a shortcut is issued, 1. check if there is a *real* folder of that name in pwd, 2. use the gohash shortcut.
 # Good to replace the cd shortcut in this way
@@ -9299,7 +9296,7 @@ function logview ($app, $num) {
 
 Set-Alias logs logview
 
-function wh ($search, $path, $index, [switch]$size, [switch]$bare) { 
+function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
     # Could add a switch to tries --version, -version, --ver, -ver, --v, -v, /?  to see if get output from the program
     # Could add a switch to get internal version of executable:
     #    (Get-Item C:\Windows\System32\Lsasrv.dll).VersionInfo.FileVersion
@@ -9331,7 +9328,7 @@ function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
             elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
             else {""}
         }
-        
+
         $count = 0
                                                                             # i(?:n(?:d(?:e(?:x)?)?)?)? or i(?:n(?:d(?:ex?)?)?)?) are equivalent
         if ([string]::IsNullOrWhiteSpace($path) -or $path -match "^\d+$" -or $path -match "\-(?:i(?:n(?:d(?:e(?:x)?)?)?)?)?") {    # In this case, we use $path as if it was $index (!), just pretend
@@ -9423,7 +9420,7 @@ function whdups {
     foreach ($path in $paths) {
         if (Test-Path $path) { $files += (gci $path -af | select Name).Name }   # Need ( ).Name so that we just have an array of strings. -af shorthand for -Attributes Files
     }
-    
+
     # Find all NON-unique items in an array (tried various ways, but as usual, PowerShell has a very efficient way to do this)
     $dups = $files | Group-Object | Where-Object {$_.Count -gt 1}
     foreach ($d in ($dups | sort).Name) {
@@ -9436,7 +9433,7 @@ function whdups {
     #   $hash = @{}
     #   $files | foreach { $hash["$_"] += 1 }   # $hash["filename"] will increment for each found item
     #   $has.keys | where {$hash["$_"] -gt 1} | foreach { write-host "Duplicate element found $_" }   # Find keys that are more than 1 in size
-    
+
     # Can use the above for any generic dedupe process, such as for media/films:
     # i.e. Collect a hash of all Names and put all paths into the values. Then compare the paths for sizes etc and present the output
 }
@@ -9528,9 +9525,9 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [s
         $PathToDestination = "$($PathToDestination)__$($dtnow).zip"
         if ($7z -ne "") {
             echo "$7z a -y -r -t7zip $compress $PathToDestination $FilesAndOrFoldersToZip"
-            & $7z "a" "-y" "-r" "-tzip" "$compress" "$PathToDestination" "$FilesAndOrFoldersToZip" 
+            & $7z "a" "-y" "-r" "-tzip" "$compress" "$PathToDestination" "$FilesAndOrFoldersToZip"
         }
-        else { 
+        else {
             # Don't really want to use PowerShell method but will if 7z.exe is not available
             if ($FilesAndOrFoldersToZip -match '\\$') {
                 # Use -LiteralPath with "\" at end of line to recurve whole folder with Compress-Archive
@@ -9541,7 +9538,7 @@ function zip ($FilesAndOrFoldersToZip, $PathToDestination, [switch]$sevenzip, [s
             }
         }
     }
-}   
+}
 
 # https://blogs.msmvps.com/russel/2017/04/28/resizing-the-powershell-console/
 function lll {
@@ -9620,7 +9617,7 @@ function ccc {
     }
 }
 
-# Template for future use ... can be handy 
+# Template for future use ... can be handy
 function Move-Mouse {
     # Load Required Assemblies
     Add-Type -AssemblyName System.Windows.Forms
@@ -9751,7 +9748,7 @@ function Install-NotepadPlusPlus {
         $command = @'
 cmd.exe /C "C:\Program Files (x86)\Notepad++\uninstall.exe" /S
 '@ ; if (Test-Path "C:\Program Files (x86)\Notepad++\uninstall.exe") { Invoke-Expression -Command:$command }
-        
+
         $command = @'
 cmd.exe /C "C:\Program Files\Notepad++\uninstall.exe" /S
 '@ ; if (Test-Path "C:\Program Files\Notepad++\uninstall.exe") { Invoke-Expression -Command:$command }
@@ -9785,8 +9782,8 @@ cmd.exe /C "C:\Program Files\Notepad++\uninstall.exe" /S
     # x86 : cmd.exe /C reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" /v "Debugger" /t REG_SZ /d "\"%ProgramFiles(x86)%\Notepad++\notepad++.exe\" -notepadStyleCmdline -z" /f
     # x64 : cmd.exe /C reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" /v "Debugger" /t REG_SZ /d "\"%ProgramFiles%\Notepad++\notepad++.exe\" -notepadStyleCmdline -z" /f
     # cmd alternative syntax with reg add: reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" /v "Debugger" /t REG_SZ /d "\"%ProgramFiles(x86)%\Notepad++\notepad++.exe\" -notepadStyleCmdline -z" /f
-    
-    # Not sure why I was testing for the existence of notepad.exe, I think should always force the insertion of this 
+
+    # Not sure why I was testing for the existence of notepad.exe, I think should always force the insertion of this
     # if (Test-Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe") {
     "- Override Default Text Editor (Notepad -> Notepad++) by updating Registry"
     New-Item -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe" -Force | Out-Null
@@ -9794,7 +9791,7 @@ cmd.exe /C "C:\Program Files\Notepad++\uninstall.exe" /S
     # }
 
     # Make Notepad++ the default association for files with no extension (such as "Dockerfile")
-    # Even though VSCode will be used for editing those, Notepad++ should be default for all text file types.    
+    # Even though VSCode will be used for editing those, Notepad++ should be default for all text file types.
     # assoc .txt="Notepad"
     # ftype "Notepad"="C:\Program Files (x86)\Notepad++\notepad++.exe" "%1"
     # https://www.file-extensions.org/article/set-default-program-for-files-with-no-extension-in-windows
@@ -9807,7 +9804,7 @@ cmd.exe /C "C:\Program Files\Notepad++\uninstall.exe" /S
     $command = @'
     cmd.exe /C ftype ""No Extension""=""C:\Program Files\Notepad++\notepad++.exe"" ""%1""
 '@ ; Invoke-Expression -Command:$command | Out-Null
-    
+
     # Main app customisations:
     # - turn off updates (chocolatey will handle updates via "cup all" to prevent the annoying "do you want to upgrade?" prompts)
     # - replace tabs by spaces
@@ -9841,7 +9838,7 @@ cmd.exe /C "C:\Program Files\Notepad++\uninstall.exe" /S
     #    <GUIConfig name="AppPosition" x="0" y="0" width="1100" height="700" isMaximized="yes" />
     #    <GUIConfig name="RememberLastSession">yes</GUIConfig>
     #    <GUIConfig name="auto-completion" autoCAction="3" triggerFromNbChar="1" autoCIgnoreNumbers="no" funcParams="yes" />
-    #    <GUIConfig name="ScintillaPrimaryView" lineNumberMargin="show" bookMarkMargin="show" indentGuideLine="show" folderMarkStyle="box" lineWrapMethod="aligned" 
+    #    <GUIConfig name="ScintillaPrimaryView" lineNumberMargin="show" bookMarkMargin="show" indentGuideLine="show" folderMarkStyle="box" lineWrapMethod="aligned"
     #      currentLineHilitingShow="show" scrollBeyondLastLine="no" disableAdvancedScrolling="no" wrapSymbolShow="hide" Wrap="yes" borderEdge="yes" edge="no"
     #      edgeNbColumn="80" zoom="0" zoom2="0" whiteSpaceShow="hide" eolShow="hide" borderWidth="2" smoothFont="no" />
     $xml.Save($npp_config)
@@ -9862,11 +9859,11 @@ function Install-Steam ($SetupFolder) {
     # Launch Steam and log into your account.
     # Steam will briefly update and then you will be logged into your account. For installed games, verify your game cache files and you will be ready to play. All future game content will be downloaded to the new folder (D:\Games\Steam\SteamApps\ in this example)
     # If the updating fails, rerunning the Steam installer pointing at the new location correct that.
-    # 
+    #
     # Best approacb might be:
     # test for Steam install in usual C: locations.
     # If there, move the SteamApps folder to the chosen folder
-    # Install Steam to that folder so that the Steam games are then 
+    # Install Steam to that folder so that the Steam games are then
 }
 
 function Install-ConsoleColors {
@@ -10157,13 +10154,13 @@ Useful so these are available when working offline
     # cinst vscode-settingssync -y     # 1.0.0.0 [Approved]
 
     # There are other extensions in chocolately, but the above seem generally useful to pre-install
-    # there is also a way to install extensions using 'code.exe' 
+    # there is also a way to install extensions using 'code.exe'
     # You can see the full name for extensions from: C:\Users\<user>\.vscode\extensions
     # or by going to extensions manager in VS Code and searching for an extension
     # code --list-extensions
     # code --install-extension ms-vscode.csharp
     # code --uninstall-extension ms-vscode.csharp
-    
+
     # code --install-extension ms-vscode.csharp
     # code --install-extension ms-vscode.powershell
     # code --install-extension ms-python.python
@@ -10196,13 +10193,13 @@ Useful so these are available when working offline
     # Welcome to .NET Core 3.1!
     # ---------------------
     # SDK Version: 3.1.403
-    # 
+    #
     # Telemetry
     # ---------
     # The .NET Core tools collect usage data in order to help us improve your experience. The data is anonymous. It is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-    # 
+    #
     # Read more about .NET Core CLI Tools telemetry: https://aka.ms/dotnet-cli-telemetry
-    # 
+    #
     # ----------------
     # Explore documentation: https://aka.ms/dotnet-docs
     # Report issues and find source on GitHub: https://github.com/dotnet/core
@@ -10252,7 +10249,7 @@ function Install-7Zip {
         $command = @'
 cmd.exe /C "C:\Program Files (x86)\7-Zip\uninstall.exe" /S
 '@ ; if (Test-Path "C:\Program Files (x86)\7-Zip\uninstall.exe") { Invoke-Expression -Command:$command }
-        
+
         $command = @'
 cmd.exe /C "C:\Program Files\7-Zip\uninstall.exe" /S
 '@ ; if (Test-Path "C:\Program Files\7-Zip\uninstall.exe") { Invoke-Expression -Command:$command }
@@ -10279,7 +10276,7 @@ function Install-7ZipDownloadOnly {
     $table  = $page.ParsedHtml.getElementsByTagName('table')[0]
     $ver    = $table.cells[1].getElementsByTagName('p')[0].innertext.split()[2,3]
     "Current Version: {0} {1}" -f $ver[0], $ver[1]
-    
+
     # Method 2: Use regex ( -match ) with $page
     # Note on regex with html:
     # https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags
@@ -10297,11 +10294,11 @@ function Install-7ZipDownloadOnly {
         )[-1] -split 'href="'
         )[1] -split '"'
         )[0]
-    
+
     $DL_ver = $RelativeLink.Split('z')[1].Split('.')[0]
     $DL_link = -Join($urlPrefix, $RelativeLink)
     $DL_file = ($DL_link -Split('/'))[-1]
-    
+
     $DL_ver
     $DL_link
     $start_time = Get-Date
@@ -10456,7 +10453,7 @@ https://us8.list-manage.com/subscribe?u=86a6d80146a0da7f2223712e4&id=73b018498d 
 
 Selected packages:
    cinst -y 7zip notepadplusplus GoogleChrome Firefox microsoft-windows-terminal bitdefenderavfree greenshot
-   cinst -y vscode visualstudiocode javaruntime jre8 autohotkey python3 
+   cinst -y vscode visualstudiocode javaruntime jre8 autohotkey python3
    cinst -y anydesk teamviewer citrix-receiver hamachi zerotier-one filezilla filezilla.server skype
    cinst -y synergy ultramon displayfusion inputdirector sharemouse
    cinst -y mpc-hc-clsid2 bbc-iplayer handbrake ffmpeg virtualdub yacreader Paint.NET Gimp ImageMagick
@@ -10465,7 +10462,7 @@ Selected packages:
    cinst -y PowerToys vlc rufus   # Win10 PowerToys, VLC (I prefer MPC-HC), Rufus (create bootable USB stick)
    cinst -y git azure-cli azurepowershell nextcloud putty putty.portable
    cinst -y sql-server-express sql-server-management-studio
-   cinst -y DotNet4.5.2 DotNet4.6.1 dotnet4.6.2 KB2919355 KB2919442 KB2999226 KB3033929 KB3035131 
+   cinst -y DotNet4.5.2 DotNet4.6.1 dotnet4.6.2 KB2919355 KB2919442 KB2999226 KB3033929 KB3035131
    cinst -y vcredist140 vcredist2013 vcredist2015 visualstudio2017-installer visualstudio2017community
    cinst -y steam -ia "INSTALLDIR=""D:\0 Cloud\Steam"""            # Install Steam to my preferred custom folder
    cinst -y goggalaxy -ia "INSTALLDIR=""D:\0 Cloud\GOG Galaxy"""   # Install GOG Galaxy to my preferred custom folder
@@ -10477,7 +10474,7 @@ Selected packages:
    cinst -y dotnet3.5 dotnet4.5 vcredist2005 vcredist2008 vcredist2010 vcredist2012 vcredist2013   # dotnet4.6 is redundant, part of Win10 build
    cinst -y rdmfree terminals rdcman rdtabs mRemoteNG tightvnc ultravnc filezilla filezilla.server
    cinst -y lightshot greenshot sharex screenpresso
-   cinst -y chromium 
+   cinst -y chromium
    cinst -y wamp-server tomcat apache
 "@ | more
 }
@@ -10525,7 +10522,7 @@ cinst -y PowerToys      # The new PowerToys for Windows 10 0.11.0
 function Help-ChocoFileSearch {
 @"
 
-astrogrep    # regex file search GUI 
+astrogrep    # regex file search GUI
 ag           # regex file search console "silversearcher"
 ant-renamer  # multiple file renamer GUI
 advanced-renamer
@@ -10540,7 +10537,7 @@ https://chocolatey.org/packages?q=games
 https://steamcommunity.com/sharedfiles/filedetails/?id=1167945
 https://developer.valvesoftware.com/wiki/Command_Line_Options
 
-### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put 
+### Note on organisation: To keep my OS clean / easy to rebuild, I install games outside of the C: drive, so I put
 ### Steam/Uplay/Gog into a "cloud apps" folder (as they download and sync from online), so I put these into
 ### "D:\0 Cloud" (the "0" is just to sort some folders before other folders, similarly "D:\0 Backup"). With this
 ### setup, I can either install Steam to "C:\Program Files\Steam" and then move "steamapps" to "D:\0 Cloud\Steam\steamapps",
@@ -10553,16 +10550,16 @@ https://developer.valvesoftware.com/wiki/Command_Line_Options
 cinst -y steam -ia "INSTALLDIR=""D:\0 Cloud\Steam"""            # Install Steam to my preferred custom folder (tested and working)
 # cinst -y uplay
 cinst -y uplay -ia "INSTALLDIR=""D:\0 Cloud\Uplay"""            # Install Ubisoft Uplay to my preferred custom folder (to test/fix)
-cinst -y goggalaxy          
+cinst -y goggalaxy
 cinst -y goggalaxy -ia "INSTALLDIR=""D:\0 Cloud\GOG Galaxy"""   # Install GOG Galaxy to my preferred custom folder (to test/fix)
 cinst -y epicgameslauncher  # The Epic Games Launcher obtains the Unreal Game Engine, modding tools and other Epic Games like Fortnite and the new Epic Games Store (Epic Games Account Required).
-cinst -y legendary          # Alternative Epic Games Launcher        
+cinst -y legendary          # Alternative Epic Games Launcher
 cinst -y bethesdanet        # Bethesda Games
 cinst -y battle.net         # Login for World of Warcraft, StarCraft II, Diablo III, and Hearthstone: Heroes of Warcraft
 cinst -y itch               # Install, update and play indie games.
 cinst -y butler             # butler is the itch.io command-line tools for uploading games to itch.io
 cinst -y cockatrice         # Multiplatform supported program for playing tabletop card games over a network in C++/Qt with support for both Qt4 and Qt5.
-cinst -y gdlauncher         # Minecraft launcher. 
+cinst -y gdlauncher         # Minecraft launcher.
 cinst -y voobly             # Voobly gaming network launcher, to play various games like Age of Empires II with other people.
 cinst -y playnite           # Game library manager and launcher with support for Steam, GOG, Origin, Battle.net and Uplay.
 cinst -y minetest           # Open source voxel game engine. Play or mod a game to your own liking, and play on multiplayer server.
@@ -10585,7 +10582,7 @@ cinst -y game-collector               # Game Database, catalog your game collect
 cinst -y gamedownloader.install       # Portable and open source download client. # gamedownloader.portable
 cinst -y game-key-revealer.portable   # Recover Game Keys
 cinst -y gameplay-time-tracker        # Learn time spent on computer games.
-cinst -y gamesavemanager              # GameSave Manager, backup, restore and transfer your gamesave(s). 
+cinst -y gamesavemanager              # GameSave Manager, backup, restore and transfer your gamesave(s).
 cinst -y geforce-game-ready-driver    # NVIDIA GeForce Game Ready Driver
 cinst -y cheatengine                  # Open source tool designed to help modify single player games to make harder or easier (e.g: Find that 100hp is too easy, try playing a game with a max of 10 HP), and also contains other useful tools to debug games and even normal applications.
 cinst -y antimicro                    # Graphically map keyboard buttons and mouse controls to a gamepad.   # antimicro.install, antimicro.portable
@@ -10601,7 +10598,7 @@ cinst -y wowcrypt                     # World of Warcraft Community API Project.
 cinst -y wow-stat                     # World of Warcraft server uptime monitor.
 cinst -y geforce-experience           # The easiest way to update your drivers, optimise your games, and share your victories.
 cinst -y nvidia-geforce-now           # Web based game streaming, powered by NVIDIA.
-cinst -y nvidia-profile-inspector     # modifying game profiles inside the internal driver database of the nvidia driver. 
+cinst -y nvidia-profile-inspector     # modifying game profiles inside the internal driver database of the nvidia driver.
 cinst -y opentrack                    # head tracking software to relay information to games and flight simulation software.
 cinst -y openal                       # Cross-platform 3D audio API appropriate for use with gaming applications and many other types of audio applications.
 cinst -y moddb.extension              # moddb.com website functions to extract download url from moddb.com website for a specific Mod.
@@ -10661,7 +10658,7 @@ cinst -y eduactiv8       # eduActiv8 (formerly pySioGame) is a free cross-platfo
 cinst -y blitz burgertime centipede donkeykong frogger galaxian lunarlander millipede minipacman monkeyacademy misslecommand pacman snake superburgertime   # PJ Crossley's remakes of the classic games (2017). http://pjsfreeware.synthasite.com
 cinst -y bunnyhop        # PJ Crossley original game.
 cinst -y sgt-puzzles     # Simon Tatham, collection of small one-player puzzle games
-   # Black Box, Bridges, Cube, Dominosa, Fifteen, Filling, Flip, Flood, Galaxies, Guess, Inertia, Keen, Light Up, Loopy, Magnets, 
+   # Black Box, Bridges, Cube, Dominosa, Fifteen, Filling, Flip, Flood, Galaxies, Guess, Inertia, Keen, Light Up, Loopy, Magnets,
    # Map, Mines,Net, Netslide, Palisade, Pattern, Pearl, Pegs, Puzzles Manual, Puzzles Web Site, Range, Rectangles, Same Game,
    # Signpost, Singles, Sixteen, Slant, Solo, Tents, Towers, Tracks, Twiddle, Undead, Unequal, Unruly, Untangle
 "@ | more
@@ -10670,14 +10667,14 @@ cinst -y sgt-puzzles     # Simon Tatham, collection of small one-player puzzle g
 function Help-ChocoProgrammingLanguages {
 @"
 
-cinst -y autohotkey python3 
-cinst -y activeperl strawberryperl 
+cinst -y autohotkey python3
+cinst -y activeperl strawberryperl
 cinst -y python python2 python3 pygtk-all-in-one_win32_py2.7
 cinst -y ruby rails
 cinst -y golang
 cinst -y clojure.clr dmd scala erland ocaml php5-dev gtksharp qt-sdk-windows-x86-msvc2013_opengl
 cinst -y java
-cinst -y javaruntime adobeair silverlight 
+cinst -y javaruntime adobeair silverlight
 cinst -y sharpdevelop linqpad   # LINQ
 
 # Note that python3 installs to C:\Python38 and javaruntime installs (both 32-bit and 64-bit versions).
@@ -10731,11 +10728,11 @@ cinst -y dotnetcore-sdk # Install the latest .NET Core SDK to build .NET apps on
 cinst -y dotnet3.5      # Equivalent DISM command (note that this covers .NET 2.0 and 3.5):  dism /online /Enable-Feature /Featurename:NetFx3
 cinst -y dotnet4.5      # To get latest 4.5.x install this package (will install current latest 4.5.2)
 cinst -y dotnet4.6      # Not required on Win 10 as part of build
-cinst -y vcredist2005 
-cinst -y vcredist2008 
-cinst -y vcredist2010 
-cinst -y vcredist2012 
-cinst -y vcredist2013 
+cinst -y vcredist2005
+cinst -y vcredist2008
+cinst -y vcredist2010
+cinst -y vcredist2012
+cinst -y vcredist2013
 cinst -y msaccess2010-redist
 cinst -y directx        # Still required by many games
 cinst -y webpicmd       # Microsoft Web Platform Installer for IIS
@@ -10810,7 +10807,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-L
 # cinst -y enfs4win
 
 ### The below are mostly redundant if using WSL
-cinst -y gow 
+cinst -y gow
 cinst -y lili      # Linux Live USB Installer: create USB installers for all Linux distros
 cinst -y wubi      # Windows based Ubuntu Installer
 cinst -y xming     # X Server for Windows
@@ -10871,7 +10868,7 @@ cinst -y poderosa-terminal-net40   # 2016-12-05 (P) :: SSH Client for Windows ::
 
 "@ | more
 }
-    
+
 function Help-ChocoScreenCapture {
 @"
 
@@ -10883,7 +10880,7 @@ cinst -y screenpresso  # Screen capture, including scrolling parts
 }
 function Help-ChocoKeyboardVideoMouse {
 @"
-    
+
 # Using a single Keyboard-Mouse with multiple systems
 cinst -y synergy
 cinst -y ultramon
@@ -10895,7 +10892,7 @@ cinst -y sharemouse
 
 function Help-ChocoBrowsers {
 @"
-    
+
 cinst -y chrome firefox microsoft-edge-insider
 cinst -y chromium
 cinst -y opera
@@ -10984,7 +10981,7 @@ function Help-ChocoSystemAndBenchmarking {
 aws-monitor-diskusage # 2016-05-16 Amazon no longer provides their monitoring  scripts for Windows.  Contains an updated AWS disk monitoring script for Windows and schedules it to run every 5 minutes to post metrics to AWS Cloudwatch. :: ATTENTION: This is a licensing compliant, modified, derative work, please see "UPDATE LOG" in the script comments for the changes made.
 # https://www.cpubenchmark.net/cpu_list.php   # Enter model number to get comparisons
 
-cinst -y speccy 
+cinst -y speccy
 cinst -y siw                    # System Information for Windows
 cinst -y aida64-business
 cinst -y aida64-engineer
@@ -10994,7 +10991,7 @@ cinst -y hardware-identify      # 2019-04-24 A program to identify and give info
 cinst -y libre-hardware-monitor # 2020-10-09 Fork of Open Hardware Monitor.
 cinst -y OpenHardwareMonitor    # 2020-06-19 Open source software that monitors temperature sensors, fan speeds, voltages, load and clock speeds of a computer :: Open Hardware Monitor supports most hardware monitoring chips found on todays mainboards. The CPU temperature can be monitored by reading the core temperature sensors of Intel and AMD processors. The sensors of ATI and Nvidia video cards as well as SMART hard drive temperature can be displayed. The monitored values can be displayed in the main window, in a customizable desktop gadget, or in the system tray. The free Open Hardware Monitor software runs on 32-bit and 64-bit Microsoft Windows XP / Vista / 7 and any x86 based Linux operating systems without installation.
 cinst -y belarcadvisor :: 8.5 :: Published 2016-01-18 :: The Belarc Advisor builds a detailed profile of your installed software and hardware, network inventory, missing Microsoft hotfixes, anti-virus status, security benchmarks, and displays the results in your Web browser :: **Belarc**, located in Maynard, MA, allows users to simplify and automate the management of all of their desktops, servers and laptops throughout the world, using a single database and Intranet server. Belarc's products automatically create an accurate and up-to-date central repository (CMDB), consisting of detailed software, hardware and security configurations.
-cinst -y cpu-z 
+cinst -y cpu-z
 cinst -y dataram-ramdisk       # 2017-03-16 Create a virtual disk drive in RAM
 cinst -y winfontsview :: 1.10 :: Published 2015-04-02 :: View samples of Windows fonts installed on your system :: WinFontsView is a small utility that enumerates all fonts installed on your system, and displays them in one simple table.
 cinst -y cinebench :: 20.0.0.1 :: Published 2019-10-01 :: Cinebench is a real-world cross platform test suite that evaluates your computer's performance capabilities. :: Cinebench is a real-world cross-platform test suite that evaluates your computer's hardware capabilities. Improvements to Cinebench Release 20 reflect the overall advancements to CPU and rendering technology in recent years, providing a more accurate measurement of Cinema 4D's ability to take advantage of multiple CPU cores and modern processor features available to the average user. Best of all: It's free.
@@ -11026,18 +11023,18 @@ cinst -y monitorinfoview :: 1.22 :: Published 2020-08-23 :: View essential infor
 
 function Help-ChocoDisksAndPartitioning {
     @"
-    
+
     # USB image tools
     cinst -y rufus                 # Create bootable USB drives from Windows and Linux images :: Rufus is a utility that helps format and create bootable USB flash drives, such as USB keys/pendrives, memory sticks, etc.
     cinst -y autobootdisk          # 2018-04-06 Bootable USB tool
-    
+
     # Disk Partitioning tools
     cinst -y partitionwizard       # 12.1.01 :: Published 2020-08-28 :: Free partition manager :: MiniTool Partition Wizard Free helps users to manage disks and partitions, check file system, align SSD partition, migrate OS to SSD, clone disk, convert MBR to GPT, etc.
     cinst -y PartitionMasterFree   # 13.5 :: Published 2019-10-21 :: Free (for personal use) and Easy-to-use Disk Management Software. :: EaseUS Partition Master Free Edition is a partition solution and disk management utility. It allows you to extend partition, especially for system drive, settle low disk space problem, manage disk space easily on MBR and GUID partition table (GPT) disk under 32 bit and 64 bit Windows 2000/XP/Vista/Windows 7 SP1/Windows 8. The most popular hard disk management functions are brought together with powerful data protection including: Partition Manager, Disk and Partition Copy Wizard and Partition Recovery Wizard.
     cinst -y diskgenius            # 5.3.0.1066 :: Published 2020-09-24 :: All-in-one solution, partition manager, disk recovery, etc
-    
+
     cinst -y ntfsinfo              # 2016-07-04 Detailed information about NTFS volumes, including the size and location of the Master File Table (MFT) and MFT-zone, as well as the sizes of the NTFS meta-data files. :: NTFSInfo is a little applet that shows you information about NTFS volumes. Its dump includes the size of a drive's allocation units, where key NTFS files are located, and the sizes of the NTFS metadata files on the volume. This information is typically of little more than curiosity value, but NTFSInfo does show some interesting things. For example, you've probably heard about the NTFS equivalent of the FAT file system's File Allocation Table. Its called the Master File Table (MFT), and it is made up of constant sized records that describe the location of all the files and directories on the drive. What's surprising about the MFT is that it is managed as a file, just like any other. NTFSInfo will show you where on the disk (in terms of clusters) the MFT is located and how large it is, in addition to specifying how large the volume's clusters and MFT records are. In order to protect the MFT from fragmentation, NTFS reserves a portion of the disk around the MFT that it will not allocate to other files unless disk space runs low. This area is known as the MFT-Zone and NTFSInfo will tell you where on the disk the MFT-Zone is located and what percentage of the drive is reserved for it.
-    
+
     # Diagnostics
     cinst -y crystaldiskinfo       # 2020-09-28 HDD/SSD utility software
     cinst -y crystaldiskmark       # 2020-06-28 Small HDD/SDD benchmark utility
@@ -11071,7 +11068,7 @@ function Help-ChocoDisksAndPartitioning {
     # azure-information-protection-unified-labeling-client :: 2.6.111 :: Published 2020-06-09 :: This package contains the azure information protection unified labeling client which can be downloaded and installed by everyone. :: The Azure Information Protection Client allows the user to encrypt content within the usual Microsoft Office product family.
 
 function Help-ChocoNetworking {
-@"        
+@"
 
 ### TCP/IP, DNS, LAN, PING, WIFI, SSL
 cinst -y dns-benchmark :: 1.3.6668.20190425 :: Published 2019-04-29 :: Domain Name Speed Benchmark :: ___
@@ -11098,7 +11095,7 @@ cinst skype mattermost mumble itch
 
 function Help-ChocoWebAndSQLServer {
 @"
-    
+
 ### WAMP, Windows-Apache-MySQL-PHP, Tomcat
 cinst -y wamp-server
 cinst -y tomcat
@@ -11113,7 +11110,7 @@ cinst -y sqlserver-odbcdriver # Microsoft ODBC Driver 17 for SQL Server is a sin
 cinst -y sql-server-express     # SQL Server 2019 Express LocalDB lightweight, can be seamlessly upgraded to full SQL
 cinst -y sqllocaldb             # SQL Server 2017 Express LocalDB 14.0.1000.169
 cinst -y sql-server-2017        # SQL Server 2017 Developer Edition
-cinst -y ssrs                   # SQL Server 2017 Reporting Services 
+cinst -y ssrs                   # SQL Server 2017 Reporting Services
 cinst -y ssdt17                 # SQL Server 2017 Data Tools for Visual Studio Update
 cinst -y mssqlserver2014express # SQL Server 2014 Express SP3 12.2.5000.20190905
 cinst -y sqlserver2014express   # SQL Server 2014 Express, just downloads and starts the installer
@@ -11176,7 +11173,7 @@ cinst -y sql-workbench :: 124.0.0 :: Published 2019-01-30 :: SQL Workbench/J is 
 
 function Help-ChocoPackaging {
 @"
-    
+
 cinst -y insted
 cinst -y lessmsi          # Analyse and extract MSIs.
 cinst -y innosetup
@@ -11186,7 +11183,7 @@ cinst -y resourcesextract
 cinst -y wixtoolset       # Windows Installer XML (WiX) is a toolset that builds Windows installation packages from XML source code. The toolset supports a command line environment that developers may integrate into their build processes to build MSI and MSM setup packages.
 "@ | more
 }
-    
+
 function Help-ChocoMultimedia {
 @"
 
@@ -11227,7 +11224,7 @@ cinst calibre -y    # Read all E-book epub, mobi, etc
 ### Download/offline YouTube videos
 cinst -y youtube-dl
 cinst -y win-youtube-dl
-cinst -y atubecatcher    
+cinst -y atubecatcher
 "@ | more
 }
 
@@ -11262,19 +11259,19 @@ function Get-Choco-Descriptions($x) {
             1 {return $false; break}
         }
     }
-    
+
     $numArgs = $args.Length
     echo "`nAll args   : $args"
     echo "Total args : $numArgs`n"
     for ($i=0; $i -le $numArgs - 1; $i++) { echo "Argument $i : $($args[$i])" }
-    
+
     $now = (Get-Date).GetDateTimeFormats()[77].ToString()   # [datetime]::Now
     $header = "`nStarted search at $($now) for '$($x)'"
     $filetmp = ".\choco-details__$($x)__list.txt"
     $filetxt_time = Get-Date -format "yyyy-MM-dd" # removed __hh-mm
     $previousfiles = Get-ChildItem ".\choco-details__$($x)__*"
     $previousnum = $previousfiles.count
-    
+
     $exitFunction = $false
     if ($previousnum -ne 0) {
         echo "`r`n`r`nExisting file(s):`r`n$($previousfiles)`r`n`r`n"
@@ -11286,7 +11283,7 @@ function Get-Choco-Descriptions($x) {
         }
     }
     if ($exitFunction -eq $true) { return }
-    
+
     echo "$($header)`r`n==============="            # echo "$filetxt `r`n"
 
     [regex]$exclude = "\[Pending\]|broken|packages|Did you know|Features|https|Chocolatey v|^$|being ignored due to|It is recommended that you reboot|A pending system reboot| validations performed|Validation Warnings"
@@ -11303,10 +11300,10 @@ function Get-Choco-Descriptions($x) {
     if ($num -eq 0) { echo "No matches in chocolatey db.`n"; rm ".\choco-details__$($x)__*" > $null; break }
     $found = $num.ToString() + "_found"
     $filetxt = ".\choco-details__$($x)__$($found)__$($filetxt_time).txt"
-    
+
     $m = "matches"; if ($num -eq 1) {$m = "match" }
     $foundlist = "Found $($num) search $($m) for 'choco list $($x)'"
-    
+
     echo "`r`n`r`n$($mat)`r`n==========`r`n"
     foreach ($line in $lines) {
         $pkg = $line.split(" ")[0]
@@ -11315,12 +11312,12 @@ function Get-Choco-Descriptions($x) {
 
         # Use try/catch in case Summary or Description are empty, remember ? => Where-Object
         try { $summary = ($pkginfo | ? { $_ -match "Summary:" }).replace(" Summary:"," ::") }
-        catch { $summary = " ::" } 
+        catch { $summary = " ::" }
         try { $description = ($pkginfo | ? { $_ -match "Description:" }).replace(" Description:"," ::") }
         catch { $description = " ::" }
         if ($summary -eq $description) { $description = "" }    # ignore description if it is same as summary
         if ($description -match '$summary') { $summary = "" }   # ignore summary if it is contained in the description, note '' around the match otherwise will fail with special characters in $summary e.g. "C++"
-        
+
         # Get Published date and trusted/approved date if available. Note that .split uses chararray, while -split uses string to split
         try {
             $published = (( $pkginfo | ? { $_ -match "Published:" } ) -split " Published: ")[1]
@@ -11338,7 +11335,7 @@ function Get-Choco-Descriptions($x) {
             $approve_year  = ($approved -split " ")[2]
             $approved = $approve_year + '-' + $approve_month + '-' + $approve_day
         }
-        catch { $approved = " N.A." } 
+        catch { $approved = " N.A." }
 
         $outpkg = $pkg + " :: " + $ver + " :: Published " + $published + " :: Latest Approval " + $approved + $summary + $description + "`r`n"
         echo $outpkg
@@ -11353,7 +11350,7 @@ function Get-Choco-Descriptions($x) {
     echo $header | Out-File $filetxt   # Must not use -Append when creating file or get an error
     echo $end | Out-File -Append $filetxt
     echo $foundlist | Out-File -Append $filetxt
-    echo ===============`r`n | Out-File -Append $filetxt    
+    echo ===============`r`n | Out-File -Append $filetxt
     $out | Out-File -Append $filetxt
     Remove-Item $filetmp
 
@@ -11452,7 +11449,7 @@ function Choco-Index {
 
             # Use try/catch in case Summary or Description are empty, remember ? => Where-Object
             try { $summary = ($pkginfo | ? { $_ -match "Summary:" }).replace(" Summary:"," ::") }
-            catch { $summary = "  ::" } 
+            catch { $summary = "  ::" }
             try { $description = ($pkginfo | ? { $_ -match "Description:" }).replace(" Description:"," ::") }
             catch { $description = "  ::" }
             if ($summary -eq $description) { $description = "" }    # ignore description if it is same as summary
@@ -11493,7 +11490,7 @@ function Choco-Index {
         echo $header | Out-File $filetxt   # Must not use -Append when creating file or get an error
         echo $end | Out-File -Append $filetxt
         echo $foundlist | Out-File -Append $filetxt
-        echo ===============`r`n | Out-File -Append $filetxt    
+        echo ===============`r`n | Out-File -Append $filetxt
         $out | Out-File -Append $filetxt
         Remove-Item $filetmp
     }
@@ -11533,8 +11530,8 @@ function Remove-HiddenAttribute ($Path, [switch]$Recurse) {
     <#
     Purpose: change the Attributes of "Hidden" folder to "Normal"
     website: http://www.amandhally.net/blog
-    blog: http://newdelhipowershellusergroup.blogspot.com/               /^(o.o)^\ 
-    more info: http://newdelhipowershellusergroup.blogspot.com/2012/01/script-to-reset-hidden-files-and.html 
+    blog: http://newdelhipowershellusergroup.blogspot.com/               /^(o.o)^\
+    more info: http://newdelhipowershellusergroup.blogspot.com/2012/01/script-to-reset-hidden-files-and.html
     #>
     if ($Recurse -eq $true) { $r = "-Recurse" }
     $Items = Get-ChildItem -Path $path -Force  $r
@@ -11554,15 +11551,15 @@ function Masquerade-PEB {
         function will overwrite powershell's "ImagePathName" & "CommandLine" in
         _RTL_USER_PROCESS_PARAMETERS and the "FullDllName" & "BaseDllName" in the
         _LDR_DATA_TABLE_ENTRY linked list.
-        
+
         This can be useful as it would fool any Windows work-flows which rely solely
         on the Process Status API to check process identity. A practical example would
         be the IFileOperation COM Object which can perform an elevated file copy if it
         thinks powershell is really explorer.exe ;)!
-    
+
         Notes:
           * Works on x32/64.
-        
+
           * Most of these API's and structs are undocumented. I strongly recommend
             @rwfpl's terminus project as a reference guide!
               + http://terminus.rewolf.pl/terminus/
@@ -12038,7 +12035,7 @@ function Install-ModuleToDirectory {
     # We want to force installation into user space, but there is no command to do this
     # There is a command to force installation to AllUser space: Install-Module <Name> -Scope AllUsers
     # $ModulePath = "$(Split-Path $Profile)\Modules1"   # This is where all modules must go. It should be on path (must add if required)
-    # $ModulePathTest = foreach ($i in ($env:PSModulePath).split(";")) { if ($i -like $ModulePath) { $True } }   # Get 
+    # $ModulePathTest = foreach ($i in ($env:PSModulePath).split(";")) { if ($i -like $ModulePath) { $True } }   # Get
     # if ($ModulePathTest -eq $null) { }   # Need to add this if not present
 
     if (!(Test-Path $UserModulePath)) { New-Item $UserModulePath -ItemType Directory -Force }
