@@ -175,8 +175,10 @@ function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size 
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
 function dir/w ($name) { cmd.exe /c dir /w $name }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
 # function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
+function dosdir { cmd.exe /c dir $args }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
+# function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 
-function dirq ($name) {   # quick and dirty Size + Name, work in progress
+function dirquick ($name) {   # quick and dirty Size + Name, work in progress
     $out = ""
     function Format-FileSize([int64]$size) {
         if ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
@@ -201,30 +203,31 @@ function dirq ($name) {   # quick and dirty Size + Name, work in progress
     $out += "$(Format-FileSize($size_total)) : Total Size"
     $out
 }
-Set-Alias dq dirq
-# $out.TrimEnd("  :  ")   # trims whitespace from either size of ":"
+Set-Alias dirq dirquick
+Set-Alias dq dirquick
+Set-Alias qq dirquick
 
-function dirwide ($name) {   # quick and dirty wide listing, work in progress
-    $out = ""
-    function Format-FileSize([int64]$size) {
-        if ($size -gt 1TB) {[string]::Format("{0:0.00}TB", $size / 1TB)}
-        elseif ($size -gt 1GB) {[string]::Format("{0:0.0}GB", $size / 1GB)}
-        elseif ($size -gt 1MB) {[string]::Format("{0:0.0}MB", $size / 1MB)}
-        elseif ($size -gt 1KB) {[string]::Format("{0:0.0}kB", $size / 1KB)}
-        elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
-        else {""}
-    }
+# function dirwide ($name) {   # quick and dirty wide listing, work in progress
+#     $out = ""
+#     function Format-FileSize([int64]$size) {
+#         if ($size -gt 1TB) {[string]::Format("{0:0.00}TB", $size / 1TB)}
+#         elseif ($size -gt 1GB) {[string]::Format("{0:0.0}GB", $size / 1GB)}
+#         elseif ($size -gt 1MB) {[string]::Format("{0:0.0}MB", $size / 1MB)}
+#         elseif ($size -gt 1KB) {[string]::Format("{0:0.0}kB", $size / 1KB)}
+#         elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
+#         else {""}
+#     }
+# 
+#     foreach ($i in (dir $folder | sort Length).FullName) {
+#         if (Test-Path -Path $i -PathType Container) { $size = "[D]" ; $size_out = "[D]" }
+#         else { $size = (gci $i | select length).Length ; $size_out = Format-FileSize($size) }
+#         $out += "$i $size_out  :  "
+#         # $outlength +=
+#     }
+#     $out.TrimEnd("  :  ")
+# }
 
-    foreach ($i in (dir $folder | sort Length).FullName) {
-        if (Test-Path -Path $i -PathType Container) { $size = "[D]" ; $size_out = "[D]" }
-        else { $size = (gci $i | select length).Length ; $size_out = Format-FileSize($size) }
-        $out += "$i $size_out  :  "
-        # $outlength +=
-    }
-    $out.TrimEnd("  :  ")
-}
-
-function dirpaths ($folder, $filter) {   # Remove header information and just show the full paths
+function dirfullname ($folder, $filter) {   # Remove header information and just show the full paths
     try { gci -r $folder -Filter $filter | select -expand FullName -EA silent }
     catch { "crapped out!" }
 }
