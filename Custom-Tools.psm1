@@ -171,10 +171,10 @@ function dir/b ($name) { dir $name | select Name | sort Name }   # Mimic DOS dir
 function dir/s ($name) { dir -Force -Recurse $name }             # Mimic DOS dis/s. Dir with subfolders (-Recurse). Add "-Force" to show also Hidden files.
 function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis/p. Dir page by page. Add "-Force" also to show all files.
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
-function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 # https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
-function dir/w ($name) { cmd.exe /c dir /w }   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
+function dir/w ($name) { cmd.exe /c dir /w $name }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
+# function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 
 function dirq ($name) {   # quick and dirty Size + Name, work in progress
     $out = ""
@@ -201,7 +201,8 @@ function dirq ($name) {   # quick and dirty Size + Name, work in progress
     $out += "$(Format-FileSize($size_total)) : Total Size"
     $out
 }
-# $out.TrimEnd("  :  ")   # trime ous whitespace from either size of ":"
+Set-Alias dq dirq
+# $out.TrimEnd("  :  ")   # trims whitespace from either size of ":"
 
 function dirwide ($name) {   # quick and dirty wide listing, work in progress
     $out = ""
