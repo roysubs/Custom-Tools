@@ -4,18 +4,18 @@ function Get-Shortcut {
   param(
     $path = $null
   )
-  
+
   $obj = New-Object -ComObject WScript.Shell
 
   if ($path -eq $null) {
     $pathUser = [System.Environment]::GetFolderPath('StartMenu')
     $pathCommon = $obj.SpecialFolders.Item('AllUsersStartMenu')
-    $path = dir $pathUser, $pathCommon -Filter *.lnk -Recurse 
+    $path = dir $pathUser, $pathCommon -Filter *.lnk -Recurse
   }
   if ($path -is [string]) {
     $path = dir $path -Filter *.lnk
   }
-  $path | ForEach-Object { 
+  $path | ForEach-Object {
     if ($_ -is [string]) {
       $_ = dir $_ -Filter *.lnk
     }
@@ -49,7 +49,7 @@ function Set-Shortcut {
   begin {
     $shell = New-Object -ComObject WScript.Shell
   }
-  
+
   process {
     $link = $shell.CreateShortcut($LinkPath)
 

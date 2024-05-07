@@ -102,7 +102,7 @@ function Enable-PinnedItemsModule {
     # $Argument = "-ExecutionPolicy Bypass -NoProfile -NoLogo -Command `"& 'C:\users\proxb\desktop\Windbg.exe'`""
     # $Icon = 'C:\users\proxb\desktop\Windbg.exe'
     # New-PinnedItem -TargetPath $TargetPath -ShortCutPath $ShortcutPath -Argument $Argument -Type TaskBar -IconLocation $Icon
-    # Get-PinnedItem -Type StartMenu | Where {$_.Name -eq 'Snipping Tool'} | Remove-PinnedItem 
+    # Get-PinnedItem -Type StartMenu | Where {$_.Name -eq 'Snipping Tool'} | Remove-PinnedItem
 }
 
 function Install-ChrisTitusTools {

@@ -217,7 +217,7 @@ Set-Alias qq dirquick
 #         elseif ($size -gt 0) {[string]::Format("{0:0.0}B", $size)}
 #         else {""}
 #     }
-# 
+#
 #     foreach ($i in (dir $folder | sort Length).FullName) {
 #         if (Test-Path -Path $i -PathType Container) { $size = "[D]" ; $size_out = "[D]" }
 #         else { $size = (gci $i | select length).Length ; $size_out = Format-FileSize($size) }

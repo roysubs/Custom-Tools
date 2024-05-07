@@ -5,7 +5,7 @@ The first thing you need to do is to set your user name and email address. This 
    git config --global user.email roysubs@hotmail.com
 You can Then can see that these are set in
    git config --list --show-origin
-   
+
 Open VS Code and commit Changes to the local project:
 ==========
 File menu > select "Open Folder...", navigate to the git project, and open it.
