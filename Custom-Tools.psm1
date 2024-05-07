@@ -188,7 +188,7 @@ function dirquick ($name) {   # quick and dirty Size + Name, work in progress
         elseif ($size -gt 0) {[string]::Format("{0:0.0} B", $size)}
         else {""}
     }
-    foreach ($i in (dir $folder | sort Length).FullName) {
+    foreach ($i in (dir $folder | sort Length -Descending).FullName) {
         if (Test-Path -Path $i -PathType Container) {
             $size = "[D]"
             $size_out = "[D]"
@@ -4513,6 +4513,27 @@ function Find-ModuleDuplicates {   # Broken WIP I think
     }
     if ($hits -ne "") { echo "" ; echo $hits }
     else { "`nNo duplicate Module folders were found`n" }
+}
+
+
+
+
+function Find-Java {
+    # Check if JAVA_HOME is set
+    if ($null -eq $env:JAVA_HOME) {
+        Write-Host "JAVA_HOME is not set."
+    } else {
+        Write-Host "JAVA_HOME is set to: $($env:JAVA_HOME)"
+    }
+
+    # Check if java.exe is in the PATH
+    $javaExePath = Get-Command java.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+
+    if ($javaExePath) {
+        Write-Host "java.exe found at: $javaExePath"
+    } else {
+        Write-Host "java.exe not found in PATH."
+    }
 }
 
 
