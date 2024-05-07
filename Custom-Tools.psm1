@@ -203,6 +203,62 @@ function dirquick ($name) {   # quick and dirty Size + Name, work in progress
     $out += "$(Format-FileSize($size_total)) : Total Size"
     $out
 }
+
+function dirquick ($folder) {
+    $out = @()
+    $size_total = 0
+
+    function Format-FileSize([int64]$size) {
+        if ($size -gt 1PB) { [string]::Format("{0,5:0.00} TB", $size / 1PB) }
+        elseif ($size -gt 1TB) { [string]::Format("{0,5:0.0} GB", $size / 1TB) }
+        elseif ($size -gt 1GB) { [string]::Format("{0,5:0.0} GB", $size / 1GB) }
+        elseif ($size -gt 1MB) { [string]::Format("{0,5:0.0} MB", $size / 1MB) }
+        elseif ($size -gt 1KB) { [string]::Format("{0,5:0.0} KB", $size / 1KB) }
+        elseif ($size -gt 0) { [string]::Format("{0,5:0.0} B", $size) }
+        else { "0 B".PadLeft(7) }
+    }
+
+    Get-ChildItem $folder | ForEach-Object {
+        if ($_.PSIsContainer) {
+            $size = "[D]"
+            $size_out = "[D]"
+        }
+        else {
+            $size = $_.Length
+            $size_out = Format-FileSize($size)
+            $size_total += $size
+        }
+        $out += [PSCustomObject]@{
+            ActualSize = $size
+            FormattedSize = $size_out
+            Name = $_.Name
+        }
+    }
+
+    # Sort the objects by actual size
+    $out = $out | Sort-Object -Property ActualSize
+
+    # Add a dividing line before the summary
+    $out += [PSCustomObject]@{
+        ActualSize = [int64]::MaxValue  # Ensure this is larger than any other size
+        FormattedSize = "====="
+        Name = ""
+    }
+
+    # Add the total size
+    $out += [PSCustomObject]@{
+        ActualSize = [int64]::MaxValue  # Ensure this is larger than any other size
+        FormattedSize = Format-FileSize($size_total)
+        Name = "Total Size"
+    }
+
+    # Format the output as a table with adjusted column widths
+    # $out | Format-Table -AutoSize -Property @{Label="Size"; Expression={$_.Size.PadLeft(10)}}, @{Label="Name"; Expression={$_.Name}}
+    # $out | Format-Table -AutoSize -Property @{Label="Size"; Expression={$_.Size.PadLeft(5)}; Alignment="right"}, @{Label="Name"; Expression={$_.Name}}
+    # $out | Format-Table -AutoSize -Wrap -Property @{Label="Size"; Expression={$_.Size.PadLeft(10)}; Alignment="right"}, @{Label="Name"; Expression={$_.Name}}
+    $out | Format-Table -AutoSize -Property @{Label="FormattedSize"; Expression={$_.FormattedSize.PadLeft(5)}}, @{Label="Name"; Expression={$_.Name}}
+}
+
 Set-Alias dirq dirquick
 Set-Alias dq dirquick
 Set-Alias qq dirquick
@@ -6096,6 +6152,7 @@ function Start-SubnetQuery {
     }
 }
 
+
 function Format-TableCompact {
     [CmdletBinding()]
     Param (
@@ -6129,7 +6186,7 @@ function Enable-RDP {
     $ts | Invoke-CimMethod -MethodName SetUserAuthenticationRequired -Arguments @{UserAuthenticationRequired=0} | Out-Null
 
     # Enable RDP on the firewall
-    Enable-NetFirewallRule -DisplayName 'Remote Desktop - User Mode (TCP-in)'
+   Enable-NetFirewallRule -DisplayName 'Remote Desktop - User Mode (TCP-in)'
 }
 
 # Based on: Powershell Gallery Open-RDPGUI (2014)
