@@ -173,8 +173,11 @@ function dir/p ($name) { dir -Force $name | more }               # Mimic DOS dis
 function dir/os ($name) { dir $name | sort Length,Name }         # Sort by Size (Length), then by Name.
 # https://poshoholic.com/2010/11/11/powershell-quick-tip-creating-wide-tables-with-powershell/
 # https://stackoverflow.com/questions/1479663/how-do-i-do-dir-s-b-in-powershell
-function dir/w ($name) { cmd.exe /c dir /w $name }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
-# function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
+function dir/w ($name) {   # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
+    cmd.exe /c dir /w $name
+    # function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing with PowerShell
+}
+
 function dosdir { cmd.exe /c dir $args }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
 # function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 
@@ -9430,7 +9433,7 @@ function wh ($search, $path, $index, [switch]$size, [switch]$bare) {
                     if ($path -eq $count) { $jumpto = split-path $i }
                 }
                 if ($bare -ne $true) { if ($size) { "`nTotal Size = $(Format-FileSize($totalsize))" } }
-                if ($bare -ne $true) { "`nAppend one of the above index values to jump to (i.e. cd to) a found directory. e.g. 'wh *.exe 2' will cd to the 2nd found path.`nSpecify '-bare' to only show found result paths." }
+                if ($bare -ne $true) { "`nAppend one of the above index values to jump to (i.e. cd to) a found directory.`ne.g. 'wh *.exe 2' will cd to the 2nd found path.`nSpecify '-bare' to only show found result paths.`n" }
             }
             else {
                 foreach ($i in $results) {
