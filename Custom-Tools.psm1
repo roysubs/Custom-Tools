@@ -5336,7 +5336,7 @@ StringSplitOptions, RemoveEmptyEntries omit empty array elements from the array 
 
             Write-Host ""
             Write-Host ""
-            Write-Host "n========================================" -ForegroundColor Green
+            Write-Host "========================================" -ForegroundColor Green
             Write-Host "Update Help Files if more than $helpolderthan days old." -F Yellow -B Black
             Write-Host "Checking PowerShell Help definitions ..." -F Yellow -B Black
             Write-Host ""
