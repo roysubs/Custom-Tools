@@ -181,36 +181,16 @@ function dir/w ($name) {   # DOS dir/w, wide format (no proper equivalent with G
 function dosdir { cmd.exe /c dir $args }               # DOS dir/w, wide format (no proper equivalent with Get-ChildItem)
 # function dir/w ($name) { dir $name | Format-Wide -AutoSize }     # Wide-listing
 
-function dirquick ($name) {   # quick and dirty Size + Name, work in progress
-    $out = ""
-    function Format-FileSize([int64]$size) {
-        if ($size -gt 1TB) {[string]::Format("{0:0.00} TB", $size / 1TB)}
-        elseif ($size -gt 1GB) {[string]::Format("{0:0.0} GB", $size / 1GB)}
-        elseif ($size -gt 1MB) {[string]::Format("{0:0.0} MB", $size / 1MB)}
-        elseif ($size -gt 1KB) {[string]::Format("{0:0.0} KB", $size / 1KB)}
-        elseif ($size -gt 0) {[string]::Format("{0:0.0} B", $size)}
-        else {""}
-    }
-    foreach ($i in (dir $folder | sort Length -Descending).FullName) {
-        if (Test-Path -Path $i -PathType Container) {
-            $size = "[D]"
-            $size_out = "[D]"
-        }
-        else {
-            $size = (gci $i | select length).Length
-            $size_out = Format-FileSize($size)
-            $size_total += $size
-        }
-        $out += "$size_out`t$(split-path $i -leaf)`n"
-    }
-    $out += "$(Format-FileSize($size_total)) : Total Size"
-    $out
-}
+function quickdir {
+    # Quick Dir
+    [CmdletBinding()]
+    param (
+        [string]$folder = '.',
+        [switch]$NameSort
+    )
 
-function dirquick ($folder) {
     $out = @()
     $size_total = 0
-
     function Format-FileSize([int64]$size) {
         if ($size -gt 1PB) { [string]::Format("{0,5:0.00} TB", $size / 1PB) }
         elseif ($size -gt 1TB) { [string]::Format("{0,5:0.0} GB", $size / 1TB) }
@@ -225,36 +205,40 @@ function dirquick ($folder) {
         if ($_.PSIsContainer) {
             $size = "[D]"
             $size_out = "[D]"
-        }
-        else {
+            $isDir = 1
+        } else {
             $size = $_.Length
             $size_out = Format-FileSize($size)
             $size_total += $size
+            $isDir = 0
         }
         $out += [PSCustomObject]@{
+            IsDirectory = $isDir
             ActualSize = $size
             FormattedSize = $size_out
             Name = $_.Name
         }
     }
-
-    # Sort the objects by actual size
-    $out = $out | Sort-Object -Property ActualSize
-
+    if ($NameSort) {
+        $out = $out | Sort-Object -Property @{Expression="IsDirectory"; Descending=$true}, @{Expression="Name"; Descending=$false}
+    } else {
+        # Sort the objects by actual size
+        $out = $out | Sort-Object -Property @{Expression="IsDirectory"; Descending=$true}, @{Expression="ActualSize"; Descending=$true}
+    }
     # Add a dividing line before the summary
     $out += [PSCustomObject]@{
+        IsDirectory = 0
         ActualSize = [int64]::MaxValue  # Ensure this is larger than any other size
         FormattedSize = "====="
         Name = ""
     }
-
     # Add the total size
     $out += [PSCustomObject]@{
+        IsDirectory = 0
         ActualSize = [int64]::MaxValue  # Ensure this is larger than any other size
         FormattedSize = Format-FileSize($size_total)
         Name = "Total Size"
     }
-
     # Format the output as a table with adjusted column widths
     # $out | Format-Table -AutoSize -Property @{Label="Size"; Expression={$_.Size.PadLeft(10)}}, @{Label="Name"; Expression={$_.Name}}
     # $out | Format-Table -AutoSize -Property @{Label="Size"; Expression={$_.Size.PadLeft(5)}; Alignment="right"}, @{Label="Name"; Expression={$_.Name}}
@@ -262,9 +246,10 @@ function dirquick ($folder) {
     $out | Format-Table -AutoSize -Property @{Label="FormattedSize"; Expression={$_.FormattedSize.PadLeft(5)}}, @{Label="Name"; Expression={$_.Name}}
 }
 
-Set-Alias dirq dirquick
-Set-Alias dq dirquick
-Set-Alias qq dirquick
+Set-Alias dirq quickdir
+Set-Alias dq quickdir
+Set-Alias qq quickdir
+Set-Alias q quickdir
 
 # function dirwide ($name) {   # quick and dirty wide listing, work in progress
 #     $out = ""
