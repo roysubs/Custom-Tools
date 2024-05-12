@@ -2022,11 +2022,12 @@ Get-ColorWheel, Get-Complement, Get-Gradient, New-Hyperlink, New-Text, Write-Hos
 
 
 
-# # Example usage:
-# $filePath = "C:\Users\Boss\Desktop\PowerShell.lnk"
-# Modify-ConsoleLnkFile -FilePath $filePath
 function Modify-ConsoleLnkFile {
     param ( [string]$FilePath )
+
+    # # Example usage:
+    # $filePath = "C:\Users\Boss\Desktop\PowerShell.lnk"
+    # Modify-ConsoleLnkFile -FilePath $filePath
 
     if (-not (Test-Path -Path $FilePath)) {
         Write-Host "ERROR: File not found at the specified path."
@@ -2101,22 +2102,22 @@ function cpl {
     else {
         Write-Host "CPL file or command not found."
     }
-}
 
-# Register tab completion for the cplName parameter
-Register-ArgumentCompleter -CommandName 'cpl' -ParameterName 'cplName' -ScriptBlock {
-    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+    # Register tab completion for the cplName parameter
+    Register-ArgumentCompleter -CommandName 'cpl' -ParameterName 'cplName' -ScriptBlock {
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-    $cplCommands = @(
-        "timedate", "telephon", "TabletPC", "sysdm", "sapi", "appwiz", "powercfg", "bthprops",
-        "desk", "ncpa", "mmsys", "main", "joy", "irprops", "intl", "inetcpl", "hdwwiz", "Firewall",
-        "ControlPanel", "IndexingOptions", "EditEnvironmentVariables", "ClearBrowsingHistory",
-        "SystemPropertiesComputerName", "SystemPropertiesHardware", "SystemPropertiesAdvanced",
-        "SystemPropertiesPerformance", "SystemPropertiesDataExecutionPrevention", "SystemPropertiesProtection",
-        "SystemPropertiesRemote"
-    )
+        $cplCommands = @(
+            "timedate", "telephon", "TabletPC", "sysdm", "sapi", "appwiz", "powercfg", "bthprops",
+            "desk", "ncpa", "mmsys", "main", "joy", "irprops", "intl", "inetcpl", "hdwwiz", "Firewall",
+            "ControlPanel", "IndexingOptions", "EditEnvironmentVariables", "ClearBrowsingHistory",
+            "SystemPropertiesComputerName", "SystemPropertiesHardware", "SystemPropertiesAdvanced",
+            "SystemPropertiesPerformance", "SystemPropertiesDataExecutionPrevention", "SystemPropertiesProtection",
+            "SystemPropertiesRemote"
+        )
 
-    $cplCommands | Where-Object { $_ -like "$wordToComplete*" }
+        $cplCommands | Where-Object { $_ -like "$wordToComplete*" }
+    }
 }
 
 
@@ -8583,7 +8584,7 @@ function TopPS ([string]$SortCol = "Memory", [int]$Top = 30) {
 }
 
 function ErrBlack {
-    # Change Error codes to White on Red background for better readability
+    # Change Error codes to White on Red background for better readability on blue background consoles.
     $Host.PrivateData.ErrorBackgroundColor = "Black"
     $Host.PrivateData.ErrorForegroundColor = "Red"
 
@@ -8593,6 +8594,7 @@ function ErrBlack {
     # $Shell.BackgroundColor = "Black"
     # $Shell.ForegroundColor = "White"
     # $Shell.CursorSize = 10
+    # The only way to do this is to have separate console .lnk that have different colour settings and use them as required.
 }
 
 function Lock-Toolkit {
@@ -8627,7 +8629,15 @@ function Lock-Toolkit {
 
 
 
-
+####################
+#
+# Console Prompts
+#
+####################
+# My ChatGPT on this: https://chat.openai.com/share/91fe9f73-83e7-4fd2-af00-9c32433c9933
+# View current prompt with: (get-item function:prompt).scriptblock   or   cat function:\prompt
+# Never use a prompt with uptime built-in, as it can take up to a second to resolve, meaning that if you
+# paste 20 lines of code onto the prompt, that will take up to 20 seconds to resolve.
 # More Prompt options: https://mshforfun.blogspot.com/2006/05/perfect-prompt-for-windows-powershell.html
 # https://devblogs.microsoft.com/scripting/weekend-scripter-customize-powershell-title-and-prompt/
 # https://github.com/AmrEldib/cmder-powershell-powerline-prompt
@@ -8650,7 +8660,7 @@ function Lock-Toolkit {
 # https://www.jonathanmedd.net/2015/01/how-to-make-use-of-functions-in-powershell.html
 # https://jdhitsolutions.com/blog/powershell/6388/maximizing-my-prompt-in-powershell-core/
 
-function PromptXXX {
+function PromptTesting {
     "$($MyInvocation.InvocationName)"
     "$(($MyInvocation.MyCommand).Name)"
     ""
@@ -8668,6 +8678,7 @@ function PromptXXX {
 # }
 
 function PromptDefault {
+    # Reset the prompt back to its default settings
     # get-help about_Prompt
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_prompts?view=powershell-7
     function global:prompt {
@@ -8685,23 +8696,7 @@ function PromptDefault {
     }
 }
 
-# More simple alternative prompt, need to dotsource this
-function PromptTimeUptime {
-    function global:prompt {
-        # Adds date/time to prompt and uptime to title bar
-        $Elevated = "" ; if (Test-Admin) {$Elevated = "Administrator: "}
-        $up = Uptime
-        $Host.UI.RawUI.WindowTitle = $Elevated + "PowerShell [Uptime: $up]"   # Title bar info
-        $path = Get-Location
-        Write-Host '[' -NoNewline
-        Write-Host (Get-Date -UFormat '%T') -ForegroundColor Green -NoNewline   # $TitleDate = Get-Date -format "dd/MM/yyyy HH:mm:ss"
-        Write-Host '] ' -NoNewline
-        Write-Host "$path" -NoNewline
-        return "> "   # Must have a line like this at end of prompt or you always get " PS>" on the prompt
-    }
-}
-
-function PromptTruncatedPaths {
+function PromptTruncatedPathA {
     # https://www.johndcook.com/blog/2008/05/12/customizing-the-powershell-command-prompt/
     function global:prompt {
         $cwd = (get-location).Path
@@ -8715,7 +8710,7 @@ function PromptTruncatedPaths {
     }
 }
 
-function PromptShortenPath {
+function PromptTruncatedPathB {
     # https://stackoverflow.com/questions/1338453/custom-powershell-prompts
     function global:shorten-path([string] $path) {
         $loc = $path.Replace($HOME, '~')
@@ -8733,9 +8728,9 @@ function PromptShortenPath {
 
         write-host "$([char]0x0A7) " -n -f $cloc
         write-host ([net.dns]::GetHostName()) -n -f $chost
-        write-host ' {' -n -f $cdelim
+        write-host ' <' -n -f $cdelim
         write-host (shorten-path (pwd).Path) -n -f $cloc
-        write-host '}' -n -f $cdelim
+        write-host '>' -n -f $cdelim
         return ' '
     }
 }
@@ -8749,14 +8744,12 @@ function PromptUserAndExecutionTimer {
         if ((New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {$Elevated = "Admin: "}
         $TitleVer = "PS v$($PSVersionTable.PSversion.major).$($PSVersionTable.PSversion.minor)"
         # $($executionContext.SessionState.Path.CurrentLocation.path)
-
-        ### Custom Uptime without seconds (not really necessary)
+        # Custom Uptime without seconds (not really necessary)
         # $wmi = gwmi -class Win32_OperatingSystem -computer "."
         # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
         # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
         # $s = "" ; if ($uptime.Days -ne 1) {$s = "s"}
         # $TitleUp = "[Up: $($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min]"
-
         $Host.UI.RawUI.WindowTitle = "$($Elevated) $($TitleVer)"   # $($TitleUp)"
 
         ### History ID
@@ -8764,43 +8757,32 @@ function PromptUserAndExecutionTimer {
         # Uncomment below for leading zeros
         # $HistoryId = '{0:d4}' -f $MyInvocation.HistoryId
         Write-Host -Object "$HistoryId " -NoNewline -ForegroundColor Cyan
-
-
         ### Time calculation
         $Success = $?
         $LastExecutionTimeSpan = if (@(Get-History).Count -gt 0) {
             Get-History | Select-Object -Last 1 | ForEach-Object {
                 New-TimeSpan -Start $_.StartExecutionTime -End $_.EndExecutionTime
             }
-        }
-        else {
+        } else {
             New-TimeSpan
         }
 
         $LastExecutionShortTime = if ($LastExecutionTimeSpan.Days -gt 0) {
             "$($LastExecutionTimeSpan.Days + [Math]::Round($LastExecutionTimeSpan.Hours / 24, 2)) d"
-        }
-        elseif ($LastExecutionTimeSpan.Hours -gt 0) {
+        } elseif ($LastExecutionTimeSpan.Hours -gt 0) {
             "$($LastExecutionTimeSpan.Hours + [Math]::Round($LastExecutionTimeSpan.Minutes / 60, 2)) h"
-        }
-        elseif ($LastExecutionTimeSpan.Minutes -gt 0) {
+        } elseif ($LastExecutionTimeSpan.Minutes -gt 0) {
             "$($LastExecutionTimeSpan.Minutes + [Math]::Round($LastExecutionTimeSpan.Seconds / 60, 2)) m"
-        }
-        elseif ($LastExecutionTimeSpan.Seconds -gt 0) {
+        } elseif ($LastExecutionTimeSpan.Seconds -gt 0) {
             "$($LastExecutionTimeSpan.Seconds + [Math]::Round($LastExecutionTimeSpan.Milliseconds / 1000, 1)) s"
-        }
-        elseif ($LastExecutionTimeSpan.Milliseconds -gt 0) {
+        } elseif ($LastExecutionTimeSpan.Milliseconds -gt 0) {
             "$([Math]::Round($LastExecutionTimeSpan.TotalMilliseconds, 0)) ms"
             # ms are 1/1000 of a sec so no point in extra decimal places here
-        }
-        else {
-            "0 s"
-        }
+        } else { "0 s" }
 
         if ($Success) {
             Write-Host -Object "[$LastExecutionShortTime] " -NoNewline -ForegroundColor Green
-        }
-        else {
+        } else {
             Write-Host -Object "! [$LastExecutionShortTime] " -NoNewline -ForegroundColor Red
         }
 
@@ -8840,90 +8822,29 @@ function PromptUserAndExecutionTimer {
     }
 }
 
-function PromptSlightlyBroken {
-    # https://community.spiceworks.com/topic/1965997-custom-cmd-powershell-prompt
-
-    # if ($MyInvocation.InvocationName -eq "PromptOverTheTop") {
-    #     "`nWarning: Must dotsource '$($MyInvocation.MyCommand)' or it will not be applied to this session.`n`n   . $($MyInvocation.MyCommand)`n"
-    # } else {
-    if ($host.name -eq 'ConsoleHost') {
-        # fff
-        $Shell = $Host.UI.RawUI
-        $Shell.BackgroundColor = "Black"
-        $Shell.ForegroundColor = "White"
-        $Shell.CursorSize = 10
-    }
-    # $Shell=$Host.UI.RawUI
-    # $size=$Shell.BufferSize
-    # $size.width=120
-    # $size.height=3000
-    # $Shell.BufferSize=$size
-    # $size=$Shell.WindowSize
-    # $size.width=120
-    # $size.height=30
-    # $Shell.WindowSize=$size
-    # $Shell.BackgroundColor="Black"
-    # $Shell.ForegroundColor="White"
-    # $Shell.CursorSize=10
-    # $Shell.WindowTitle="Console PowerShell"
-
+function PromptAdvancedTitleBar {
     function global:Get-Uptime {
-
-        # $wmi = gwmi -class Win32_OperatingSystem -computer "."   # Removed this method as not CIM compliant
-        # $LBTime = $wmi.ConvertToDateTime($wmi.Lastbootuptime)
-        # [TimeSpan]$uptime = New-TimeSpan $LBTime $(get-date)
         $BootUpTime = (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime
         $CurrentDate = Get-Date
         $Uptime = $CurrentDate - $BootUpTime
-        $s = "" ; if ($Uptime.Days -ne 1) {$s = "s"}
-        $uptime_string = "$($uptime.days) day$s $($uptime.hours) hr $($uptime.minutes) min $($uptime.seconds) sec"
-        # $os = Get-WmiObject win32_operatingsystem
-        # $uptime = (Get-Date) - ($os.ConvertToDateTime($os.lastbootuptime))
-        # $days = $Uptime.Days ; if ($days -eq "1") { $days = "$days day" } else { $days = "$days days"}
-        # $hours = $Uptime.Hours ; if ($hours -eq "1") { $hours = "$hours hr" } else { $hours = "$hours hrs"}
-        # $minutes = $Uptime.Minutes ; if ($minutes -eq "1") { $minutes = "$minutes min" } else { $minutes = "$minutes mins"}
-        # $Display = "$days, $hours, $minutes"
-        Write-Output $uptime_string
+        $uptime_string = "$($Uptime.Days) days, $($Uptime.Hours) hours"
+        return $uptime_string
+        # return $Uptime
     }
-    function Spaces ($numspaces) { for ($i = 0; $i -lt $numspaces; $i++) { Write-Host " " -NoNewline } }
-
-    # $MaximumHistoryCount=1024
-    $IPAddress = @(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.DefaultIpGateway})[0].IPAddress[0]
-    $IPGateway = @(Get-WmiObject Win32_NetworkAdapterConfiguration | Where-Object {$_.DefaultIpGateway})[0].DefaultIPGateway[0]
-    $UserDetails = "$env:UserDomain\$env:UserName (PS-HOME: $HOME)"
-    $PSExecPolicy = Get-ExecutionPolicy
-    $PSVersion = "$($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor) ($PSExecPolicy)"
-    $ComputerAndLogon = "$($env:COMPUTERNAME)"
-    $ComputerAndLogonSpaces = 28 - $ComputerAndLogon.Length
-    Clear
-    Write-Host "-----------------------------------------------------------------------------------------------------------------------" -ForegroundColor Green
-    Write-Host "|    ComputerName:  " -nonewline -ForegroundColor Green; Write-Host $ComputerAndLogon -nonewline -ForegroundColor White ; Spaces $ComputerAndLogonSpaces ; Write-Host "UserName:" -nonewline -ForegroundColor Green ; Write-Host "  $UserDetails" -ForegroundColor White
-    Write-Host "|    Logon Server:  " -nonewline -ForegroundColor Green; Write-Host $($env:LOGONSERVER)"`t`t`t`t" -nonewline -ForegroundColor White ; Write-Host "IP Address:`t" -nonewline -ForegroundColor Green ; Write-Host "`t$IPAddress ($IPGateway)" -ForegroundColor White
-    Write-Host "|    Uptime:        " -nonewline -ForegroundColor Green; Write-Host "$(Get-Uptime)`t" -nonewline -ForegroundColor White; Write-Host "PS Version:`t" -nonewline -ForegroundColor Green ; Write-Host "`t$PSVersion" -ForegroundColor White
-    Write-Host "-----------------------------------------------------------------------------------------------------------------------" -ForegroundColor Green
-    # Write-Host "-----------------------------------------------------------------------------------------------------------------------" -ForegroundColor Green
-    # Write-Host "|`tComputerName:`t" -nonewline -ForegroundColor Green; Write-Host $($env:COMPUTERNAME)"`t`t`t`t" -nonewline -ForegroundColor White ; Write-Host "UserName:`t$UserDetails" -ForegroundColor White
-    # Write-Host "|`tLogon Server:`t" -nonewline -ForegroundColor Green; Write-Host $($env:LOGONSERVER)"`t`t`t`t" -nonewline -ForegroundColor White ; Write-Host "IP Address:`t$IPAddress ($IPGateway)" -ForegroundColor White
-    # Write-Host "|`tUptime:`t`t" -nonewline -ForegroundColor Green; Write-Host "$(Get-Uptime)`t" -nonewline -ForegroundColor White; Write-Host "PS Version:`t$PSVersion" -ForegroundColor White
-    # Write-Host "-----------------------------------------------------------------------------------------------------------------------" -ForegroundColor Green
-    function global:admin {
-        $Elevated = ""
-        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent() )
-        if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $true) { $Elevated = "Administrator: " }
-        $Host.UI.RawUI.WindowTitle = "$Elevated$TitleVer"
+    function global:Update-ConsoleTitle {
+        $AdminStatus = if ($env:USERNAME -eq 'SYSTEM') { "(Admin)" } else { "(non-Admin)" }
+        $Uptime = Get-Uptime
+        $Title = "Uptime: $Uptime"
+        $Host.UI.RawUI.WindowTitle = "$AdminStatus, $Title"
     }
-    admin
-    Set-Location C:\
-
-    function global:prompt{
+    function global:prompt {
+        Update-ConsoleTitle
         $br = "`n"
         Write-Host "[" -noNewLine
-        Write-Host $(Get-date) -ForegroundColor Green -noNewLine
-        Write-Host "] " -noNewLine
-        Write-Host "[" -noNewLine
+        Write-Host $(Get-Date -Format HH:mm:ss) -ForegroundColor Green -noNewLine
+        Write-Host "] [" -noNewLine
         Write-Host "$env:username" -Foregroundcolor Red -noNewLine
-        Write-Host "] " -noNewLine
-        Write-Host "[" -noNewLine
+        Write-Host "] [" -noNewLine
         Write-Host $($(Get-Location).Path.replace($home,"~")) -ForegroundColor Yellow -noNewLine
         Write-Host $(if ($nestedpromptlevel -ge 1) { '>>' }) -noNewLine
         Write-Host "] "
@@ -8934,13 +8855,9 @@ function PromptSlightlyBroken {
 Set-Alias p0 PromptDefault
 Set-Alias p-default PromptDefault
 Set-Alias p-timer PromptUserAndExecutionTimer   # Using this as my console default
-Set-Alias p-shortpath PromptShortenPath
-Set-Alias p-truncpath PromptTruncatedPaths
-Set-Alias p-uptime PromptTimeUptime
-Set-Alias p-ott PromptSlightlyBroken
-
-# View current prompt with: (get-item function:prompt).scriptblock   or   cat function:\prompt
-
+Set-Alias p-truncA PromptTruncatedPathsA
+Set-Alias p-truncB PromptTruncatedPathsB
+Set-Alias p-ott PromptAdvancedTitleBar
 
 # function PromptOverTheTop {
 #     # https://community.spiceworks.com/topic/1965997-custom-cmd-powershell-prompt
